@@ -1,0 +1,84 @@
+export const REMOTE_OPTIONS = [
+  { value: "remote", label: "Remote (Anywhere)", group: "Remote" },
+  { value: "remote-us", label: "Remote (US Only)", group: "Remote" },
+  { value: "remote-eu", label: "Remote (Europe)", group: "Remote" },
+  { value: "remote-india", label: "Remote (India)", group: "Remote" },
+];
+
+export const COUNTRIES = [
+  { value: "United States", label: "United States", group: "Countries" },
+  { value: "United Kingdom", label: "United Kingdom", group: "Countries" },
+  { value: "Canada", label: "Canada", group: "Countries" },
+  { value: "Germany", label: "Germany", group: "Countries" },
+  { value: "India", label: "India", group: "Countries" },
+  { value: "Australia", label: "Australia", group: "Countries" },
+  { value: "France", label: "France", group: "Countries" },
+  { value: "Netherlands", label: "Netherlands", group: "Countries" },
+  { value: "Singapore", label: "Singapore", group: "Countries" },
+  { value: "Japan", label: "Japan", group: "Countries" },
+  { value: "UAE", label: "UAE", group: "Countries" },
+  { value: "Ireland", label: "Ireland", group: "Countries" },
+  { value: "Sweden", label: "Sweden", group: "Countries" },
+  { value: "Switzerland", label: "Switzerland", group: "Countries" },
+  { value: "Spain", label: "Spain", group: "Countries" },
+  { value: "Italy", label: "Italy", group: "Countries" },
+  { value: "Brazil", label: "Brazil", group: "Countries" },
+  { value: "Poland", label: "Poland", group: "Countries" },
+  { value: "Israel", label: "Israel", group: "Countries" },
+  { value: "South Korea", label: "South Korea", group: "Countries" },
+];
+
+export const CITIES = [
+  // US
+  { value: "New York, NY", label: "New York, NY", group: "US Cities" },
+  { value: "San Francisco, CA", label: "San Francisco, CA", group: "US Cities" },
+  { value: "Los Angeles, CA", label: "Los Angeles, CA", group: "US Cities" },
+  { value: "Seattle, WA", label: "Seattle, WA", group: "US Cities" },
+  { value: "Austin, TX", label: "Austin, TX", group: "US Cities" },
+  { value: "Chicago, IL", label: "Chicago, IL", group: "US Cities" },
+  { value: "Boston, MA", label: "Boston, MA", group: "US Cities" },
+  { value: "Denver, CO", label: "Denver, CO", group: "US Cities" },
+  { value: "Atlanta, GA", label: "Atlanta, GA", group: "US Cities" },
+  { value: "Dallas, TX", label: "Dallas, TX", group: "US Cities" },
+  { value: "Miami, FL", label: "Miami, FL", group: "US Cities" },
+  { value: "Washington, DC", label: "Washington, DC", group: "US Cities" },
+  // UK
+  { value: "London, UK", label: "London, UK", group: "UK Cities" },
+  { value: "Manchester, UK", label: "Manchester, UK", group: "UK Cities" },
+  { value: "Edinburgh, UK", label: "Edinburgh, UK", group: "UK Cities" },
+  // Canada
+  { value: "Toronto, Canada", label: "Toronto, Canada", group: "Canada Cities" },
+  { value: "Vancouver, Canada", label: "Vancouver, Canada", group: "Canada Cities" },
+  { value: "Montreal, Canada", label: "Montreal, Canada", group: "Canada Cities" },
+  // India
+  { value: "Bangalore, India", label: "Bangalore, India", group: "India Cities" },
+  { value: "Mumbai, India", label: "Mumbai, India", group: "India Cities" },
+  { value: "Delhi NCR, India", label: "Delhi NCR, India", group: "India Cities" },
+  { value: "Hyderabad, India", label: "Hyderabad, India", group: "India Cities" },
+  { value: "Pune, India", label: "Pune, India", group: "India Cities" },
+  { value: "Chennai, India", label: "Chennai, India", group: "India Cities" },
+  { value: "Gurugram, India", label: "Gurugram, India", group: "India Cities" },
+  { value: "Noida, India", label: "Noida, India", group: "India Cities" },
+  // Europe
+  { value: "Berlin, Germany", label: "Berlin, Germany", group: "Europe Cities" },
+  { value: "Munich, Germany", label: "Munich, Germany", group: "Europe Cities" },
+  { value: "Amsterdam, Netherlands", label: "Amsterdam, Netherlands", group: "Europe Cities" },
+  { value: "Paris, France", label: "Paris, France", group: "Europe Cities" },
+  { value: "Dublin, Ireland", label: "Dublin, Ireland", group: "Europe Cities" },
+  { value: "Stockholm, Sweden", label: "Stockholm, Sweden", group: "Europe Cities" },
+  { value: "Zurich, Switzerland", label: "Zurich, Switzerland", group: "Europe Cities" },
+  { value: "Barcelona, Spain", label: "Barcelona, Spain", group: "Europe Cities" },
+  // Asia Pacific
+  { value: "Singapore", label: "Singapore", group: "APAC Cities" },
+  { value: "Tokyo, Japan", label: "Tokyo, Japan", group: "APAC Cities" },
+  { value: "Sydney, Australia", label: "Sydney, Australia", group: "APAC Cities" },
+  { value: "Melbourne, Australia", label: "Melbourne, Australia", group: "APAC Cities" },
+  { value: "Dubai, UAE", label: "Dubai, UAE", group: "APAC Cities" },
+  { value: "Seoul, South Korea", label: "Seoul, South Korea", group: "APAC Cities" },
+];
+
+export const ALL_LOCATION_OPTIONS = [
+  ...REMOTE_OPTIONS,
+  ...CITIES,
+  ...COUNTRIES,
+];

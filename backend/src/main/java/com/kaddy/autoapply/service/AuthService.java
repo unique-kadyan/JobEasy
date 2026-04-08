@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -73,9 +74,9 @@ public class AuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new BadRequestException("Invalid email or password"));
 
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new BadRequestException("Invalid email or password");
-        }
+        Optional.ofNullable(user.getPasswordHash())
+                .filter(hash -> passwordEncoder.matches(request.password(), hash))
+                .orElseThrow(() -> new BadRequestException("Invalid email or password"));
 
         return buildAuthResponse(user);
     }

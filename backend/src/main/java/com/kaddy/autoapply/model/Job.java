@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Document(collection = "jobs")
 @CompoundIndex(name = "source_externalId", def = "{'source': 1, 'externalId': 1}", unique = true)
@@ -145,7 +146,7 @@ public class Job {
             job.tags = this.tags;
             job.jobType = this.jobType;
             job.datePosted = this.datePosted;
-            job.scrapedAt = this.scrapedAt != null ? this.scrapedAt : LocalDateTime.now();
+            job.scrapedAt = Optional.ofNullable(this.scrapedAt).orElseGet(LocalDateTime::now);
             job.expiresAt = this.expiresAt;
             return job;
         }

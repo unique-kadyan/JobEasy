@@ -1,5 +1,6 @@
 package com.kaddy.autoapply.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kaddy.autoapply.dto.response.GeneratedResumeResponse;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class ResumeGeneratorService {
@@ -136,7 +138,6 @@ public class ResumeGeneratorService {
         return sb.toString();
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> parseResumeJson(String raw) {
         try {
             String json = raw.trim();
@@ -147,7 +148,7 @@ public class ResumeGeneratorService {
                 if (start >= 0 && end > start) json = json.substring(start, end + 1);
             }
             return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
             log.warn("Failed to parse AI resume JSON, wrapping raw: {}", e.getMessage());
             Map<String, Object> fallback = new HashMap<>();
             fallback.put("raw", raw);
@@ -174,20 +175,20 @@ public class ResumeGeneratorService {
     }
 
     private Map<String, Object> buildPreview(Map<String, Object> data) {
-        if (data == null) return Map.of();
-        Map<String, Object> preview = new HashMap<>();
-        preview.put("name", data.get("name"));
-        preview.put("contact", data.get("contact"));
-        preview.put("summary", data.get("summary"));
-        // First 2 experience entries only
-        if (data.get("experience") instanceof List<?> exp) {
-            preview.put("experience", exp.subList(0, Math.min(2, exp.size())));
-        }
-        preview.put("skills", data.get("skills"));
-        return preview;
+        return Optional.ofNullable(data).map(d -> {
+            Map<String, Object> preview = new HashMap<>();
+            preview.put("name", d.get("name"));
+            preview.put("contact", d.get("contact"));
+            preview.put("summary", d.get("summary"));
+            if (d.get("experience") instanceof List<?> exp) {
+                preview.put("experience", exp.subList(0, Math.min(2, exp.size())));
+            }
+            preview.put("skills", d.get("skills"));
+            return preview;
+        }).orElseGet(Map::of);
     }
 
     private String nvl(String s) {
-        return s != null ? s : "";
+        return Optional.ofNullable(s).orElse("");
     }
 }

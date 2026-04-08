@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 
 @Document(collection = "users")
 public class User {
@@ -172,8 +173,8 @@ public class User {
             user.linkedinUrl = this.linkedinUrl;
             user.githubUrl = this.githubUrl;
             user.portfolioUrl = this.portfolioUrl;
-            user.createdAt = this.createdAt != null ? this.createdAt : LocalDateTime.now();
-            user.updatedAt = this.updatedAt != null ? this.updatedAt : LocalDateTime.now();
+            user.createdAt = Optional.ofNullable(this.createdAt).orElseGet(LocalDateTime::now);
+            user.updatedAt = Optional.ofNullable(this.updatedAt).orElseGet(LocalDateTime::now);
             return user;
         }
     }

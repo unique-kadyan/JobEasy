@@ -7,9 +7,10 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 /**
  * Audits security-sensitive operations (auth events and job applications).
@@ -44,7 +45,8 @@ public class SecurityAuditAspect {
     }
 
     private String currentUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth != null ? String.valueOf(auth.getPrincipal()) : "anonymous";
+        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+                .map(auth -> String.valueOf(auth.getPrincipal()))
+                .orElse("anonymous");
     }
 }

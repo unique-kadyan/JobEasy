@@ -4,6 +4,7 @@ import com.kaddy.autoapply.dto.request.ApplyRequest;
 import com.kaddy.autoapply.dto.response.ApplicationResponse;
 import com.kaddy.autoapply.dto.response.JobResponse;
 import com.kaddy.autoapply.exception.BadRequestException;
+import com.kaddy.autoapply.exception.ResourceNotFoundException;
 import com.kaddy.autoapply.model.Application;
 import com.kaddy.autoapply.model.Job;
 import com.kaddy.autoapply.model.Resume;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class ApplicationService {
@@ -43,11 +45,9 @@ public class ApplicationService {
         }
 
         Job job = jobService.getJobEntity(request.jobId());
-        String resumeId = request.resumeId() != null
-                ? request.resumeId()
-                : resumeRepository.findByUserIdAndIsPrimaryTrue(userId)
-                                  .map(Resume::getId)
-                                  .orElse(null);
+        String resumeId = Optional.ofNullable(request.resumeId())
+                .orElseGet(() -> resumeRepository.findByUserIdAndIsPrimaryTrue(userId)
+                        .map(Resume::getId).orElse(null));
 
         Application app = applicationRepository.save(Application.builder()
                 .userId(userId).jobId(job.getId())
@@ -78,7 +78,7 @@ public class ApplicationService {
                                                           int page, int size) {
         Page<Application> apps = (status != null && !status.isBlank())
                 ? applicationRepository.findByUserIdAndStatusOrderByAppliedAtDesc(
-                        userId, ApplicationStatus.valueOf(status), PageRequest.of(page, size))
+                        userId, parseStatus(status), PageRequest.of(page, size))
                 : applicationRepository.findByUserIdOrderByAppliedAtDesc(
                         userId, PageRequest.of(page, size));
 
@@ -86,24 +86,32 @@ public class ApplicationService {
             Job job = null;
             try {
                 job = jobService.getJobEntity(app.getJobId());
-            } catch (Exception e) {
+            } catch (ResourceNotFoundException e) {
                 log.debug("Job {} not found for application {}: {}", app.getJobId(), app.getId(), e.getMessage());
             }
             return toResponse(app, job);
         });
     }
 
+    private ApplicationStatus parseStatus(String status) {
+        try {
+            return ApplicationStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid status: " + status);
+        }
+    }
+
     public ApplicationResponse updateStatus(String id, String newStatus) {
         Application app = applicationRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Application not found"));
-        app.setStatus(ApplicationStatus.valueOf(newStatus));
+        app.setStatus(parseStatus(newStatus));
         app.setStatusUpdated(LocalDateTime.now());
         app = applicationRepository.save(app);
 
         Job job = null;
         try {
             job = jobService.getJobEntity(app.getJobId());
-        } catch (Exception e) {
+        } catch (ResourceNotFoundException e) {
             log.debug("Job {} not found for application {}: {}", app.getJobId(), app.getId(), e.getMessage());
         }
         return toResponse(app, job);
@@ -114,11 +122,11 @@ public class ApplicationService {
     }
 
     private ApplicationResponse toResponse(Application app, Job job) {
-        JobResponse jr = job != null ? new JobResponse(
-                job.getId(), job.getExternalId(), job.getSource().name(),
-                job.getTitle(), job.getCompany(), job.getLocation(),
-                job.getUrl(), null, job.getSalary(), null,
-                job.getJobType(), job.getDatePosted(), null) : null;
+        JobResponse jr = Optional.ofNullable(job).map(j -> new JobResponse(
+                j.getId(), j.getExternalId(), j.getSource().name(),
+                j.getTitle(), j.getCompany(), j.getLocation(),
+                j.getUrl(), null, j.getSalary(), null,
+                j.getJobType(), j.getDatePosted(), null)).orElse(null);
 
         return new ApplicationResponse(
                 app.getId(), jr, app.getStatus().name(), app.getMatchScore(),

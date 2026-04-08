@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 
 @Document(collection = "resumes")
 public class Resume {
@@ -116,8 +117,8 @@ public class Resume {
             resume.parsedText = this.parsedText;
             resume.parsedData = this.parsedData;
             resume.isPrimary = this.isPrimary;
-            resume.createdAt = this.createdAt != null ? this.createdAt : LocalDateTime.now();
-            resume.updatedAt = this.updatedAt != null ? this.updatedAt : LocalDateTime.now();
+            resume.createdAt = Optional.ofNullable(this.createdAt).orElseGet(LocalDateTime::now);
+            resume.updatedAt = Optional.ofNullable(this.updatedAt).orElseGet(LocalDateTime::now);
             return resume;
         }
     }

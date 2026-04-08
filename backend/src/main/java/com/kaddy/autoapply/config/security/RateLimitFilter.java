@@ -2,12 +2,12 @@ package com.kaddy.autoapply.config.security;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -27,8 +27,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
         String ip = getClientIp(request);
         String path = request.getRequestURI();
 
@@ -49,9 +49,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private Bucket createBucket(boolean isAuth) {
-        Bandwidth limit = isAuth
-                ? Bandwidth.classic(10, Refill.greedy(10, Duration.ofMinutes(1)))
-                : Bandwidth.classic(60, Refill.greedy(60, Duration.ofMinutes(1)));
+        int capacity = isAuth ? 10 : 60;
+        Bandwidth limit = Bandwidth.builder()
+                .capacity(capacity)
+                .refillGreedy(capacity, Duration.ofMinutes(1))
+                .build();
         return Bucket.builder().addLimit(limit).build();
     }
 

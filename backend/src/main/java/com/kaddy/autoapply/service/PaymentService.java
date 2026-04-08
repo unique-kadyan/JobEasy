@@ -20,8 +20,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.util.HexFormat;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class PaymentService {
@@ -85,7 +87,8 @@ public class PaymentService {
         );
 
         Map<String, Object> razorpayOrder = callRazorpayCreateOrder(orderBody);
-        String orderId = (String) razorpayOrder.get("id");
+        String orderId = Optional.ofNullable((String) razorpayOrder.get("id"))
+                .orElseThrow(() -> new BadRequestException("Payment gateway returned no order ID."));
 
         Payment payment = new Payment();
         payment.setUserId(userId);
@@ -96,7 +99,7 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         String displayPrice = formatDisplayPrice(amountPaise, countryCode);
-        String displayCurrency = isIndia ? "INR" : (countryCode != null ? countryCode : "INR");
+        String displayCurrency = isIndia ? "INR" : Optional.ofNullable(countryCode).orElse("INR");
 
         return new PaymentOrderResponse(orderId, amountPaise, "INR", keyId,
                 resumeId, displayPrice, displayCurrency);
@@ -150,7 +153,7 @@ public class PaymentService {
                     .block();
 
             return objectMapper.readValue(responseStr, new TypeReference<Map<String, Object>>() {});
-        } catch (Exception e) {
+        } catch (com.fasterxml.jackson.core.JsonProcessingException | RuntimeException e) {
             log.error("Razorpay order creation failed: {}", e.getMessage());
             throw new BadRequestException("Payment gateway error. Please try again.");
         }
@@ -165,7 +168,7 @@ public class PaymentService {
             byte[] hash = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
             String computed = HexFormat.of().formatHex(hash);
             return computed.equals(signature);
-        } catch (Exception e) {
+        } catch (GeneralSecurityException e) {
             log.error("Signature verification error: {}", e.getMessage());
             return false;
         }

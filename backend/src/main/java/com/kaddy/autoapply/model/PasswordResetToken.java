@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Document(collection = "password_reset_tokens")
 public class PasswordResetToken {
@@ -80,8 +81,8 @@ public class PasswordResetToken {
             prt.token = this.token;
             prt.userId = this.userId;
             prt.used = this.used;
-            prt.createdAt = this.createdAt != null ? this.createdAt : LocalDateTime.now();
-            prt.expiresAt = this.expiresAt != null ? this.expiresAt : LocalDateTime.now().plusHours(1);
+            prt.createdAt = Optional.ofNullable(this.createdAt).orElseGet(LocalDateTime::now);
+            prt.expiresAt = Optional.ofNullable(this.expiresAt).orElseGet(() -> LocalDateTime.now().plusHours(1));
             return prt;
         }
     }

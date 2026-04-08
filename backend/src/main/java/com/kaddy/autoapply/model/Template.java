@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Document(collection = "templates")
 public class Template {
@@ -89,8 +90,8 @@ public class Template {
             template.content = this.content;
             template.description = this.description;
             template.isSystem = this.isSystem;
-            template.createdAt = this.createdAt != null ? this.createdAt : LocalDateTime.now();
-            template.updatedAt = this.updatedAt != null ? this.updatedAt : LocalDateTime.now();
+            template.createdAt = Optional.ofNullable(this.createdAt).orElseGet(LocalDateTime::now);
+            template.updatedAt = Optional.ofNullable(this.updatedAt).orElseGet(LocalDateTime::now);
             return template;
         }
     }

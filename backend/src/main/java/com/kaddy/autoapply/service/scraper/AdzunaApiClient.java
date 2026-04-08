@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class AdzunaApiClient implements JobScraper {
@@ -54,7 +55,7 @@ public class AdzunaApiClient implements JobScraper {
 
         try {
             final int adzunaPage = page + 1;
-            final String where = location != null ? location : "";
+            final String where = Optional.ofNullable(location).orElse("");
 
             Map<String, Object> response = webClient.get()
                     .uri(uriBuilder -> uriBuilder
@@ -108,14 +109,16 @@ public class AdzunaApiClient implements JobScraper {
     }
 
     private String buildSalary(Map<String, Object> item) {
-        Object min = item.get("salary_min");
-        Object max = item.get("salary_max");
+        Optional<Number> optMin = Optional.ofNullable(item.get("salary_min"))
+                .filter(Number.class::isInstance).map(Number.class::cast);
+        Optional<Number> optMax = Optional.ofNullable(item.get("salary_max"))
+                .filter(Number.class::isInstance).map(Number.class::cast);
 
-        if (min == null && max == null) return null;
-        if (min != null && max != null) return "£" + Math.round(((Number) min).doubleValue())
-                + " - £" + Math.round(((Number) max).doubleValue());
-        if (min != null) return "£" + Math.round(((Number) min).doubleValue()) + "+";
-        if (max instanceof Number maxNum) return "Up to £" + Math.round(maxNum.doubleValue());
-        return null;
+        if (optMin.isEmpty() && optMax.isEmpty()) return null;
+        return optMin.flatMap(mn -> optMax.map(mx ->
+                        "£" + Math.round(mn.doubleValue()) + " - £" + Math.round(mx.doubleValue())))
+                .or(() -> optMin.map(mn -> "£" + Math.round(mn.doubleValue()) + "+"))
+                .or(() -> optMax.map(mx -> "Up to £" + Math.round(mx.doubleValue())))
+                .orElse(null);
     }
 }

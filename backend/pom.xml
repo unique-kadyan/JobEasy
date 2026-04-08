@@ -18,7 +18,8 @@
     <description>Automated job application platform with AI-powered cover letters</description>
 
     <properties>
-        <java.version>25</java.version>
+        <java.version>17</java.version>
+        <maven.compiler.release>17</maven.compiler.release>
         <jjwt.version>0.12.6</jjwt.version>
         <springdoc.version>2.6.0</springdoc.version>
         <resilience4j.version>2.2.0</resilience4j.version>
@@ -153,7 +154,7 @@
         <dependency>
             <groupId>de.flapdoodle.embed</groupId>
             <artifactId>de.flapdoodle.embed.mongo.spring3x</artifactId>
-            <version>4.14.0</version>
+            <version>4.15.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

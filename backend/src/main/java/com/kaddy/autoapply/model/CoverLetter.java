@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Document(collection = "cover_letters")
 public class CoverLetter {
@@ -108,8 +109,8 @@ public class CoverLetter {
             cl.aiProvider = this.aiProvider;
             cl.aiModel = this.aiModel;
             cl.promptUsed = this.promptUsed;
-            cl.createdAt = this.createdAt != null ? this.createdAt : LocalDateTime.now();
-            cl.updatedAt = this.updatedAt != null ? this.updatedAt : LocalDateTime.now();
+            cl.createdAt = Optional.ofNullable(this.createdAt).orElseGet(LocalDateTime::now);
+            cl.updatedAt = Optional.ofNullable(this.updatedAt).orElseGet(LocalDateTime::now);
             return cl;
         }
     }

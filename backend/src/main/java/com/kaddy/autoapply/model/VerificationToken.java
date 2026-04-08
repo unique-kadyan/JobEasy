@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Document(collection = "verification_tokens")
 public class VerificationToken {
@@ -72,8 +73,8 @@ public class VerificationToken {
             vt.id = this.id;
             vt.token = this.token;
             vt.userId = this.userId;
-            vt.createdAt = this.createdAt != null ? this.createdAt : LocalDateTime.now();
-            vt.expiresAt = this.expiresAt != null ? this.expiresAt : LocalDateTime.now().plusHours(24);
+            vt.createdAt = Optional.ofNullable(this.createdAt).orElseGet(LocalDateTime::now);
+            vt.expiresAt = Optional.ofNullable(this.expiresAt).orElseGet(() -> LocalDateTime.now().plusHours(24));
             return vt;
         }
     }

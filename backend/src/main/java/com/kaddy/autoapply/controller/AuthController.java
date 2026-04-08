@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.Optional;
+
+import com.kaddy.autoapply.exception.BadRequestException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -42,7 +45,9 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@RequestBody Map<String, String> body) {
-        return ResponseEntity.ok(authService.refresh(body.get("refreshToken")));
+        String refreshToken = Optional.ofNullable(body.get("refreshToken"))
+                .orElseThrow(() -> new BadRequestException("refreshToken is required"));
+        return ResponseEntity.ok(authService.refresh(refreshToken));
     }
 
     @GetMapping("/me")
@@ -59,7 +64,9 @@ public class AuthController {
 
     @PostMapping("/resend-verification")
     public ResponseEntity<Map<String, String>> resendVerification(@RequestBody Map<String, String> body) {
-        authService.resendVerification(body.get("email"));
+        String email = Optional.ofNullable(body.get("email"))
+                .orElseThrow(() -> new BadRequestException("email is required"));
+        authService.resendVerification(email);
         return ResponseEntity.ok(Map.of("message", "Verification email sent"));
     }
 

@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Document(collection = "application_status_history")
 public class ApplicationStatusHistory {
@@ -77,7 +78,7 @@ public class ApplicationStatusHistory {
             h.oldStatus = this.oldStatus;
             h.newStatus = this.newStatus;
             h.notes = this.notes;
-            h.changedAt = this.changedAt != null ? this.changedAt : LocalDateTime.now();
+            h.changedAt = Optional.ofNullable(this.changedAt).orElseGet(LocalDateTime::now);
             return h;
         }
     }

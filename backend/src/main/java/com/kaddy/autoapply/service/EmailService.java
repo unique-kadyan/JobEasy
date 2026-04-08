@@ -107,7 +107,7 @@ public class EmailService {
                     .block();
             log.info("Email sent via Resend to {}: {}", to, subject);
             return true;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("Resend failed for {}: {} — falling back to Brevo", to, e.getMessage());
             return false;
         }
@@ -135,7 +135,7 @@ public class EmailService {
                     .block();
             log.info("Email sent via Brevo to {}: {}", to, subject);
             return true;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Brevo also failed for {}: {}", to, e.getMessage());
             return false;
         }

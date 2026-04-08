@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.Optional;
+
+import com.kaddy.autoapply.exception.BadRequestException;
 
 @RestController
 @RequestMapping("/api/cover-letters")
@@ -54,7 +57,9 @@ public class CoverLetterController {
     @PutMapping("/{id}")
     public ResponseEntity<CoverLetterResponse> update(@PathVariable String id,
                                                        @RequestBody Map<String, String> body) {
-        return ResponseEntity.ok(coverLetterService.update(id, body.get("content")));
+        String content = Optional.ofNullable(body.get("content"))
+                .orElseThrow(() -> new BadRequestException("content is required"));
+        return ResponseEntity.ok(coverLetterService.update(id, content));
     }
 
     @DeleteMapping("/{id}")

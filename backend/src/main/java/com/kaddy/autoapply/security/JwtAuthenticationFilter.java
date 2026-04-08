@@ -14,6 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -28,27 +29,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-        String token = extractToken(request);
+        extractToken(request).ifPresent(token -> {
+            if (tokenProvider.validateToken(token) && tokenProvider.isAccessToken(token)) {
+                String userId = tokenProvider.getUserIdFromToken(token);
+                String email  = tokenProvider.getEmailFromToken(token);
 
-        if (token != null && tokenProvider.validateToken(token) && tokenProvider.isAccessToken(token)) {
-            String userId = tokenProvider.getUserIdFromToken(token);
-            String email  = tokenProvider.getEmailFromToken(token);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userId, email, List.of());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userId, email, List.of());
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        });
 
         filterChain.doFilter(request, response);
     }
 
-    private String extractToken(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
-            return header.substring(7);
-        }
-        return null;
+    private Optional<String> extractToken(HttpServletRequest request) {
+        return Optional.ofNullable(request.getHeader("Authorization"))
+                .filter(h -> StringUtils.hasText(h) && h.startsWith("Bearer "))
+                .map(h -> h.substring(7));
     }
 }

@@ -17,6 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class CoverLetterService {
 
@@ -58,22 +60,22 @@ public class CoverLetterService {
         Job job = jobService.getJobEntity(request.jobId());
 
         StringBuilder prompt = new StringBuilder();
-        prompt.append("CANDIDATE PROFILE:\nName: ").append(user.getName()).append("\n");
-        if (user.getTitle() != null)   prompt.append("Title: ").append(user.getTitle()).append("\n");
-        if (user.getSummary() != null) prompt.append("Summary: ").append(user.getSummary()).append("\n");
-        if (user.getSkills() != null)  prompt.append("Skills: ").append(user.getSkills()).append("\n");
-        prompt.append("\nJOB DETAILS:\nTitle: ").append(job.getTitle()).append("\n");
-        prompt.append("Company: ").append(job.getCompany()).append("\n");
-        if (job.getLocation() != null)    prompt.append("Location: ").append(job.getLocation()).append("\n");
-        if (job.getDescription() != null) prompt.append("Description: ").append(job.getDescription()).append("\n");
+        prompt.append("CANDIDATE PROFILE:\nName: ")
+                .append(Optional.ofNullable(user.getName()).orElse("")).append("\n");
+        Optional.ofNullable(user.getTitle()).ifPresent(v -> prompt.append("Title: ").append(v).append("\n"));
+        Optional.ofNullable(user.getSummary()).ifPresent(v -> prompt.append("Summary: ").append(v).append("\n"));
+        Optional.ofNullable(user.getSkills()).ifPresent(v -> prompt.append("Skills: ").append(v).append("\n"));
+        prompt.append("\nJOB DETAILS:\nTitle: ")
+                .append(Optional.ofNullable(job.getTitle()).orElse("")).append("\n");
+        prompt.append("Company: ")
+                .append(Optional.ofNullable(job.getCompany()).orElse("")).append("\n");
+        Optional.ofNullable(job.getLocation()).ifPresent(v -> prompt.append("Location: ").append(v).append("\n"));
+        Optional.ofNullable(job.getDescription()).ifPresent(v -> prompt.append("Description: ").append(v).append("\n"));
 
-        Template template = null;
-        if (request.templateId() != null) {
-            template = templateRepository.findById(request.templateId()).orElse(null);
-            if (template != null) {
-                prompt.append("\nTEMPLATE STYLE:\n").append(template.getContent()).append("\n");
-            }
-        }
+        Optional<Template> templateOpt = Optional.ofNullable(request.templateId())
+                .flatMap(templateRepository::findById);
+        templateOpt.ifPresent(t ->
+                prompt.append("\nTEMPLATE STYLE:\n").append(t.getContent()).append("\n"));
 
         AiProviderFactory.GenerationResult result =
                 aiProviderFactory.generate(SYSTEM_PROMPT, prompt.toString(), request.provider());
@@ -81,7 +83,7 @@ public class CoverLetterService {
         CoverLetter cl = coverLetterRepository.save(CoverLetter.builder()
                 .userId(userId)
                 .jobId(job.getId())
-                .templateId(template != null ? template.getId() : null)
+                .templateId(templateOpt.map(Template::getId).orElse(null))
                 .content(result.content())
                 .aiProvider(result.providerName())
                 .aiModel(request.provider())
@@ -94,16 +96,14 @@ public class CoverLetterService {
     public Page<CoverLetterResponse> getUserCoverLetters(String userId, int page, int size) {
         return coverLetterRepository
                 .findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size))
-                .map(cl -> {
-                    Job job = cl.getJobId() != null ? safeGetJob(cl.getJobId()) : null;
-                    return toResponse(cl, job);
-                });
+                .map(cl -> toResponse(cl, Optional.ofNullable(cl.getJobId())
+                        .flatMap(jobId -> Optional.ofNullable(safeGetJob(jobId))).orElse(null)));
     }
 
     public CoverLetterResponse getCoverLetter(String id) {
         CoverLetter cl = coverLetterRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cover letter not found"));
-        return toResponse(cl, cl.getJobId() != null ? safeGetJob(cl.getJobId()) : null);
+        return toResponse(cl, Optional.ofNullable(cl.getJobId()).flatMap(jobId -> Optional.ofNullable(safeGetJob(jobId))).orElse(null));
     }
 
     public CoverLetterResponse update(String id, String content) {
@@ -111,7 +111,7 @@ public class CoverLetterService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cover letter not found"));
         cl.setContent(content);
         cl = coverLetterRepository.save(cl);
-        return toResponse(cl, cl.getJobId() != null ? safeGetJob(cl.getJobId()) : null);
+        return toResponse(cl, Optional.ofNullable(cl.getJobId()).flatMap(jobId -> Optional.ofNullable(safeGetJob(jobId))).orElse(null));
     }
 
     public void delete(String id) {
@@ -121,18 +121,19 @@ public class CoverLetterService {
     private Job safeGetJob(String jobId) {
         try {
             return jobService.getJobEntity(jobId);
-        } catch (Exception e) {
+        } catch (ResourceNotFoundException e) {
             log.debug("Job {} not found when loading cover letter: {}", jobId, e.getMessage());
             return null;
         }
     }
 
     private CoverLetterResponse toResponse(CoverLetter cl, Job job) {
+        Optional<Job> optJob = Optional.ofNullable(job);
         return new CoverLetterResponse(
                 cl.getId(),
-                job != null ? job.getId() : null,
-                job != null ? job.getTitle() : null,
-                job != null ? job.getCompany() : null,
+                optJob.map(Job::getId).orElse(null),
+                optJob.map(Job::getTitle).orElse(null),
+                optJob.map(Job::getCompany).orElse(null),
                 cl.getContent(), cl.getAiProvider(), cl.getAiModel(), cl.getCreatedAt()
         );
     }

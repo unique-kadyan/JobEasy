@@ -20,6 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import com.kaddy.autoapply.exception.BadRequestException;
 
 @RestController
 @RequestMapping("/api/applications")
@@ -58,7 +61,9 @@ public class ApplicationController {
     @PutMapping("/{id}/status")
     public ResponseEntity<ApplicationResponse> updateStatus(@PathVariable String id,
                                                              @RequestBody Map<String, String> body) {
-        return ResponseEntity.ok(applicationService.updateStatus(id, body.get("status")));
+        String status = Optional.ofNullable(body.get("status"))
+                .orElseThrow(() -> new BadRequestException("status is required"));
+        return ResponseEntity.ok(applicationService.updateStatus(id, status));
     }
 
     @DeleteMapping("/{id}")

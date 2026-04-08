@@ -67,7 +67,7 @@ public abstract class OpenAiCompatibleProvider implements AiProvider {
             return (String) message.get("content");
         } catch (AiServiceException e) {
             throw e;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw new AiServiceException(getName() + " API call failed: " + e.getMessage(), e);
         }
     }

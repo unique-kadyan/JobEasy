@@ -76,7 +76,7 @@ public class OpenAiProvider implements AiProvider {
             return (String) message.get("content");
         } catch (AiServiceException e) {
             throw e;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw new AiServiceException("OpenAI API call failed: " + e.getMessage(), e);
         }
     }

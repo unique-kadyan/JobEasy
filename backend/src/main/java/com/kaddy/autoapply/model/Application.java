@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Document(collection = "applications")
 @CompoundIndex(name = "user_job", def = "{'userId': 1, 'jobId': 1}", unique = true)
@@ -113,8 +114,8 @@ public class Application {
             app.status = this.status;
             app.matchScore = this.matchScore;
             app.notes = this.notes;
-            app.appliedAt = this.appliedAt != null ? this.appliedAt : LocalDateTime.now();
-            app.statusUpdated = this.statusUpdated != null ? this.statusUpdated : LocalDateTime.now();
+            app.appliedAt = Optional.ofNullable(this.appliedAt).orElseGet(LocalDateTime::now);
+            app.statusUpdated = Optional.ofNullable(this.statusUpdated).orElseGet(LocalDateTime::now);
             return app;
         }
     }

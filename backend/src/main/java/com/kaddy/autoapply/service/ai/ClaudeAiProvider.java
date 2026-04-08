@@ -78,7 +78,7 @@ public class ClaudeAiProvider implements AiProvider {
                     .orElseThrow(() -> new AiServiceException("No text in Claude response"));
         } catch (AiServiceException e) {
             throw e;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw new AiServiceException("Claude API call failed: " + e.getMessage(), e);
         }
     }

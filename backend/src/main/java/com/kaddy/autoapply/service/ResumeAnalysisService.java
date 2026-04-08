@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class ResumeAnalysisService {
@@ -35,7 +36,7 @@ public class ResumeAnalysisService {
                         .stream().findFirst()
                         .orElseThrow(() -> new BadRequestException("No resume found. Please upload a resume first.")));
 
-        String text = resume.getParsedText() != null ? resume.getParsedText().toLowerCase() : "";
+        String text = Optional.ofNullable(resume.getParsedText()).map(String::toLowerCase).orElse("");
         Map<String, Object> parsed = resume.getParsedData();
 
         List<String> missing = new ArrayList<>();
@@ -71,7 +72,8 @@ public class ResumeAnalysisService {
         }
 
         // ── Work experience ──────────────────────────────────────────────────────
-        boolean hasExperience = Boolean.TRUE.equals(parsed != null ? parsed.get("hasExperience") : false)
+        boolean hasExperience = Optional.ofNullable(parsed)
+                .map(p -> Boolean.TRUE.equals(p.get("hasExperience"))).orElse(false)
                 || text.contains("experience") || text.contains("employment") || text.contains("work history");
         if (!hasExperience) {
             missing.add("Work experience section");
@@ -90,7 +92,8 @@ public class ResumeAnalysisService {
         }
 
         // ── Education ────────────────────────────────────────────────────────────
-        boolean hasEducation = Boolean.TRUE.equals(parsed != null ? parsed.get("hasEducation") : false)
+        boolean hasEducation = Optional.ofNullable(parsed)
+                .map(p -> Boolean.TRUE.equals(p.get("hasEducation"))).orElse(false)
                 || text.contains("education") || text.contains("university") || text.contains("degree")
                 || text.contains("bachelor") || text.contains("master");
         if (!hasEducation) {
@@ -102,7 +105,8 @@ public class ResumeAnalysisService {
         }
 
         // ── Skills ───────────────────────────────────────────────────────────────
-        boolean hasSkills = parsed != null && parsed.get("skills") instanceof List<?> list && !list.isEmpty();
+        boolean hasSkills = Optional.ofNullable(parsed)
+                .map(p -> p.get("skills") instanceof List<?> l && !l.isEmpty()).orElse(false);
         if (!hasSkills) {
             missing.add("Skills section");
             suggestions.add("Add a dedicated skills section listing technical and soft skills relevant to your target role.");
@@ -112,7 +116,8 @@ public class ResumeAnalysisService {
         }
 
         // ── Projects ─────────────────────────────────────────────────────────────
-        boolean hasProjects = Boolean.TRUE.equals(parsed != null ? parsed.get("hasProjects") : false)
+        boolean hasProjects = Optional.ofNullable(parsed)
+                .map(p -> Boolean.TRUE.equals(p.get("hasProjects"))).orElse(false)
                 || text.contains("project") || text.contains("portfolio");
         if (!hasProjects) {
             suggestions.add("Consider adding a projects section to demonstrate hands-on experience.");
@@ -122,7 +127,8 @@ public class ResumeAnalysisService {
         }
 
         // ── Certifications ───────────────────────────────────────────────────────
-        boolean hasCerts = Boolean.TRUE.equals(parsed != null ? parsed.get("hasCertifications") : false)
+        boolean hasCerts = Optional.ofNullable(parsed)
+                .map(p -> Boolean.TRUE.equals(p.get("hasCertifications"))).orElse(false)
                 || text.contains("certif") || text.contains("aws") || text.contains("google cloud");
         if (!hasCerts) {
             suggestions.add("Add any relevant certifications to strengthen your application.");
@@ -139,7 +145,10 @@ public class ResumeAnalysisService {
         }
 
         // ── Resume length ────────────────────────────────────────────────────────
-        int wordCount = parsed != null && parsed.get("wordCount") instanceof Integer wc ? wc : countWords(text);
+        int wordCount = Optional.ofNullable(parsed)
+                .flatMap(p -> Optional.ofNullable(p.get("wordCount")))
+                .filter(Integer.class::isInstance).map(Integer.class::cast)
+                .orElseGet(() -> countWords(text));
         String lengthAssessment;
         if (wordCount < 300) {
             lengthAssessment = "Too short — add more detail to experience and skills sections.";

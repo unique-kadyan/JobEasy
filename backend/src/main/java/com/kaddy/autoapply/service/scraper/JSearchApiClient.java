@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class JSearchApiClient implements JobScraper {
@@ -47,7 +48,7 @@ public class JSearchApiClient implements JobScraper {
         }
 
         try {
-            String searchQuery = query + (location != null ? " in " + location : "");
+            String searchQuery = query + Optional.ofNullable(location).map(l -> " in " + l).orElse("");
 
             Map<String, Object> response = webClient.get()
                     .uri(uriBuilder -> uriBuilder
@@ -123,13 +124,13 @@ public class JSearchApiClient implements JobScraper {
     }
 
     private String buildSalary(Map<String, Object> item) {
-        Object min = item.get("job_min_salary");
-        Object max = item.get("job_max_salary");
+        Optional<Object> optMin = Optional.ofNullable(item.get("job_min_salary"));
+        Optional<Object> optMax = Optional.ofNullable(item.get("job_max_salary"));
         String currency = (String) item.getOrDefault("job_salary_currency", "USD");
 
-        if (min == null && max == null) return null;
-        if (min != null && max != null) return currency + " " + min + " - " + max;
-        if (min != null) return currency + " " + min + "+";
-        return "Up to " + currency + " " + max;
+        if (optMin.isEmpty() && optMax.isEmpty()) return null;
+        return optMin.flatMap(mn -> optMax.map(mx -> currency + " " + mn + " - " + mx))
+                .or(() -> optMin.map(mn -> currency + " " + mn + "+"))
+                .orElseGet(() -> "Up to " + currency + " " + optMax.orElse(""));
     }
 }
