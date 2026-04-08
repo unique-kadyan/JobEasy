@@ -1,0 +1,55 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/kaddy_test
+  mail:
+    host: localhost
+    port: 2525
+
+app:
+  jwt:
+    secret: test-secret-key-that-is-at-least-256-bits-long-for-hmac-sha256-signing-algorithm-here
+    access-token-expiry: 900000
+    refresh-token-expiry: 604800000
+  ai:
+    claude:
+      api-key: ""
+      model: claude-sonnet-4-20250514
+    openai:
+      api-key: ""
+      model: gpt-4o
+    default-provider: OPENAI
+  scraper:
+    jsearch-api-key: ""
+    cache-ttl-minutes: 1
+  cors:
+    allowed-origins: http://localhost:3000
+  upload:
+    dir: ./test-uploads
+  mail:
+    from: test@kaddy.app
+  frontend-url: http://localhost:3000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      claudeAi:
+        sliding-window-size: 2
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
+      openAi:
+        sliding-window-size: 2
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
+  retry:
+    instances:
+      claudeAi:
+        max-attempts: 1
+      openAi:
+        max-attempts: 1

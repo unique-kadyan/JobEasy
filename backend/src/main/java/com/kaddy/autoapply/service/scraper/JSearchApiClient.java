@@ -1,0 +1,135 @@
+package com.kaddy.autoapply.service.scraper;
+
+import com.kaddy.autoapply.dto.response.JobResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@Component
+public class JSearchApiClient implements JobScraper {
+
+    private static final Logger log = LoggerFactory.getLogger(JSearchApiClient.class);
+    private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
+            new ParameterizedTypeReference<>() {};
+
+    private final WebClient webClient;
+    private final String apiKey;
+
+    public JSearchApiClient(
+            WebClient.Builder webClientBuilder,
+            @Value("${app.scraper.jsearch-api-key}") String apiKey) {
+        this.webClient = webClientBuilder
+                .baseUrl("https://jsearch.p.rapidapi.com")
+                .build();
+        this.apiKey = apiKey;
+    }
+
+    @Override
+    public String getSource() {
+        return "JSEARCH";
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<JobResponse> fetchJobs(String query, String location, int page) {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("JSearch API key not configured");
+            return List.of();
+        }
+
+        try {
+            String searchQuery = query + (location != null ? " in " + location : "");
+
+            Map<String, Object> response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/search")
+                            .queryParam("query", searchQuery)
+                            .queryParam("page", page + 1)
+                            .queryParam("num_pages", 1)
+                            .queryParam("date_posted", "week")
+                            .build())
+                    .header("X-RapidAPI-Key", apiKey)
+                    .header("X-RapidAPI-Host", "jsearch.p.rapidapi.com")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToMono(MAP_TYPE)
+                    .block();
+
+            if (response == null || !response.containsKey("data")) {
+                return List.of();
+            }
+
+            List<Map<String, Object>> data = (List<Map<String, Object>>) response.get("data");
+            List<JobResponse> jobs = new ArrayList<>();
+
+            for (Map<String, Object> item : data) {
+                String source = determineSource(
+                        (String) item.getOrDefault("job_publisher", ""),
+                        (String) item.getOrDefault("job_apply_link", ""));
+
+                jobs.add(new JobResponse(
+                        null,
+                        (String) item.get("job_id"),
+                        source,
+                        (String) item.get("job_title"),
+                        (String) item.get("employer_name"),
+                        buildLocation(item),
+                        (String) item.get("job_apply_link"),
+                        (String) item.get("job_description"),
+                        buildSalary(item),
+                        null,
+                        (String) item.getOrDefault("job_employment_type", ""),
+                        LocalDateTime.now(),
+                        null
+                ));
+            }
+
+            return jobs;
+        } catch (Exception e) {
+            log.error("JSearch API error: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    private String determineSource(String publisher, String applyLink) {
+        String lower = (publisher + " " + applyLink).toLowerCase();
+        if (lower.contains("linkedin")) return "LINKEDIN";
+        if (lower.contains("indeed")) return "INDEED";
+        return "INDEED"; // default
+    }
+
+    private String buildLocation(Map<String, Object> item) {
+        String city = (String) item.getOrDefault("job_city", "");
+        String state = (String) item.getOrDefault("job_state", "");
+        String country = (String) item.getOrDefault("job_country", "");
+        Boolean isRemote = (Boolean) item.getOrDefault("job_is_remote", false);
+
+        if (Boolean.TRUE.equals(isRemote)) return "Remote";
+
+        List<String> parts = new ArrayList<>();
+        if (!city.isBlank()) parts.add(city);
+        if (!state.isBlank()) parts.add(state);
+        if (!country.isBlank() && parts.isEmpty()) parts.add(country);
+        return String.join(", ", parts);
+    }
+
+    private String buildSalary(Map<String, Object> item) {
+        Object min = item.get("job_min_salary");
+        Object max = item.get("job_max_salary");
+        String currency = (String) item.getOrDefault("job_salary_currency", "USD");
+
+        if (min == null && max == null) return null;
+        if (min != null && max != null) return currency + " " + min + " - " + max;
+        if (min != null) return currency + " " + min + "+";
+        return "Up to " + currency + " " + max;
+    }
+}
