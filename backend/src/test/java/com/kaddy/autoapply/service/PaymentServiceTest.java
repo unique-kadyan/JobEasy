@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,6 +28,7 @@ class PaymentServiceTest {
     @Mock PaymentRepository paymentRepository;
     @Mock GeneratedResumeRepository generatedResumeRepository;
     @Mock WebClient.Builder webClientBuilder;
+    @Mock WebClient webClient;
 
     // PaymentService is constructed manually so we can inject blank keys (dev mode)
     private PaymentService devService;   // blank keys — uses mock orders
@@ -37,6 +39,11 @@ class PaymentServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Stub the fluent WebClient.Builder chain so the constructor can complete
+        lenient().when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
+        lenient().when(webClientBuilder.defaultHeader(anyString(), any(String[].class))).thenReturn(webClientBuilder);
+        lenient().when(webClientBuilder.build()).thenReturn(webClient);
+
         // Blank key-id/key-secret triggers dev-mode path (no real HTTP call)
         devService = new PaymentService(
                 paymentRepository, generatedResumeRepository,

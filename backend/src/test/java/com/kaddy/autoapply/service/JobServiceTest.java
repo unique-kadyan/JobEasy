@@ -97,7 +97,6 @@ class JobServiceTest {
         var dbPage = new PageImpl<>(List.of(dbJob), PageRequest.of(0, 30), 1);
         when(scraperOrchestrator.searchJobs(any(), any(), anyInt())).thenReturn(List.of());
         when(jobRepository.searchJobsBySource(eq("java"), eq("INDEED"), any())).thenReturn(dbPage);
-        when(jobRepository.findBySourceAndExternalId(any(), any())).thenReturn(Optional.of(dbJob));
 
         PagedResponse<JobResponse> result = jobService.searchJobs("java", null, "INDEED", 0, 30);
 

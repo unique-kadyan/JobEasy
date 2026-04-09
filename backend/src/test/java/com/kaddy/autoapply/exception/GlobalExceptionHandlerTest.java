@@ -9,8 +9,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -30,6 +34,16 @@ class GlobalExceptionHandlerTest {
     @Autowired ObjectMapper objectMapper;
     @MockBean  AuthService authService;
 
+    /**
+     * Each test that hits /api/auth/* gets a unique IP so the rate-limit bucket
+     * (10 req/min per IP) is never exhausted across the test suite.
+     */
+    private static final AtomicInteger ipSuffix = new AtomicInteger(0);
+
+    private MockHttpServletRequestBuilder uniqueIp(MockHttpServletRequestBuilder req) {
+        return req.header("X-Forwarded-For", "10.99.0." + ipSuffix.incrementAndGet());
+    }
+
     // ── 400 via MethodArgumentNotValidException (bean validation) ─────────────
 
     @Test
@@ -37,7 +51,7 @@ class GlobalExceptionHandlerTest {
         String body = """
                 {"email":"not-an-email","password":"password123","name":"Test"}
                 """;
-        mockMvc.perform(post("/api/auth/signup")
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
                 .andExpect(status().isBadRequest())
@@ -52,7 +66,7 @@ class GlobalExceptionHandlerTest {
         String body = """
                 {"email":"a@b.com","password":"12","name":"Test"}
                 """;
-        mockMvc.perform(post("/api/auth/signup")
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
                 .andExpect(status().isBadRequest())
@@ -68,7 +82,7 @@ class GlobalExceptionHandlerTest {
         String body = objectMapper.writeValueAsString(
                 new SignupRequest("dup@test.com", "password123", "Test"));
 
-        mockMvc.perform(post("/api/auth/signup")
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
                 .andExpect(status().isBadRequest())
@@ -81,7 +95,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void malformedJson_shouldReturn400() throws Exception {
-        mockMvc.perform(post("/api/auth/signup")
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{this is not json}"))
                 .andExpect(status().isBadRequest())
@@ -92,7 +106,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void wrongContentType_shouldReturn400() throws Exception {
-        mockMvc.perform(post("/api/auth/signup")
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
                 .contentType(MediaType.TEXT_PLAIN)
                 .content("some text"))
                 .andExpect(status().isBadRequest());
@@ -109,6 +123,7 @@ class GlobalExceptionHandlerTest {
     // ── 404 via NoResourceFoundException (unknown route) ─────────────────────
 
     @Test
+    @WithMockUser
     void unknownRoute_shouldReturn404WithApiError() throws Exception {
         mockMvc.perform(get("/api/this-route-does-not-exist"))
                 .andExpect(status().isNotFound())
@@ -124,7 +139,7 @@ class GlobalExceptionHandlerTest {
         String body = objectMapper.writeValueAsString(
                 new SignupRequest("a@b.com", "password123", "Test"));
 
-        mockMvc.perform(post("/api/auth/signup")
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
                 .andExpect(status().isNotFound())
@@ -136,7 +151,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void wrongMethod_shouldReturn405() throws Exception {
-        mockMvc.perform(delete("/api/auth/login")
+        mockMvc.perform(uniqueIp(delete("/api/auth/login"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().isMethodNotAllowed())
@@ -152,7 +167,7 @@ class GlobalExceptionHandlerTest {
         String body = objectMapper.writeValueAsString(
                 new SignupRequest("a@b.com", "password123", "Test"));
 
-        mockMvc.perform(post("/api/auth/signup")
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
                 .andExpect(status().isServiceUnavailable())
@@ -168,7 +183,7 @@ class GlobalExceptionHandlerTest {
         String body = objectMapper.writeValueAsString(
                 new SignupRequest("a@b.com", "password123", "Test"));
 
-        mockMvc.perform(post("/api/auth/signup")
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
                 .andExpect(status().isTooManyRequests())
@@ -184,7 +199,7 @@ class GlobalExceptionHandlerTest {
         String body = objectMapper.writeValueAsString(
                 new SignupRequest("a@b.com", "password123", "Test"));
 
-        mockMvc.perform(post("/api/auth/signup")
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
                 .andExpect(status().isInternalServerError())
@@ -201,7 +216,7 @@ class GlobalExceptionHandlerTest {
         String body = objectMapper.writeValueAsString(
                 new SignupRequest("a@b.com", "password123", "Test"));
 
-        mockMvc.perform(post("/api/auth/signup")
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
                 .andExpect(jsonPath("$.status").exists())

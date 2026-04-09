@@ -30,7 +30,8 @@ class ResumeAnalysisServiceTest {
 
     @BeforeEach
     public void setUp() {
-        when(analysisRepository.save(any(ResumeAnalysis.class))).thenAnswer(inv -> {
+        // lenient: analyze_shouldThrowWhenNoResumeFound exits before save() is called
+        lenient().when(analysisRepository.save(any(ResumeAnalysis.class))).thenAnswer(inv -> {
             ResumeAnalysis a = inv.getArgument(0);
             a.setId("analysis1");
             return a;
