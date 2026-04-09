@@ -1,9 +1,37 @@
+server:
+  tomcat:
+    # Virtual threads make platform threads cheap — keep pool small to save RAM.
+    threads:
+      max: 20          # base: 200 — each idle platform thread ~1 MB stack
+      min-spare: 2     # base: 10
+    max-connections: 200    # base: 20000
+    accept-count: 50        # base: 500
+    connection-timeout: 10000ms
+
 spring:
   data:
     redis:
       # Render managed Redis injects the full connection string via REDIS_URL.
       # Format injected by Render: redis://:password@host:port
       url: ${REDIS_URL}
+      lettuce:
+        pool:
+          max-active: 5    # base: 50 — each connection holds a socket buffer
+          max-idle: 2      # base: 20
+          min-idle: 1      # base: 5
+
+  # Disable Spring Boot's lazy-loading of JMX / MBean infrastructure (saves ~10 MB).
+  jmx:
+    enabled: false
+
+# Reduce MongoDB connection pool for low-memory deployment.
+app:
+  mongodb:
+    pool:
+      max-size: 10     # base: 100
+      min-size: 2      # base: 10
+  webclient:
+    max-connections: 50   # base: 500 — Netty channel pool, each holds a direct buffer
 
 logging:
   level:
