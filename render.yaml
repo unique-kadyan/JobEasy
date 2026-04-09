@@ -1,0 +1,136 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Render Blueprint — Kaddy Auto-Apply
+#
+# Declares both services so a single "New Blueprint Instance" in the Render
+# dashboard provisions the full stack from this file.
+#
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Usage:
+#   1. Push this file to your GitHub repository.
+#   2. In the Render dashboard → New → Blueprint → connect this repo.
+#   3. Render will create both services and prompt you for every env var
+#      marked  sync: false  (i.e., secrets not stored in this file).
+#   4. After the first deploy, copy the backend service URL and set it
+#      as NEXT_PUBLIC_API_URL on the frontend service (append /api).
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Backend — Spring Boot (Java 25 via Docker) ─────────────────────────────
+  #
+  # Docker runtime is required because Render's native Java runtime supports
+  # up to Java 21.  The Dockerfile at backend/Dockerfile uses the official
+  # Eclipse Temurin 25 image and produces a minimal JRE-only runtime image.
+  # ───────────────────────────────────────────────────────────────────────────
+  - type: web
+    name: kaddy-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    region: oregon
+    plan: free          # upgrade to starter+ for always-on; free tier sleeps after 15 min
+
+    # Health check — Spring Boot Actuator; Render polls this to determine
+    # liveness and to route traffic only after the service is healthy.
+    healthCheckPath: /actuator/health
+
+    envVars:
+      # ── Database ────────────────────────────────────────────────────────────
+      - key: MONGODB_URI
+        sync: false       # paste your MongoDB Atlas URI in the Render dashboard
+
+      # ── Redis ───────────────────────────────────────────────────────────────
+      - key: REDIS_HOST
+        sync: false       # Redis Cloud hostname (e.g. redis-xxxxx.c8.us-east-1-2.ec2.cloud.redislabs.com)
+      - key: REDIS_PORT
+        sync: false       # Redis Cloud port (e.g. 16979)
+      - key: REDIS_PASSWORD
+        sync: false       # Redis Cloud password (leave blank if unauthenticated)
+
+      # ── JWT ─────────────────────────────────────────────────────────────────
+      - key: JWT_SECRET
+        generateValue: true   # Render auto-generates a cryptographically secure random value
+
+      # ── CORS & Frontend URL ─────────────────────────────────────────────────
+      # Set these after the frontend service URL is known.
+      - key: CORS_ORIGINS
+        sync: false       # e.g. https://kaddy-frontend.onrender.com
+      - key: FRONTEND_URL
+        sync: false       # same as CORS_ORIGINS (used in email reset links)
+
+      # ── Email ───────────────────────────────────────────────────────────────
+      - key: RESEND_API_KEY
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false       # e.g. noreply@yourdomain.com
+
+      # ── AI Providers ────────────────────────────────────────────────────────
+      - key: AI_DEFAULT_PROVIDER
+        value: OPENAI     # change to GROQ / CLAUDE / GEMINI etc. as preferred
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CLAUDE_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: CEREBRAS_API_KEY
+        sync: false
+      - key: TOGETHER_API_KEY
+        sync: false
+      - key: SAMBANOVA_API_KEY
+        sync: false
+      - key: NOVITA_API_KEY
+        sync: false
+
+      # ── Job Scrapers ────────────────────────────────────────────────────────
+      - key: JSEARCH_API_KEY
+        sync: false
+      - key: SERPAPI_KEY
+        sync: false
+      - key: ADZUNA_APP_ID
+        sync: false
+      - key: ADZUNA_APP_KEY
+        sync: false
+      - key: CAREERJET_AFFILIATE_ID
+        sync: false
+
+      # ── Payments ────────────────────────────────────────────────────────────
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+
+      # ── Runtime tuning ──────────────────────────────────────────────────────
+      # PORT is injected automatically by Render — no manual entry needed.
+      # The Dockerfile ENTRYPOINT reads ${PORT:-8080} at container start.
+      - key: SPRING_THREADS_VIRTUAL_ENABLED
+        value: "true"
+      - key: UPLOAD_DIR
+        value: /tmp/uploads   # ephemeral — use object storage (S3/Cloudflare R2) for production
+
+  # ── Frontend — Next.js 14 (native Node.js runtime) ─────────────────────────
+  #
+  # Node version is read from frontend/.nvmrc (currently 20).
+  # Render's native Node runtime is sufficient; no Dockerfile required.
+  # ───────────────────────────────────────────────────────────────────────────
+  - type: web
+    name: kaddy-frontend
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+
+    envVars:
+      # Set this to the backend service URL after the first deploy.
+      # Format: https://<backend-service-name>.onrender.com/api
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
