@@ -3,6 +3,7 @@ package com.kaddy.autoapply.controller;
 import com.kaddy.autoapply.dto.response.AnalyticsResponse;
 import com.kaddy.autoapply.service.AnalyticsService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/analytics")
+@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class AnalyticsController {
 
     private final AnalyticsService analyticsService;

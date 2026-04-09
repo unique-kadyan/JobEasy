@@ -168,7 +168,8 @@ class AiProviderFactoryTest {
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private AiProvider mockProvider(String name, boolean available) {
-        AiProvider p = mock(AiProvider.class);
+        // AiProvider is sealed — mock the concrete non-sealed ClaudeAiProvider instead
+        ClaudeAiProvider p = mock(ClaudeAiProvider.class);
         when(p.getName()).thenReturn(name);
         when(p.isAvailable()).thenReturn(available);
         return p;

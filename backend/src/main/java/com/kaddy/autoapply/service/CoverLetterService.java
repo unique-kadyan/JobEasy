@@ -2,7 +2,9 @@ package com.kaddy.autoapply.service;
 
 import com.kaddy.autoapply.dto.request.CoverLetterRequest;
 import com.kaddy.autoapply.dto.response.CoverLetterResponse;
+import com.kaddy.autoapply.exception.BadRequestException;
 import com.kaddy.autoapply.exception.ResourceNotFoundException;
+import com.kaddy.autoapply.security.SecurityUtils;
 import com.kaddy.autoapply.model.CoverLetter;
 import com.kaddy.autoapply.model.Job;
 import com.kaddy.autoapply.model.Template;
@@ -13,12 +15,38 @@ import com.kaddy.autoapply.repository.UserRepository;
 import com.kaddy.autoapply.service.ai.AiProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+/**
+ * Cover-letter generation and management service.
+ *
+ * <h3>Parallel I/O in {@link #generate}</h3>
+ * <p>Generating a cover letter requires two independent data lookups before the
+ * AI prompt can be assembled:
+ * <ol>
+ *   <li>Fetch the caller's {@link User} profile (skills, summary, name).</li>
+ *   <li>Fetch the target {@link Job} entity (title, company, description).</li>
+ * </ol>
+ * <p>These two MongoDB reads have no data dependency on each other.  Firing them
+ * concurrently on virtual threads halves the lookup latency (≈ 10 ms → 10 ms
+ * instead of ≈ 20 ms) before the AI call — the dominant cost — even begins.
+ *
+ * <h3>Ownership enforcement</h3>
+ * <p>All write/read operations on an existing cover letter go through
+ * {@link #findOwned}, which throws {@link BadRequestException} if the requesting
+ * user does not own the document.
+ */
 @Service
 public class CoverLetterService {
 
@@ -36,29 +64,70 @@ public class CoverLetterService {
             Do NOT include any placeholder text like [Your Name] — use actual values provided.
             Return ONLY the cover letter text.""";
 
+    /** Timeout for the parallel user + job lookup phase. */
+    private static final long LOOKUP_TIMEOUT_SECONDS = 5;
+
     private final CoverLetterRepository coverLetterRepository;
-    private final UserRepository userRepository;
-    private final TemplateRepository templateRepository;
-    private final JobService jobService;
-    private final AiProviderFactory aiProviderFactory;
+    private final UserRepository        userRepository;
+    private final TemplateRepository    templateRepository;
+    private final JobService            jobService;
+    private final AiProviderFactory     aiProviderFactory;
+    private final Executor              executor;
 
     public CoverLetterService(CoverLetterRepository coverLetterRepository,
                                UserRepository userRepository,
                                TemplateRepository templateRepository,
                                JobService jobService,
-                               AiProviderFactory aiProviderFactory) {
+                               AiProviderFactory aiProviderFactory,
+                               @Qualifier("virtualThreadExecutor") Executor executor) {
         this.coverLetterRepository = coverLetterRepository;
-        this.userRepository = userRepository;
-        this.templateRepository = templateRepository;
-        this.jobService = jobService;
-        this.aiProviderFactory = aiProviderFactory;
+        this.userRepository        = userRepository;
+        this.templateRepository    = templateRepository;
+        this.jobService            = jobService;
+        this.aiProviderFactory     = aiProviderFactory;
+        this.executor              = executor;
     }
 
-    public CoverLetterResponse generate(String userId, CoverLetterRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        Job job = jobService.getJobEntity(request.jobId());
+    // ── Generation ────────────────────────────────────────────────────────────
 
+    /**
+     * Generates a cover letter using AI.
+     *
+     * <p>User profile and job data are fetched in parallel on virtual threads.
+     * The AI call follows once both are resolved — it is the dominant latency
+     * (typically 1–5 s) and cannot be parallelised further.
+     */
+    @PreAuthorize("isAuthenticated()")
+    public CoverLetterResponse generate(String userId, CoverLetterRequest request) {
+        // ── Parallel I/O: user profile + job entity fetched concurrently ──────
+        CompletableFuture<User> userFuture = CompletableFuture.supplyAsync(
+                () -> userRepository.findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found")),
+                executor);
+
+        CompletableFuture<Job> jobFuture = CompletableFuture.supplyAsync(
+                () -> jobService.getJobEntity(request.jobId()),
+                executor);
+
+        User user;
+        Job  job;
+        try {
+            CompletableFuture.allOf(userFuture, jobFuture)
+                    .get(LOOKUP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            user = userFuture.join();
+            job  = jobFuture.join();
+        } catch (TimeoutException e) {
+            throw new BadRequestException("Data lookup timed out — please retry");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BadRequestException("Request interrupted");
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException re) throw re;
+            throw new BadRequestException("Failed to load required data: " + cause.getMessage());
+        }
+
+        // ── Build prompt ───────────────────────────────────────────────────────
         StringBuilder prompt = new StringBuilder();
         prompt.append("CANDIDATE PROFILE:\nName: ")
                 .append(Optional.ofNullable(user.getName()).orElse("")).append("\n");
@@ -77,6 +146,7 @@ public class CoverLetterService {
         templateOpt.ifPresent(t ->
                 prompt.append("\nTEMPLATE STYLE:\n").append(t.getContent()).append("\n"));
 
+        // ── AI call (blocking — virtual thread parks during I/O) ───────────────
         AiProviderFactory.GenerationResult result =
                 aiProviderFactory.generate(SYSTEM_PROMPT, prompt.toString(), request.provider());
 
@@ -93,29 +163,49 @@ public class CoverLetterService {
         return toResponse(cl, job);
     }
 
+    // ── Read ──────────────────────────────────────────────────────────────────
+
+    @PreAuthorize("isAuthenticated()")
     public Page<CoverLetterResponse> getUserCoverLetters(String userId, int page, int size) {
         return coverLetterRepository
                 .findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size))
                 .map(cl -> toResponse(cl, Optional.ofNullable(cl.getJobId())
-                        .flatMap(jobId -> Optional.ofNullable(safeGetJob(jobId))).orElse(null)));
+                        .flatMap(id -> Optional.ofNullable(safeGetJob(id))).orElse(null)));
     }
 
-    public CoverLetterResponse getCoverLetter(String id) {
-        CoverLetter cl = coverLetterRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Cover letter not found"));
-        return toResponse(cl, Optional.ofNullable(cl.getJobId()).flatMap(jobId -> Optional.ofNullable(safeGetJob(jobId))).orElse(null));
+    @PreAuthorize("isAuthenticated()")
+    public CoverLetterResponse getCoverLetter(String userId, String id) {
+        CoverLetter cl = findOwned(userId, id);
+        return toResponse(cl, Optional.ofNullable(cl.getJobId())
+                .flatMap(jid -> Optional.ofNullable(safeGetJob(jid))).orElse(null));
     }
 
-    public CoverLetterResponse update(String id, String content) {
-        CoverLetter cl = coverLetterRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Cover letter not found"));
+    // ── Write ─────────────────────────────────────────────────────────────────
+
+    @PreAuthorize("isAuthenticated()")
+    public CoverLetterResponse update(String userId, String id, String content) {
+        CoverLetter cl = findOwned(userId, id);
         cl.setContent(content);
         cl = coverLetterRepository.save(cl);
-        return toResponse(cl, Optional.ofNullable(cl.getJobId()).flatMap(jobId -> Optional.ofNullable(safeGetJob(jobId))).orElse(null));
+        return toResponse(cl, Optional.ofNullable(cl.getJobId())
+                .flatMap(jid -> Optional.ofNullable(safeGetJob(jid))).orElse(null));
     }
 
-    public void delete(String id) {
+    @PreAuthorize("isAuthenticated()")
+    public void delete(String userId, String id) {
+        findOwned(userId, id);
         coverLetterRepository.deleteById(id);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private CoverLetter findOwned(String userId, String id) {
+        CoverLetter cl = coverLetterRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cover letter not found"));
+        if (!cl.getUserId().equals(userId) && !SecurityUtils.isAdmin()) {
+            throw new BadRequestException("Cover letter does not belong to the current user");
+        }
+        return cl;
     }
 
     private Job safeGetJob(String jobId) {

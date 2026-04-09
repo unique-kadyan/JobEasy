@@ -1,5 +1,29 @@
 package com.kaddy.autoapply.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
 import com.kaddy.autoapply.dto.response.JobResponse;
 import com.kaddy.autoapply.dto.response.PagedResponse;
 import com.kaddy.autoapply.exception.ResourceNotFoundException;
@@ -7,36 +31,30 @@ import com.kaddy.autoapply.model.Job;
 import com.kaddy.autoapply.model.enums.JobSource;
 import com.kaddy.autoapply.repository.JobRepository;
 import com.kaddy.autoapply.service.scraper.ScraperOrchestrator;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import java.util.concurrent.Executor;
 
 @ExtendWith(MockitoExtension.class)
 class JobServiceTest {
 
-    @Mock JobRepository jobRepository;
-    @Mock ScraperOrchestrator scraperOrchestrator;
+    @Mock
+    JobRepository jobRepository;
+    @Mock
+    ScraperOrchestrator scraperOrchestrator;
+    @Mock
+    Executor executor;
 
-    @InjectMocks JobService jobService;
+    @InjectMocks
+    JobService jobService;
 
     private Job dbJob;
     private JobResponse scrapedJob;
 
     @BeforeEach
     void setUp() {
+        // Run submitted tasks immediately on the calling thread so CompletableFuture chains complete synchronously.
+        // lenient() because getJob/getJobEntity tests don't use the executor.
+        lenient().doAnswer(inv -> { ((Runnable) inv.getArgument(0)).run(); return null; }).when(executor).execute(any());
+
         dbJob = Job.builder()
                 .id("db1").externalId("ext1").source(JobSource.INDEED)
                 .title("Backend Engineer").company("TechCo").location("Remote")
@@ -47,7 +65,7 @@ class JobServiceTest {
         scrapedJob = new JobResponse(null, "ext2", "INDEED",
                 "Frontend Dev", "StartupCo", "NYC",
                 "https://example.com/2", null, null, null, "FULL_TIME",
-                LocalDateTime.now(), null);
+                LocalDateTime.now(), null, null, null, null, null);
     }
 
     // ── searchJobs — DB path ──────────────────────────────────────────────────
@@ -112,8 +130,7 @@ class JobServiceTest {
         // 5 scraped jobs, page size 2, requesting page 1
         List<JobResponse> fiveJobs = List.of(
                 makeScraped("j1"), makeScraped("j2"), makeScraped("j3"),
-                makeScraped("j4"), makeScraped("j5")
-        );
+                makeScraped("j4"), makeScraped("j5"));
         var emptyPage = new PageImpl<>(List.<Job>of(), PageRequest.of(1, 2), 0);
         when(scraperOrchestrator.searchJobs(any(), any(), anyInt())).thenReturn(fiveJobs);
         when(jobRepository.searchJobs(any(), any())).thenReturn(emptyPage);
@@ -151,7 +168,8 @@ class JobServiceTest {
 
     @Test
     void cacheJobs_shouldSkipJobWhenRepositoryThrows() {
-        // First scraped job will cause a repo exception; second should still be attempted
+        // First scraped job will cause a repo exception; second should still be
+        // attempted
         var badJob = makeScraped("extBad");
         var goodJob = makeScraped("extGood");
         var emptyPage = new PageImpl<>(List.<Job>of(), PageRequest.of(0, 30), 0);
@@ -188,6 +206,6 @@ class JobServiceTest {
         return new JobResponse(null, externalId, "INDEED",
                 "Dev", "Co", "NY",
                 "https://x.com", null, null, null, "FULL_TIME",
-                LocalDateTime.now(), null);
+                LocalDateTime.now(), null, externalId, null, null, null);
     }
 }

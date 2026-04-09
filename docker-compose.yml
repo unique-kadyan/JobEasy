@@ -1,4 +1,6 @@
 services:
+
+  # ── MongoDB ──────────────────────────────────────────────────────────────────
   mongodb:
     image: mongo:7
     container_name: kaddy_mongodb
@@ -7,17 +9,62 @@ services:
     volumes:
       - mongodata:/data/db
     restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-}
 
+  # ── Redis ─────────────────────────────────────────────────────────────────────
+  #
+  # Persistence is provided by TWO complementary mechanisms:
+  #
+  #   AOF (appendonly.aof) — every write command is logged and fsynced to disk
+  #   once per second.  On restart Redis replays the log, recovering all data
+  #   except at most the last second of writes before a hard crash.
+  #
+  #   RDB (dump.rdb) — periodic binary snapshot (every 60 s if ≥ 10 000
+  #   changes, every 5 min if ≥ 100, every 1 h if ≥ 1).  Provides a fast
+  #   full-state backup alongside the AOF.
+  #
+  # Both files are written to /data inside the container, which is backed by the
+  # named Docker volume `redisdata`.  The volume survives container restarts,
+  # re-creations, and image upgrades — Redis always wakes up with full state.
+  #
+  # Authentication: set REDIS_PASSWORD in your .env file.  The same value must
+  # be provided to the Spring app via REDIS_PASSWORD so Lettuce can authenticate.
+  # ─────────────────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: kaddy_redis
     ports:
       - "6379:6379"
     volumes:
+      # Named volume holds AOF + RDB files — persists across restarts/upgrades
       - redisdata:/data
-    command: redis-server --save 60 1 --loglevel warning
+      # Mount our custom redis.conf read-only into the container
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --requirepass "${REDIS_PASSWORD:-}"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     restart: unless-stopped
+    healthcheck:
+      # Use AUTH only when a password is set; gracefully handle empty password.
+      test: >
+        sh -c '
+          if [ -n "$$REDIS_PASSWORD" ]; then
+            redis-cli -a "$$REDIS_PASSWORD" ping | grep -q PONG
+          else
+            redis-cli ping | grep -q PONG
+          fi
+        '
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   mongodata:
+    driver: local
   redisdata:
+    driver: local

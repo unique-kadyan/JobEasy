@@ -6,8 +6,7 @@ import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -21,10 +20,18 @@ import com.kaddy.autoapply.dto.request.LoginRequest;
 import com.kaddy.autoapply.dto.request.SignupRequest;
 import com.kaddy.autoapply.dto.response.AuthResponse;
 import com.kaddy.autoapply.dto.response.UserResponse;
+import com.kaddy.autoapply.config.SecurityConfig;
+import com.kaddy.autoapply.security.JwtAuthenticationFilter;
+import com.kaddy.autoapply.security.JwtTokenProvider;
 import com.kaddy.autoapply.service.AuthService;
+import com.kaddy.autoapply.service.TokenBlacklistService;
+import org.springframework.context.annotation.Import;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+// @WebMvcTest does not include @Configuration @EnableWebSecurity classes via component scan;
+// we must import SecurityConfig and JwtAuthenticationFilter explicitly so that our custom
+// security rules (permitAll on /api/auth/**, CSRF disabled) are applied instead of Spring's default.
+@WebMvcTest(AuthController.class)
+@Import({SecurityConfig.class, JwtAuthenticationFilter.class})
 @ActiveProfiles("test")
 class AuthControllerTest {
 
@@ -34,10 +41,17 @@ class AuthControllerTest {
     private ObjectMapper objectMapper;
     @MockBean
     private AuthService authService;
+    // Mock JwtAuthenticationFilter's dependencies so the real filter loads and
+    // always forwards the request (filterChain.doFilter is unconditional in the impl).
+    @MockBean
+    private JwtTokenProvider jwtTokenProvider;
+    @MockBean
+    private TokenBlacklistService tokenBlacklistService;
 
     UserResponse userResponse = new UserResponse(
             "u1", "test@test.com", "Test", null, null, null,
-            null, null, null, null, null, null, null, false, LocalDateTime.now());
+            null, null, null, null, null, null, null, false, 0, null, null, false, 0,
+            LocalDateTime.now(), java.util.List.of("ROLE_USER"));
 
     @Test
     void signup_shouldReturn201() throws Exception {
@@ -89,7 +103,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/applications")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test

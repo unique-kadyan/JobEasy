@@ -34,8 +34,9 @@ public class RedisConfig {
                 .disableCachingNullValues();
 
         Map<String, RedisCacheConfiguration> perCacheTtl = Map.of(
-                "jobs",  jsonConfig.entryTtl(Duration.ofMinutes(60)),
-                "users", jsonConfig.entryTtl(Duration.ofMinutes(15))
+                "jobs",      jsonConfig.entryTtl(Duration.ofMinutes(60)),
+                "users",     jsonConfig.entryTtl(Duration.ofMinutes(15)),
+                "templates", jsonConfig.entryTtl(Duration.ofMinutes(5))
         );
 
         return RedisCacheManager.builder(factory)

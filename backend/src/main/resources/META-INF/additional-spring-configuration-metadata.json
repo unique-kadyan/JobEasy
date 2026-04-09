@@ -22,7 +22,10 @@
     { "name": "app.payment", "description": "Payment gateway configuration." },
     { "name": "app.payment.razorpay", "description": "Razorpay payment gateway." },
     { "name": "app.cors", "description": "CORS configuration." },
-    { "name": "app.upload", "description": "File upload configuration." }
+    { "name": "app.upload", "description": "File upload configuration." },
+    { "name": "app.mongodb.pool", "description": "MongoDB driver connection pool settings (MongoConfig)." },
+    { "name": "app.mongodb.socket", "description": "MongoDB driver socket/connect timeout settings (MongoConfig)." },
+    { "name": "app.webclient", "description": "Outbound HTTP client timeouts and connection pool (WebClientConfig)." }
   ],
   "properties": [
     { "name": "app.jwt.secret", "type": "java.lang.String", "description": "JWT signing secret (min 256 bits)." },
@@ -64,7 +67,18 @@
     { "name": "app.cors.allowed-origins", "type": "java.lang.String", "description": "Comma-separated CORS allowed origins." },
     { "name": "app.upload.dir", "type": "java.lang.String", "description": "Directory for uploaded resume files." },
     { "name": "app.frontend-url", "type": "java.lang.String", "description": "Frontend application URL." },
-    { "name": "app.mail.from", "type": "java.lang.String", "description": "Default mail sender address (test profile)." }
+    { "name": "app.mail.from", "type": "java.lang.String", "description": "Default mail sender address (test profile)." },
+    { "name": "app.mongodb.pool.max-size", "type": "java.lang.Integer", "defaultValue": 100, "description": "Maximum connections in the MongoDB driver pool per host." },
+    { "name": "app.mongodb.pool.min-size", "type": "java.lang.Integer", "defaultValue": 10, "description": "Minimum warm connections kept open in the MongoDB driver pool." },
+    { "name": "app.mongodb.pool.max-wait-ms", "type": "java.lang.Integer", "defaultValue": 5000, "description": "Milliseconds a thread waits for a pool connection before failing." },
+    { "name": "app.mongodb.pool.max-idle-ms", "type": "java.lang.Integer", "defaultValue": 60000, "description": "Milliseconds after which an idle connection is evicted from the pool." },
+    { "name": "app.mongodb.socket.connect-timeout-ms", "type": "java.lang.Integer", "defaultValue": 5000, "description": "TCP connect timeout in milliseconds for the MongoDB driver." },
+    { "name": "app.mongodb.socket.read-timeout-ms", "type": "java.lang.Integer", "defaultValue": 10000, "description": "Socket read timeout in milliseconds for the MongoDB driver." },
+    { "name": "app.webclient.connect-timeout-ms", "type": "java.lang.Integer", "defaultValue": 5000, "description": "TCP connect timeout in milliseconds for outbound WebClient calls." },
+    { "name": "app.webclient.read-timeout-s", "type": "java.lang.Integer", "defaultValue": 10, "description": "Netty pipeline read timeout in seconds for outbound WebClient calls." },
+    { "name": "app.webclient.write-timeout-s", "type": "java.lang.Integer", "defaultValue": 5, "description": "Netty pipeline write timeout in seconds for outbound WebClient calls." },
+    { "name": "app.webclient.response-timeout-s", "type": "java.lang.Integer", "defaultValue": 15, "description": "End-to-end response timeout in seconds for outbound WebClient calls." },
+    { "name": "app.webclient.max-connections", "type": "java.lang.Integer", "defaultValue": 500, "description": "Maximum connections in the Reactor-Netty HTTP connection pool." }
   ],
   "hints": []
 }

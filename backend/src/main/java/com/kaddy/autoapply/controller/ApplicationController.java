@@ -1,10 +1,13 @@
 package com.kaddy.autoapply.controller;
 
 import com.kaddy.autoapply.dto.request.ApplyRequest;
+import com.kaddy.autoapply.dto.request.InterviewDetailsRequest;
+import com.kaddy.autoapply.dto.request.OfferDetailsRequest;
 import com.kaddy.autoapply.dto.response.ApplicationResponse;
 import com.kaddy.autoapply.service.ApplicationService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -26,49 +29,71 @@ import com.kaddy.autoapply.exception.BadRequestException;
 
 @RestController
 @RequestMapping("/api/applications")
+@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class ApplicationController {
 
-    private final ApplicationService applicationService;
+        private final ApplicationService applicationService;
 
-    public ApplicationController(ApplicationService applicationService) {
-        this.applicationService = applicationService;
-    }
+        public ApplicationController(ApplicationService applicationService) {
+                this.applicationService = applicationService;
+        }
 
-    @PostMapping
-    public ResponseEntity<ApplicationResponse> apply(Authentication auth,
-                                                      @Valid @RequestBody ApplyRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(applicationService.apply((String) auth.getPrincipal(), request));
-    }
+        @PostMapping
+        public ResponseEntity<ApplicationResponse> apply(Authentication auth,
+                        @Valid @RequestBody ApplyRequest request) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(applicationService.apply((String) auth.getPrincipal(), request));
+        }
 
-    @PostMapping("/bulk-apply")
-    public ResponseEntity<List<ApplicationResponse>> bulkApply(Authentication auth,
-                                                                @RequestBody List<ApplyRequest> requests) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(applicationService.bulkApply((String) auth.getPrincipal(), requests));
-    }
+        @PostMapping("/bulk-apply")
+        public ResponseEntity<List<ApplicationResponse>> bulkApply(Authentication auth,
+                        @Valid @RequestBody List<ApplyRequest> requests) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(applicationService.bulkApply((String) auth.getPrincipal(), requests));
+        }
 
-    @GetMapping
-    public ResponseEntity<Page<ApplicationResponse>> list(
-            Authentication auth,
-            @RequestParam(required = false) String status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(
-                applicationService.getUserApplications((String) auth.getPrincipal(), status, page, size));
-    }
+        @GetMapping
+        public ResponseEntity<Page<ApplicationResponse>> list(
+                        Authentication auth,
+                        @RequestParam(required = false) String status,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "20") int size) {
+                return ResponseEntity.ok(
+                                applicationService.getUserApplications((String) auth.getPrincipal(), status, page,
+                                                size));
+        }
 
-    @PutMapping("/{id}/status")
-    public ResponseEntity<ApplicationResponse> updateStatus(@PathVariable String id,
-                                                             @RequestBody Map<String, String> body) {
-        String status = Optional.ofNullable(body.get("status"))
-                .orElseThrow(() -> new BadRequestException("status is required"));
-        return ResponseEntity.ok(applicationService.updateStatus(id, status));
-    }
+        @PutMapping("/{id}/status")
+        public ResponseEntity<ApplicationResponse> updateStatus(
+                        Authentication auth,
+                        @PathVariable String id,
+                        @RequestBody Map<String, String> body) {
+                String status = Optional.ofNullable(body.get("status"))
+                                .orElseThrow(() -> new BadRequestException("status is required"));
+                return ResponseEntity.ok(applicationService.updateStatus(id, (String) auth.getPrincipal(), status));
+        }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        applicationService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
+        @PutMapping("/{id}/interview")
+        public ResponseEntity<ApplicationResponse> updateInterview(
+                        Authentication auth,
+                        @PathVariable String id,
+                        @Valid @RequestBody InterviewDetailsRequest request) {
+                return ResponseEntity.ok(
+                                applicationService.updateInterviewDetails(id, (String) auth.getPrincipal(), request));
+        }
+
+        @PutMapping("/{id}/offer")
+        public ResponseEntity<ApplicationResponse> updateOffer(
+                        Authentication auth,
+                        @PathVariable String id,
+                        @Valid @RequestBody OfferDetailsRequest request) {
+                return ResponseEntity.ok(
+                                applicationService.updateOfferDetails(id, (String) auth.getPrincipal(), request));
+        }
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> delete(Authentication auth, @PathVariable String id) {
+                applicationService.delete(id, (String) auth.getPrincipal());
+                return ResponseEntity.noContent().build();
+        }
 }

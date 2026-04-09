@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +26,7 @@ import com.kaddy.autoapply.exception.BadRequestException;
 
 @RestController
 @RequestMapping("/api/cover-letters")
+@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class CoverLetterController {
 
     private final CoverLetterService coverLetterService;
@@ -50,21 +52,22 @@ public class CoverLetterController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CoverLetterResponse> get(@PathVariable String id) {
-        return ResponseEntity.ok(coverLetterService.getCoverLetter(id));
+    public ResponseEntity<CoverLetterResponse> get(Authentication auth, @PathVariable String id) {
+        return ResponseEntity.ok(coverLetterService.getCoverLetter((String) auth.getPrincipal(), id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CoverLetterResponse> update(@PathVariable String id,
+    public ResponseEntity<CoverLetterResponse> update(Authentication auth,
+                                                       @PathVariable String id,
                                                        @RequestBody Map<String, String> body) {
         String content = Optional.ofNullable(body.get("content"))
                 .orElseThrow(() -> new BadRequestException("content is required"));
-        return ResponseEntity.ok(coverLetterService.update(id, content));
+        return ResponseEntity.ok(coverLetterService.update((String) auth.getPrincipal(), id, content));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        coverLetterService.delete(id);
+    public ResponseEntity<Void> delete(Authentication auth, @PathVariable String id) {
+        coverLetterService.delete((String) auth.getPrincipal(), id);
         return ResponseEntity.noContent().build();
     }
 }

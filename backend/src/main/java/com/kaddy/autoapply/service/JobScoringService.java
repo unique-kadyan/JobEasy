@@ -1,0 +1,394 @@
+package com.kaddy.autoapply.service;
+
+import com.kaddy.autoapply.dto.response.JobResponse;
+import com.kaddy.autoapply.model.User;
+import com.kaddy.autoapply.service.ai.AiProviderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+/**
+ * Scores a {@link JobResponse} against a {@link User}'s profile using two stages:
+ *
+ * <ol>
+ *   <li><b>Local stage</b> — word-boundary keyword matching of user skills against the job
+ *       title + description, plus bonuses for remote preference, city match, and target roles.
+ *       Fast, no network I/O, runs synchronously.</li>
+ *   <li><b>AI stage</b> — deep semantic evaluation via {@link AiProviderFactory}.
+ *       Runs asynchronously and only for jobs that reach or exceed
+ *       {@link #AI_EVALUATION_THRESHOLD}.  The future resolves to an updated
+ *       {@link JobResponse}; callers may choose to join or discard it.</li>
+ * </ol>
+ *
+ * Scoring weights:
+ * <pre>
+ *   skill match ratio     : up to 0.70
+ *   target-role title hit : +0.10
+ *   location match        : +0.05 (remote) … +0.10 (city match)
+ *   seniority alignment   : +0.05
+ *   ─────────────────────────────────────────────────────
+ *   STRONG   ≥ 0.60
+ *   MODERATE ≥ 0.35
+ *   WEAK     < 0.35
+ * </pre>
+ */
+@Service
+public class JobScoringService {
+
+    private static final Logger log = LoggerFactory.getLogger(JobScoringService.class);
+
+    /** Minimum local score before the AI evaluation stage is triggered. */
+    static final double AI_EVALUATION_THRESHOLD = 0.35;
+
+    private static final double MAX_SKILL_WEIGHT     = 0.70;
+    private static final double ROLE_BONUS           = 0.10;
+    private static final double REMOTE_BONUS         = 0.05;
+    private static final double CITY_BONUS           = 0.10;
+    private static final double SENIORITY_BONUS      = 0.05;
+
+    /** Seniority keywords mapped to rough years-of-experience buckets. */
+    private static final Map<String, int[]> SENIORITY_RANGES = Map.of(
+            "intern",       new int[]{0, 1},
+            "junior",       new int[]{0, 3},
+            "entry",        new int[]{0, 2},
+            "mid",          new int[]{2, 6},
+            "senior",       new int[]{4, 99},
+            "staff",        new int[]{6, 99},
+            "principal",    new int[]{8, 99},
+            "lead",         new int[]{5, 99}
+    );
+
+    private final AiProviderFactory aiProviderFactory;
+    private final SalaryNormalizationService salaryNormalizationService;
+
+    public JobScoringService(AiProviderFactory aiProviderFactory,
+                             SalaryNormalizationService salaryNormalizationService) {
+        this.aiProviderFactory = aiProviderFactory;
+        this.salaryNormalizationService = salaryNormalizationService;
+    }
+
+    // ── Public API ────────────────────────────────────────────────────────────
+
+    /**
+     * Scores the job locally and returns an updated {@link JobResponse} with score fields
+     * populated.  The {@link JobResponse#normalizedSalaryUsd()} is also resolved here.
+     *
+     * @param user the authenticated user whose profile drives scoring
+     * @param job  the raw (unscored) job response from a scraper
+     * @return a new {@code JobResponse} with score, strength, missing skills, and salary set
+     */
+    public JobResponse scoreLocally(User user, JobResponse job) {
+        if (user == null) return job;
+
+        Set<String> userSkills = extractSkills(user);
+        String searchText = buildSearchText(job);
+
+        SkillMatchResult skillMatch = matchSkills(userSkills, searchText);
+        double score = skillMatch.ratio() * MAX_SKILL_WEIGHT;
+
+        score += roleTitleBonus(user, job);
+        score += locationBonus(user, job);
+        score += seniorityBonus(user, searchText);
+
+        // Cap at 1.0
+        score = Math.min(1.0, score);
+
+        String strength = classify(score);
+        Double normalizedSalary = salaryNormalizationService.toAnnualUsd(job.salary());
+
+        log.debug("Local score for job '{}' @ '{}': score={}, strength={}, missing={}",
+                job.title(), job.company(), String.format("%.2f", score), strength,
+                skillMatch.missing());
+
+        return job.withScore(score, strength, skillMatch.missing(), List.of(), normalizedSalary);
+    }
+
+    /**
+     * Triggers an async AI deep evaluation for jobs that pass the local threshold.
+     * The returned {@link CompletableFuture} resolves to the same {@code job} if AI
+     * evaluation is skipped (score below threshold or AI unavailable), or to an enriched
+     * {@link JobResponse} with AI reasoning lines populated.
+     *
+     * @param user          the authenticated user
+     * @param scoredJob     job already scored by {@link #scoreLocally}
+     * @return future resolving to a fully scored job
+     */
+    public CompletableFuture<JobResponse> enrichWithAi(User user, JobResponse scoredJob) {
+        if (scoredJob.matchScore() == null || scoredJob.matchScore() < AI_EVALUATION_THRESHOLD) {
+            return CompletableFuture.completedFuture(scoredJob);
+        }
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                String systemPrompt = buildAiSystemPrompt(user);
+                String userPrompt   = buildAiUserPrompt(user, scoredJob);
+
+                AiProviderFactory.GenerationResult result =
+                        aiProviderFactory.generate(systemPrompt, userPrompt, null);
+
+                List<String> reasoning = parseAiReasoning(result.content());
+
+                return scoredJob.withScore(
+                        scoredJob.matchScore(),
+                        scoredJob.matchStrength(),
+                        scoredJob.missingSkills(),
+                        reasoning,
+                        scoredJob.normalizedSalaryUsd()
+                );
+            } catch (Exception e) {
+                log.warn("AI enrichment failed for job '{}': {}", scoredJob.title(), e.getMessage());
+                return scoredJob;
+            }
+        });
+    }
+
+    /**
+     * Convenience method: scores locally and triggers AI enrichment in one call.
+     * Returns the locally scored job immediately via the future; the AI lines are
+     * appended when the future completes.
+     *
+     * @param user the authenticated user
+     * @param job  the raw unscored job
+     * @return future resolving to a fully scored (local + AI) job
+     */
+    public CompletableFuture<JobResponse> score(User user, JobResponse job) {
+        JobResponse locallyScored = scoreLocally(user, job);
+        return enrichWithAi(user, locallyScored);
+    }
+
+    /**
+     * Batch-scores a list of jobs locally (no AI calls) and filters out jobs whose
+     * title, description, or company matches any of the user's {@code skipKeywords}.
+     *
+     * @param user the authenticated user
+     * @param jobs raw job list
+     * @return filtered and locally-scored list, sorted by match score descending
+     */
+    public List<JobResponse> scoreAndFilterBatch(User user, List<JobResponse> jobs) {
+        if (user == null) return jobs;
+
+        Set<String> skipKeywords = normaliseKeywords(user.getSkipKeywords());
+
+        return jobs.stream()
+                .filter(j -> !matchesSkipKeywords(j, skipKeywords))
+                .map(j -> scoreLocally(user, j))
+                .sorted(Comparator.comparingDouble(
+                        j -> j.matchScore() != null ? -j.matchScore() : 0.0))
+                .collect(Collectors.toList());
+    }
+
+    // ── Scoring helpers ───────────────────────────────────────────────────────
+
+    private Set<String> extractSkills(User user) {
+        if (user.getSkills() == null || user.getSkills().isEmpty()) return Set.of();
+        // Skills map: keys are skill names (e.g. "Java", "Spring Boot", "React")
+        return user.getSkills().keySet().stream()
+                .filter(k -> k != null && !k.isBlank())
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+    }
+
+    private String buildSearchText(JobResponse job) {
+        String title = job.title() != null ? job.title() : "";
+        String desc  = job.description() != null ? job.description() : "";
+        String tags  = job.tags() != null ? String.join(" ", job.tags()) : "";
+        return (title + " " + desc + " " + tags).toLowerCase();
+    }
+
+    /**
+     * Matches each user skill against {@code text} using word-boundary patterns to avoid
+     * false positives (e.g. "C" matching inside "Go", or "Go" matching inside "Django").
+     */
+    private SkillMatchResult matchSkills(Set<String> userSkills, String text) {
+        if (userSkills.isEmpty()) return new SkillMatchResult(0.0, List.of());
+
+        List<String> matched = new ArrayList<>();
+        List<String> missing = new ArrayList<>();
+
+        for (String skill : userSkills) {
+            // Escape special regex chars in skill name, then wrap in word boundaries
+            String escaped = Pattern.quote(skill);
+            Pattern pattern = Pattern.compile("\\b" + escaped + "\\b", Pattern.CASE_INSENSITIVE);
+            if (pattern.matcher(text).find()) {
+                matched.add(skill);
+            } else {
+                missing.add(skill);
+            }
+        }
+
+        double ratio = (double) matched.size() / userSkills.size();
+        return new SkillMatchResult(ratio, Collections.unmodifiableList(missing));
+    }
+
+    private double roleTitleBonus(User user, JobResponse job) {
+        if (user.getTargetRoles() == null || user.getTargetRoles().isEmpty()) return 0.0;
+        if (job.title() == null) return 0.0;
+
+        String titleLower = job.title().toLowerCase();
+        return user.getTargetRoles().stream()
+                .anyMatch(role -> role != null && titleLower.contains(role.toLowerCase()))
+                ? ROLE_BONUS : 0.0;
+    }
+
+    private double locationBonus(User user, JobResponse job) {
+        if (job.location() == null) return 0.0;
+        String jobLoc = job.location().toLowerCase();
+
+        if (jobLoc.contains("remote") || jobLoc.contains("worldwide") || jobLoc.contains("anywhere")) {
+            return REMOTE_BONUS;
+        }
+
+        if (user.getLocation() != null && !user.getLocation().isBlank()) {
+            String userCity = user.getLocation().toLowerCase().split(",")[0].trim();
+            if (!userCity.isEmpty() && jobLoc.contains(userCity)) return CITY_BONUS;
+        }
+
+        return 0.0;
+    }
+
+    private double seniorityBonus(User user, String text) {
+        int exp = user.getExperienceYears();
+        for (Map.Entry<String, int[]> entry : SENIORITY_RANGES.entrySet()) {
+            if (text.contains(entry.getKey())) {
+                int[] range = entry.getValue();
+                if (exp >= range[0] && exp <= range[1]) return SENIORITY_BONUS;
+            }
+        }
+        return 0.0;
+    }
+
+    private String classify(double score) {
+        if (score >= 0.60) return "STRONG";
+        if (score >= 0.35) return "MODERATE";
+        return "WEAK";
+    }
+
+    // ── Skip-keyword filtering ────────────────────────────────────────────────
+
+    private Set<String> normaliseKeywords(List<String> keywords) {
+        if (keywords == null) return Set.of();
+        return keywords.stream()
+                .filter(k -> k != null && !k.isBlank())
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+    }
+
+    private boolean matchesSkipKeywords(JobResponse job, Set<String> skipKeywords) {
+        if (skipKeywords.isEmpty()) return false;
+        String combined = ((job.title()       != null ? job.title()       : "") + " " +
+                           (job.company()     != null ? job.company()     : "") + " " +
+                           (job.description() != null ? job.description() : "")).toLowerCase();
+        return skipKeywords.stream().anyMatch(combined::contains);
+    }
+
+    // ── AI prompt builders ────────────────────────────────────────────────────
+
+    private String buildAiSystemPrompt(User user) {
+        return """
+                You are a career advisor evaluating job-candidate fit.
+                Return a JSON array of 3-5 concise reasoning strings explaining the match quality.
+                Be specific about skill alignment, experience level, and growth potential.
+                Format: ["reason 1", "reason 2", ...]
+                Do not include markdown fences or any other text outside the JSON array.
+                """;
+    }
+
+    private String buildAiUserPrompt(User user, JobResponse job) {
+        String skills = user.getSkills() != null
+                ? String.join(", ", user.getSkills().keySet())
+                : "not specified";
+
+        String targetRoles = user.getTargetRoles() != null
+                ? String.join(", ", user.getTargetRoles())
+                : "not specified";
+
+        String missing = job.missingSkills() != null && !job.missingSkills().isEmpty()
+                ? String.join(", ", job.missingSkills())
+                : "none";
+
+        return String.format("""
+                Evaluate this job-candidate match:
+
+                CANDIDATE:
+                - Skills: %s
+                - Experience: %d years
+                - Target roles: %s
+                - Location: %s
+
+                JOB:
+                - Title: %s
+                - Company: %s
+                - Location: %s
+                - Type: %s
+                - Description (first 800 chars): %s
+
+                LOCAL SCORE: %.0f%%
+                MISSING SKILLS: %s
+
+                Provide 3-5 reasoning strings as a JSON array.
+                """,
+                skills,
+                user.getExperienceYears(),
+                targetRoles,
+                user.getLocation() != null ? user.getLocation() : "not specified",
+                job.title(),
+                job.company(),
+                job.location(),
+                job.jobType(),
+                truncate(job.description(), 800),
+                (job.matchScore() != null ? job.matchScore() * 100 : 0),
+                missing
+        );
+    }
+
+    /** Parses the AI response JSON array into a list of strings. */
+    private List<String> parseAiReasoning(String content) {
+        if (content == null || content.isBlank()) return List.of();
+        try {
+            // Strip optional markdown fences
+            String cleaned = content.strip()
+                    .replaceAll("^```json\\s*", "")
+                    .replaceAll("^```\\s*", "")
+                    .replaceAll("```$", "")
+                    .strip();
+
+            if (!cleaned.startsWith("[")) return List.of(cleaned);
+
+            // Simple extraction: find quoted strings inside the array
+            List<String> lines = new ArrayList<>();
+            int i = 0;
+            while (i < cleaned.length()) {
+                int start = cleaned.indexOf('"', i);
+                if (start == -1) break;
+                int end = cleaned.indexOf('"', start + 1);
+                while (end != -1 && cleaned.charAt(end - 1) == '\\') {
+                    end = cleaned.indexOf('"', end + 1);
+                }
+                if (end == -1) break;
+                String token = cleaned.substring(start + 1, end).replace("\\\"", "\"");
+                if (!token.isBlank()) lines.add(token);
+                i = end + 1;
+            }
+            return Collections.unmodifiableList(lines);
+        } catch (Exception e) {
+            log.warn("Failed to parse AI reasoning response: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    // ── Utility ───────────────────────────────────────────────────────────────
+
+    private String truncate(String s, int maxLen) {
+        if (s == null) return "";
+        return s.length() <= maxLen ? s : s.substring(0, maxLen) + "…";
+    }
+
+    // ── Inner record ──────────────────────────────────────────────────────────
+
+    private record SkillMatchResult(double ratio, List<String> missing) {}
+}

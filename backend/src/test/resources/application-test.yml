@@ -1,22 +1,49 @@
 spring:
+  threads:
+    virtual:
+      enabled: false    # avoids redisConnectionFactoryVirtualThreads which fails on empty REDIS_URL
   data:
     mongodb:
-      uri: mongodb://localhost:27017/kaddy_test
+      # MONGODB_URI must be set as an environment variable.
+      # CI:        set automatically by the ci.yml workflow (local Docker service, no credentials).
+      # Local dev: export MONGODB_URI=mongodb://localhost:27017/autoapply  (or your Atlas URI).
+      # No default credentials are stored here — never commit real connection strings.
+      uri: ${MONGODB_URI:mongodb://localhost:27017/autoapply}
     redis:
-      host: localhost
-      port: 6379
-      connect-timeout: 1s
-      timeout: 1s
+      url: "redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}"
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      connect-timeout: 2s
+      timeout: 2s
   mail:
     host: localhost
     port: 2525
 
 app:
   jwt:
-    secret: test-secret-key-that-is-at-least-256-bits-long-for-hmac-sha256-signing-algorithm-here
+    secret: ${JWT_SECRET:test-secret-key-that-is-at-least-256-bits-long-for-hmac-sha256-signing-algorithm-here}
     access-token-expiry: 900000
     refresh-token-expiry: 604800000
+  email:
+    resend:
+      api-key: ""
+    brevo:
+      api-key: ""
   ai:
+    cerebras:
+      api-key: ""
+    groq:
+      api-key: ""
+    together:
+      api-key: ""
+    mistral:
+      api-key: ""
+    sambanova:
+      api-key: ""
+    novita:
+      api-key: ""
+    gemini:
+      api-key: ""
     claude:
       api-key: ""
       model: claude-sonnet-4-20250514
@@ -27,6 +54,13 @@ app:
   scraper:
     jsearch-api-key: ""
     cache-ttl-minutes: 1
+    adzuna:
+      app-id: ""
+      app-key: ""
+    serpapi:
+      api-key: ""
+    careerjet:
+      affiliate-id: ""
   cors:
     allowed-origins: http://localhost:3000
   upload:

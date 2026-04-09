@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kaddy.autoapply.dto.response.GeneratedResumeResponse;
 import com.kaddy.autoapply.exception.BadRequestException;
+import com.kaddy.autoapply.security.SecurityUtils;
 import com.kaddy.autoapply.model.GeneratedResume;
 import com.kaddy.autoapply.model.Resume;
 import com.kaddy.autoapply.model.User;
@@ -14,6 +15,7 @@ import com.kaddy.autoapply.repository.UserRepository;
 import com.kaddy.autoapply.service.ai.AiProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -22,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
+@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class ResumeGeneratorService {
 
     private static final Logger log = LoggerFactory.getLogger(ResumeGeneratorService.class);
@@ -96,10 +99,10 @@ public class ResumeGeneratorService {
     public GeneratedResumeResponse getFull(String id, String userId) {
         GeneratedResume gr = generatedResumeRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Generated resume not found."));
-        if (!gr.getUserId().equals(userId)) {
+        if (!gr.getUserId().equals(userId) && !SecurityUtils.isAdmin()) {
             throw new BadRequestException("Access denied.");
         }
-        if (!gr.isPaid()) {
+        if (!gr.isPaid() && !SecurityUtils.isAdmin()) {
             throw new BadRequestException("Payment required to access the full resume.");
         }
         return toResponse(gr, true);

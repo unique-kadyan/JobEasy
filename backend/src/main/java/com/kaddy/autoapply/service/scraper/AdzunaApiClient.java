@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
-public class AdzunaApiClient implements JobScraper {
+public non-sealed class AdzunaApiClient implements JobScraper {
 
     private static final Logger log = LoggerFactory.getLogger(AdzunaApiClient.class);
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
@@ -84,7 +84,7 @@ public class AdzunaApiClient implements JobScraper {
                 Map<String, Object> company = (Map<String, Object>) item.getOrDefault("company", Map.of());
                 Map<String, Object> loc = (Map<String, Object>) item.getOrDefault("location", Map.of());
 
-                jobs.add(new JobResponse(
+                jobs.add(JobResponse.unscored(
                         null,
                         (String) item.get("id"),
                         "ADZUNA",
@@ -96,8 +96,7 @@ public class AdzunaApiClient implements JobScraper {
                         buildSalary(item),
                         null,
                         (String) item.getOrDefault("contract_type", ""),
-                        LocalDateTime.now(),
-                        null
+                        LocalDateTime.now()
                 ));
             }
 

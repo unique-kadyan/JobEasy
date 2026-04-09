@@ -1,19 +1,21 @@
 package com.kaddy.autoapply.controller;
 
+import com.kaddy.autoapply.dto.request.AutoSearchScheduleRequest;
 import com.kaddy.autoapply.dto.request.ProfileUpdateRequest;
+import com.kaddy.autoapply.dto.response.AutoSearchScheduleResponse;
 import com.kaddy.autoapply.dto.response.UserResponse;
 import com.kaddy.autoapply.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
+@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class UserController {
 
     private final UserService userService;
@@ -21,6 +23,8 @@ public class UserController {
     public UserController(UserService userService) {
         this.userService = userService;
     }
+
+    // ── Profile ───────────────────────────────────────────────────────────────
 
     @GetMapping("/profile")
     public ResponseEntity<UserResponse> getProfile(Authentication auth) {
@@ -32,6 +36,73 @@ public class UserController {
                                                        @RequestBody ProfileUpdateRequest request) {
         return ResponseEntity.ok(userService.updateProfile((String) auth.getPrincipal(), request));
     }
+
+    // ── GitHub import ─────────────────────────────────────────────────────────
+
+    /**
+     * POST /api/users/github-import
+     * Body: { "username": "octocat" }
+     */
+    @PostMapping("/github-import")
+    public ResponseEntity<UserResponse> importFromGitHub(Authentication auth,
+                                                          @RequestBody Map<String, String> body) {
+        String username = body.get("username");
+        if (username == null || username.isBlank()) {
+            throw new com.kaddy.autoapply.exception.BadRequestException("GitHub username is required");
+        }
+        return ResponseEntity.ok(
+                userService.importFromGitHub((String) auth.getPrincipal(), username.strip()));
+    }
+
+    // ── Skip keywords ─────────────────────────────────────────────────────────
+
+    @PostMapping("/skip-keywords")
+    public ResponseEntity<UserResponse> addSkipKeyword(Authentication auth,
+                                                        @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(
+                userService.addSkipKeyword((String) auth.getPrincipal(), body.getOrDefault("keyword", "")));
+    }
+
+    @DeleteMapping("/skip-keywords/{keyword}")
+    public ResponseEntity<UserResponse> removeSkipKeyword(Authentication auth,
+                                                           @PathVariable String keyword) {
+        return ResponseEntity.ok(
+                userService.removeSkipKeyword((String) auth.getPrincipal(), keyword));
+    }
+
+    // ── Not-interested reasons ────────────────────────────────────────────────
+
+    @PostMapping("/not-interested-reasons")
+    public ResponseEntity<UserResponse> addNotInterestedReason(Authentication auth,
+                                                                @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(
+                userService.addNotInterestedReason((String) auth.getPrincipal(),
+                        body.getOrDefault("reason", "")));
+    }
+
+    @DeleteMapping("/not-interested-reasons/{reason}")
+    public ResponseEntity<UserResponse> removeNotInterestedReason(Authentication auth,
+                                                                   @PathVariable String reason) {
+        return ResponseEntity.ok(
+                userService.removeNotInterestedReason((String) auth.getPrincipal(), reason));
+    }
+
+    // ── Auto-search schedule ──────────────────────────────────────────────────
+
+    @GetMapping("/auto-search-schedule")
+    public ResponseEntity<AutoSearchScheduleResponse> getSchedule(Authentication auth) {
+        return ResponseEntity.ok(userService.getAutoSearchSchedule((String) auth.getPrincipal()));
+    }
+
+    @PutMapping("/auto-search-schedule")
+    public ResponseEntity<AutoSearchScheduleResponse> updateSchedule(
+            Authentication auth,
+            @Valid @RequestBody AutoSearchScheduleRequest request) {
+        return ResponseEntity.ok(
+                userService.updateAutoSearchSchedule((String) auth.getPrincipal(), request));
+    }
+
+    // ── Account ───────────────────────────────────────────────────────────────
 
     @DeleteMapping("/account")
     public ResponseEntity<Void> deleteAccount(Authentication auth) {

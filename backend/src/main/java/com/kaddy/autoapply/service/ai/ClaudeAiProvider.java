@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class ClaudeAiProvider implements AiProvider {
+public non-sealed class ClaudeAiProvider implements AiProvider {
 
     private static final Logger log = LoggerFactory.getLogger(ClaudeAiProvider.class);
 

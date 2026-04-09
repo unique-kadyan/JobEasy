@@ -14,7 +14,7 @@ import java.util.Map;
  * /v1/chat/completions endpoint (Cerebras, Groq, Together, Mistral,
  * SambaNova, Novita, Gemini OpenAI-compat, OpenAI itself).
  */
-public abstract class OpenAiCompatibleProvider implements AiProvider {
+public non-sealed abstract class OpenAiCompatibleProvider implements AiProvider {
 
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
             new ParameterizedTypeReference<>() {};

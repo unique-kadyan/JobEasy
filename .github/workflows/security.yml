@@ -1,13 +1,18 @@
 name: Security — Dependency & Secret Scan
 
+# Versions are derived from project definition files — do NOT hardcode here:
+#   Java  →  .java-version          (project root)
+#   Maven →  backend/.mvn/wrapper/maven-wrapper.properties  (via ./mvnw)
+#   Node  →  frontend/.nvmrc
+
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   schedule:
     # Runs every Sunday at 06:00 UTC
-    - cron: '0 6 * * 0'
+    - cron: "0 6 * * 0"
 
 jobs:
   # ── OWASP Dependency Check (Java) ─────────────────────────────────────────
@@ -21,20 +26,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      # JDK version read from .java-version at the repository root.
+      - name: Set up JDK (version from .java-version)
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version-file: .java-version
+          distribution: temurin
           cache: maven
 
       - name: Run OWASP Dependency Check
         working-directory: backend
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
-          mvn --batch-mode org.owasp:dependency-check-maven:check \
+          ./mvnw --batch-mode org.owasp:dependency-check-maven:check \
             -DfailBuildOnCVSS=7 \
             -Dformats=HTML,SARIF \
-            -DsuppressionsFile=.owasp-suppressions.xml 2>/dev/null || true
+            -DsuppressionsFile=.owasp-suppressions.xml \
+            ${NVD_API_KEY:+-DnvdApiKey=$NVD_API_KEY}
         continue-on-error: true
 
       - name: Upload OWASP report
@@ -59,10 +68,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      # Node version read from frontend/.nvmrc.
+      - name: Set up Node.js (version from frontend/.nvmrc)
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: frontend/.nvmrc
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 

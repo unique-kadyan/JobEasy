@@ -1,7 +1,10 @@
 package com.kaddy.autoapply.security;
 
+import com.kaddy.autoapply.model.enums.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,7 +22,7 @@ class JwtTokenProviderTest {
 
     @Test
     void shouldGenerateAndValidateAccessToken() {
-        String token = provider.generateAccessToken("user123", "test@example.com");
+        String token = provider.generateAccessToken("user123", "test@example.com", List.of(Role.ROLE_USER));
 
         assertNotNull(token);
         assertTrue(provider.validateToken(token));
@@ -30,7 +33,7 @@ class JwtTokenProviderTest {
 
     @Test
     void shouldGenerateRefreshToken() {
-        String token = provider.generateRefreshToken("user123", "test@example.com");
+        String token = provider.generateRefreshToken("user123", "test@example.com", List.of(Role.ROLE_USER));
 
         assertNotNull(token);
         assertTrue(provider.validateToken(token));
@@ -46,7 +49,7 @@ class JwtTokenProviderTest {
 
     @Test
     void shouldRejectTamperedToken() {
-        String token = provider.generateAccessToken("user1", "a@b.com");
+        String token = provider.generateAccessToken("user1", "a@b.com", List.of(Role.ROLE_USER));
         String tampered = token.substring(0, token.length() - 5) + "XXXXX";
         assertFalse(provider.validateToken(tampered));
     }

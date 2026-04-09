@@ -31,25 +31,14 @@ public class Application {
     private LocalDateTime appliedAt;
     private LocalDateTime statusUpdated;
 
+    // ── Pipeline tracking ─────────────────────────────────────────────────────
+    private InterviewDetails interviewDetails;
+    private OfferDetails offerDetails;
+
     public Application() {
         this.status = ApplicationStatus.APPLIED;
         this.appliedAt = LocalDateTime.now();
         this.statusUpdated = LocalDateTime.now();
-    }
-
-    public Application(String id, String userId, String jobId, String coverLetterId,
-                       String resumeId, ApplicationStatus status, BigDecimal matchScore,
-                       String notes, LocalDateTime appliedAt, LocalDateTime statusUpdated) {
-        this.id = id;
-        this.userId = userId;
-        this.jobId = jobId;
-        this.coverLetterId = coverLetterId;
-        this.resumeId = resumeId;
-        this.status = status;
-        this.matchScore = matchScore;
-        this.notes = notes;
-        this.appliedAt = appliedAt;
-        this.statusUpdated = statusUpdated;
     }
 
     public String getId() { return id; }
@@ -62,6 +51,8 @@ public class Application {
     public String getNotes() { return notes; }
     public LocalDateTime getAppliedAt() { return appliedAt; }
     public LocalDateTime getStatusUpdated() { return statusUpdated; }
+    public InterviewDetails getInterviewDetails() { return interviewDetails; }
+    public OfferDetails getOfferDetails() { return offerDetails; }
 
     public void setId(String id) { this.id = id; }
     public void setUserId(String userId) { this.userId = userId; }
@@ -73,23 +64,19 @@ public class Application {
     public void setNotes(String notes) { this.notes = notes; }
     public void setAppliedAt(LocalDateTime appliedAt) { this.appliedAt = appliedAt; }
     public void setStatusUpdated(LocalDateTime statusUpdated) { this.statusUpdated = statusUpdated; }
+    public void setInterviewDetails(InterviewDetails interviewDetails) { this.interviewDetails = interviewDetails; }
+    public void setOfferDetails(OfferDetails offerDetails) { this.offerDetails = offerDetails; }
 
-    public static Builder builder() {
-        return new Builder();
-    }
+    public static Builder builder() { return new Builder(); }
 
     public static final class Builder {
 
-        private String id;
-        private String userId;
-        private String jobId;
-        private String coverLetterId;
-        private String resumeId;
+        private String id, userId, jobId, coverLetterId, resumeId, notes;
         private ApplicationStatus status = ApplicationStatus.APPLIED;
         private BigDecimal matchScore;
-        private String notes;
-        private LocalDateTime appliedAt;
-        private LocalDateTime statusUpdated;
+        private LocalDateTime appliedAt, statusUpdated;
+        private InterviewDetails interviewDetails;
+        private OfferDetails offerDetails;
 
         private Builder() {}
 
@@ -103,19 +90,23 @@ public class Application {
         public Builder notes(String notes) { this.notes = notes; return this; }
         public Builder appliedAt(LocalDateTime appliedAt) { this.appliedAt = appliedAt; return this; }
         public Builder statusUpdated(LocalDateTime statusUpdated) { this.statusUpdated = statusUpdated; return this; }
+        public Builder interviewDetails(InterviewDetails interviewDetails) { this.interviewDetails = interviewDetails; return this; }
+        public Builder offerDetails(OfferDetails offerDetails) { this.offerDetails = offerDetails; return this; }
 
         public Application build() {
             Application app = new Application();
-            app.id = this.id;
-            app.userId = this.userId;
-            app.jobId = this.jobId;
-            app.coverLetterId = this.coverLetterId;
-            app.resumeId = this.resumeId;
-            app.status = this.status;
-            app.matchScore = this.matchScore;
-            app.notes = this.notes;
-            app.appliedAt = Optional.ofNullable(this.appliedAt).orElseGet(LocalDateTime::now);
-            app.statusUpdated = Optional.ofNullable(this.statusUpdated).orElseGet(LocalDateTime::now);
+            app.id = id;
+            app.userId = userId;
+            app.jobId = jobId;
+            app.coverLetterId = coverLetterId;
+            app.resumeId = resumeId;
+            app.status = status;
+            app.matchScore = matchScore;
+            app.notes = notes;
+            app.appliedAt = Optional.ofNullable(appliedAt).orElseGet(LocalDateTime::now);
+            app.statusUpdated = Optional.ofNullable(statusUpdated).orElseGet(LocalDateTime::now);
+            app.interviewDetails = interviewDetails;
+            app.offerDetails = offerDetails;
             return app;
         }
     }

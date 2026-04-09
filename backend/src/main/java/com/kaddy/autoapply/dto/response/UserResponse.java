@@ -1,6 +1,7 @@
 package com.kaddy.autoapply.dto.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 public record UserResponse(
@@ -18,5 +19,11 @@ public record UserResponse(
         String githubUrl,
         String portfolioUrl,
         boolean emailVerified,
-        LocalDateTime createdAt
+        int experienceYears,
+        List<String> targetRoles,
+        List<String> skipKeywords,
+        boolean autoSearchEnabled,
+        int autoSearchIntervalHours,
+        LocalDateTime createdAt,
+        List<String> roles
 ) {}

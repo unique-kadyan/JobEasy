@@ -1,7 +1,7 @@
 package com.kaddy.autoapply.exception;
 
 public sealed abstract class AppException extends RuntimeException
-        permits ResourceNotFoundException, BadRequestException, AiServiceException, RateLimitException {
+        permits ResourceNotFoundException, BadRequestException, AiServiceException, RateLimitException, ExternalServiceException {
 
     private final int statusCode;
 

@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
-public class JSearchApiClient implements JobScraper {
+public non-sealed class JSearchApiClient implements JobScraper {
 
     private static final Logger log = LoggerFactory.getLogger(JSearchApiClient.class);
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
@@ -77,7 +77,7 @@ public class JSearchApiClient implements JobScraper {
                         (String) item.getOrDefault("job_publisher", ""),
                         (String) item.getOrDefault("job_apply_link", ""));
 
-                jobs.add(new JobResponse(
+                jobs.add(JobResponse.unscored(
                         null,
                         (String) item.get("job_id"),
                         source,
@@ -89,8 +89,7 @@ public class JSearchApiClient implements JobScraper {
                         buildSalary(item),
                         null,
                         (String) item.getOrDefault("job_employment_type", ""),
-                        LocalDateTime.now(),
-                        null
+                        LocalDateTime.now()
                 ));
             }
 

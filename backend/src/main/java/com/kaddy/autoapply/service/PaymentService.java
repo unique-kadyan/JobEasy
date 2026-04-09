@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kaddy.autoapply.dto.request.PaymentVerifyRequest;
 import com.kaddy.autoapply.dto.response.PaymentOrderResponse;
 import com.kaddy.autoapply.exception.BadRequestException;
+import com.kaddy.autoapply.security.SecurityUtils;
 import com.kaddy.autoapply.model.GeneratedResume;
 import com.kaddy.autoapply.model.Payment;
 import com.kaddy.autoapply.repository.GeneratedResumeRepository;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -26,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
+@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class PaymentService {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
@@ -72,7 +75,19 @@ public class PaymentService {
     public PaymentOrderResponse createOrder(String userId, String resumeId, String countryCode) {
         GeneratedResume resume = generatedResumeRepository.findById(resumeId)
                 .orElseThrow(() -> new BadRequestException("Generated resume not found."));
-        if (!resume.getUserId().equals(userId)) throw new BadRequestException("Access denied.");
+        if (!resume.getUserId().equals(userId) && !SecurityUtils.isAdmin())
+            throw new BadRequestException("Access denied.");
+
+        // ── Admin bypass: unlock directly, no payment required ────────────────
+        if (SecurityUtils.isAdmin()) {
+            if (!resume.isPaid()) {
+                resume.setPaid(true);
+                generatedResumeRepository.save(resume);
+            }
+            return new PaymentOrderResponse("admin_bypass_" + resumeId, 0L, "INR", "",
+                    resumeId, "Free (Admin)", "INR");
+        }
+
         if (resume.isPaid()) throw new BadRequestException("This resume is already unlocked.");
 
         boolean isIndia = "IN".equalsIgnoreCase(countryCode) || countryCode == null;
@@ -114,7 +129,8 @@ public class PaymentService {
         Payment payment = paymentRepository.findByRazorpayOrderId(req.razorpayOrderId())
                 .orElseThrow(() -> new BadRequestException("Order not found."));
 
-        if (!payment.getUserId().equals(userId)) throw new BadRequestException("Access denied.");
+        if (!payment.getUserId().equals(userId) && !SecurityUtils.isAdmin())
+            throw new BadRequestException("Access denied.");
 
         payment.setRazorpayPaymentId(req.razorpayPaymentId());
         payment.setRazorpaySignature(req.razorpaySignature());

@@ -56,7 +56,7 @@ class UserServiceTest {
         when(sanitizer.sanitize("<script>xss</script>")).thenReturn("xss");
 
         var request = new ProfileUpdateRequest("New Name", "<script>xss</script>", null, null, null, null, null, null,
-                null, null);
+                null, null, null, null);
         userService.updateProfile("u1", request);
 
         verify(sanitizer).sanitize("New Name");

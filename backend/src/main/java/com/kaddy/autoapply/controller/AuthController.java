@@ -10,6 +10,7 @@ import com.kaddy.autoapply.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,6 +45,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -58,6 +60,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.refresh(refreshToken));
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public ResponseEntity<UserResponse> me(Authentication authentication) {
         String userId = (String) authentication.getPrincipal();

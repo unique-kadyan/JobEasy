@@ -36,6 +36,6 @@ class ExceptionHierarchyTest {
         // Verify sealed permits list — this is a compile-time guarantee
         var permitted = AppException.class.getPermittedSubclasses();
         assertNotNull(permitted);
-        assertEquals(4, permitted.length);
+        assertEquals(5, permitted.length);
     }
 }

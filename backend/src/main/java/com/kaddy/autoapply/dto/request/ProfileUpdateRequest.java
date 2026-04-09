@@ -1,5 +1,6 @@
 package com.kaddy.autoapply.dto.request;
 
+import java.util.List;
 import java.util.Map;
 
 public record ProfileUpdateRequest(
@@ -12,5 +13,7 @@ public record ProfileUpdateRequest(
         Map<String, Object> preferences,
         String linkedinUrl,
         String githubUrl,
-        String portfolioUrl
+        String portfolioUrl,
+        Integer experienceYears,
+        List<String> targetRoles
 ) {}

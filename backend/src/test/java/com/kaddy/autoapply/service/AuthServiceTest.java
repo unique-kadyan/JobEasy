@@ -9,7 +9,6 @@ import com.kaddy.autoapply.repository.PasswordResetTokenRepository;
 import com.kaddy.autoapply.repository.UserRepository;
 import com.kaddy.autoapply.repository.VerificationTokenRepository;
 import com.kaddy.autoapply.security.JwtTokenProvider;
-import com.kaddy.autoapply.service.TokenBlacklistService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,8 +53,8 @@ class AuthServiceTest {
         when(userRepository.existsByEmail("test@example.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("hashed");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
-        when(tokenProvider.generateAccessToken("user1", "test@example.com")).thenReturn("access-token");
-        when(tokenProvider.generateRefreshToken("user1", "test@example.com")).thenReturn("refresh-token");
+        when(tokenProvider.generateAccessToken(eq("user1"), eq("test@example.com"), any())).thenReturn("access-token");
+        when(tokenProvider.generateRefreshToken(eq("user1"), eq("test@example.com"), any())).thenReturn("refresh-token");
         when(verificationTokenRepository.save(any())).thenReturn(null);
 
         AuthResponse response = authService.signup(request);
@@ -82,8 +81,8 @@ class AuthServiceTest {
 
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("password123", "hashed")).thenReturn(true);
-        when(tokenProvider.generateAccessToken("user1", "test@example.com")).thenReturn("access");
-        when(tokenProvider.generateRefreshToken("user1", "test@example.com")).thenReturn("refresh");
+        when(tokenProvider.generateAccessToken(eq("user1"), eq("test@example.com"), any())).thenReturn("access");
+        when(tokenProvider.generateRefreshToken(eq("user1"), eq("test@example.com"), any())).thenReturn("refresh");
 
         AuthResponse response = authService.login(request);
 

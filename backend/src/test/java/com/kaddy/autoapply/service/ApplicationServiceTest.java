@@ -30,11 +30,15 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ApplicationServiceTest {
 
-    @Mock ApplicationRepository applicationRepository;
-    @Mock JobService jobService;
-    @Mock ResumeRepository resumeRepository;
+    @Mock
+    ApplicationRepository applicationRepository;
+    @Mock
+    JobService jobService;
+    @Mock
+    ResumeRepository resumeRepository;
 
-    @InjectMocks ApplicationService applicationService;
+    @InjectMocks
+    ApplicationService applicationService;
 
     private Job testJob;
     private Application testApp;
@@ -176,10 +180,9 @@ class ApplicationServiceTest {
         when(applicationRepository.save(any())).thenReturn(testApp);
         when(jobService.getJobEntity("job1")).thenReturn(testJob);
 
-        ApplicationResponse response = applicationService.updateStatus("app1", "INTERVIEWING");
+        ApplicationResponse response = applicationService.updateStatus("app1", "user1", "INTERVIEWING");
 
-        verify(applicationRepository).save(argThat(a ->
-                a.getStatus() == ApplicationStatus.INTERVIEWING));
+        verify(applicationRepository).save(argThat(a -> a.getStatus() == ApplicationStatus.INTERVIEWING));
         assertNotNull(response);
     }
 
@@ -187,8 +190,7 @@ class ApplicationServiceTest {
     void updateStatus_shouldThrowForUnknownApplication() {
         when(applicationRepository.findById("bad")).thenReturn(Optional.empty());
 
-        assertThrows(BadRequestException.class, () ->
-                applicationService.updateStatus("bad", "INTERVIEWING"));
+        assertThrows(ResourceNotFoundException.class, () -> applicationService.updateStatus("bad", "user1", "INTERVIEWING"));
     }
 
     @Test
@@ -198,14 +200,15 @@ class ApplicationServiceTest {
         when(jobService.getJobEntity("job1")).thenThrow(new ResourceNotFoundException("gone"));
 
         // should NOT throw
-        assertDoesNotThrow(() -> applicationService.updateStatus("app1", "INTERVIEWING"));
+        assertDoesNotThrow(() -> applicationService.updateStatus("app1", "user1", "INTERVIEWING"));
     }
 
     // ── delete ────────────────────────────────────────────────────────────────
 
     @Test
     void delete_shouldDelegateToRepository() {
-        applicationService.delete("app1");
+        when(applicationRepository.findById("app1")).thenReturn(Optional.of(testApp));
+        applicationService.delete("app1", "user1");
         verify(applicationRepository).deleteById("app1");
     }
 }

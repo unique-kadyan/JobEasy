@@ -6,11 +6,15 @@ import com.kaddy.autoapply.exception.BadRequestException;
 import com.kaddy.autoapply.exception.ResourceNotFoundException;
 import com.kaddy.autoapply.model.Template;
 import com.kaddy.autoapply.repository.TemplateRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class TemplateService {
 
     private final TemplateRepository templateRepository;
@@ -21,10 +25,12 @@ public class TemplateService {
         this.sanitizer = sanitizer;
     }
 
+    @Cacheable(value = "templates", key = "#userId")
     public List<Template> getTemplatesForUser(String userId) {
         return templateRepository.findAllForUser(userId);
     }
 
+    @CacheEvict(value = "templates", key = "#userId")
     public Template create(String userId, TemplateRequest request) {
         return templateRepository.save(Template.builder()
                 .userId(userId)
@@ -35,6 +41,7 @@ public class TemplateService {
                 .build());
     }
 
+    @CacheEvict(value = "templates", key = "#userId")
     public Template update(String userId, String templateId, TemplateRequest request) {
         Template template = findTemplate(templateId);
         if (Boolean.TRUE.equals(template.getIsSystem())) {
@@ -49,6 +56,7 @@ public class TemplateService {
         return templateRepository.save(template);
     }
 
+    @CacheEvict(value = "templates", key = "#userId")
     public void delete(String userId, String templateId) {
         Template template = findTemplate(templateId);
         if (Boolean.TRUE.equals(template.getIsSystem())) {

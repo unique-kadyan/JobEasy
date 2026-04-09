@@ -4,6 +4,7 @@ import com.kaddy.autoapply.dto.request.PaymentVerifyRequest;
 import com.kaddy.autoapply.dto.response.PaymentOrderResponse;
 import com.kaddy.autoapply.service.PaymentService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +16,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payments")
+@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class PaymentController {
 
     private final PaymentService paymentService;

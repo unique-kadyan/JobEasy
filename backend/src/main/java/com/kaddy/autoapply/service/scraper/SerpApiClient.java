@@ -1,6 +1,11 @@
 package com.kaddy.autoapply.service.scraper;
 
-import com.kaddy.autoapply.dto.response.JobResponse;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,22 +14,18 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import com.kaddy.autoapply.dto.response.JobResponse;
 
 /**
  * Scrapes jobs from Google Jobs via the SerpApi /search endpoint.
  * Docs: https://serpapi.com/google-jobs-api
  */
 @Component
-public class SerpApiClient implements JobScraper {
+public non-sealed class SerpApiClient implements JobScraper {
 
     private static final Logger log = LoggerFactory.getLogger(SerpApiClient.class);
-    private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
-            new ParameterizedTypeReference<>() {};
+    private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE = new ParameterizedTypeReference<>() {
+    };
 
     private final WebClient webClient;
     private final String apiKey;
@@ -73,8 +74,7 @@ public class SerpApiClient implements JobScraper {
                 return List.of();
             }
 
-            List<Map<String, Object>> results =
-                    (List<Map<String, Object>>) response.get("jobs_results");
+            List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("jobs_results");
             List<JobResponse> jobs = new ArrayList<>();
 
             for (Map<String, Object> item : results) {
@@ -88,12 +88,15 @@ public class SerpApiClient implements JobScraper {
                         (String) item.getOrDefault("location", ""),
                         applyLink,
                         (String) item.get("description"),
-                        buildSalary(item),
-                        null,
+                        (String) item.get("description"),
+                        new ArrayList<>(),
                         buildJobType(item),
                         parsePostedAt(),
-                        null
-                ));
+                        null,
+                        (String) item.getOrDefault("job_link", ""),
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        null));
             }
 
             return jobs;
@@ -111,7 +114,8 @@ public class SerpApiClient implements JobScraper {
             Object first = options.get(0);
             if (first instanceof Map<?, ?> opt) {
                 Object link = opt.get("link");
-                if (link instanceof String s) return s;
+                if (link instanceof String s)
+                    return s;
             }
         }
         // Fall back to job_link
@@ -121,7 +125,8 @@ public class SerpApiClient implements JobScraper {
     private String buildSalary(Map<String, Object> item) {
         if (item.get("detected_extensions") instanceof Map<?, ?> ext) {
             Object salary = ext.get("salary");
-            if (salary instanceof String s) return s;
+            if (salary instanceof String s)
+                return s;
         }
         return null;
     }
@@ -129,7 +134,8 @@ public class SerpApiClient implements JobScraper {
     private String buildJobType(Map<String, Object> item) {
         if (item.get("detected_extensions") instanceof Map<?, ?> ext) {
             Object type = ext.get("schedule_type");
-            if (type instanceof String s) return s;
+            if (type instanceof String s)
+                return s;
         }
         return null;
     }

@@ -5,85 +5,50 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
+/**
+ * Immutable password-reset token.
+ *
+ * <p>The only post-creation state change — marking the token used — is expressed
+ * as {@link #markUsed()}, which returns a <em>new</em> record instance rather than
+ * mutating this one, consistent with the record's value-object semantics.
+ *
+ * <p>Use {@link #create} to build a fresh token with a 1-hour TTL.
+ */
 @Document(collection = "password_reset_tokens")
-public class PasswordResetToken {
-
-    @Id
-    private String id;
-
-    @Indexed(unique = true)
-    private String token;
-
-    @Indexed
-    private String userId;
-
-    private boolean used;
-    private LocalDateTime createdAt;
-    private LocalDateTime expiresAt;
-
-    public PasswordResetToken() {
-        this.used = false;
-        this.createdAt = LocalDateTime.now();
-        this.expiresAt = LocalDateTime.now().plusHours(1);
+public record PasswordResetToken(
+        @Id                   String        id,
+        @Indexed(unique=true) String        token,
+        @Indexed              String        userId,
+        boolean               used,
+        LocalDateTime         createdAt,
+        LocalDateTime         expiresAt
+) {
+    /** Compact constructor — guards against null timestamps. Spring Data uses this automatically. */
+    public PasswordResetToken {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (expiresAt == null) expiresAt = createdAt.plusHours(1);
     }
 
-    public PasswordResetToken(String id, String token, String userId,
-                              boolean used, LocalDateTime createdAt, LocalDateTime expiresAt) {
-        this.id = id;
-        this.token = token;
-        this.userId = userId;
-        this.used = used;
-        this.createdAt = createdAt;
-        this.expiresAt = expiresAt;
+    /**
+     * Factory for a fresh, unused token expiring 1 hour from now.
+     * {@code id} is {@code null} so MongoDB assigns the ObjectId on save.
+     */
+    public static PasswordResetToken create(String token, String userId) {
+        LocalDateTime now = LocalDateTime.now();
+        return new PasswordResetToken(null, token, userId, false, now, now.plusHours(1));
     }
 
-    public String getId() { return id; }
-    public String getToken() { return token; }
-    public String getUserId() { return userId; }
-    public boolean isUsed() { return used; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getExpiresAt() { return expiresAt; }
-
-    public void setId(String id) { this.id = id; }
-    public void setToken(String token) { this.token = token; }
-    public void setUserId(String userId) { this.userId = userId; }
-    public void setUsed(boolean used) { this.used = used; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
-
-    public static Builder builder() {
-        return new Builder();
+    /**
+     * Returns a new instance with {@code used = true}.
+     * Caller must persist the returned value — this instance is unchanged.
+     */
+    public PasswordResetToken markUsed() {
+        return new PasswordResetToken(id, token, userId, true, createdAt, expiresAt);
     }
 
-    public static final class Builder {
-
-        private String id;
-        private String token;
-        private String userId;
-        private boolean used = false;
-        private LocalDateTime createdAt;
-        private LocalDateTime expiresAt;
-
-        private Builder() {}
-
-        public Builder id(String id) { this.id = id; return this; }
-        public Builder token(String token) { this.token = token; return this; }
-        public Builder userId(String userId) { this.userId = userId; return this; }
-        public Builder used(boolean used) { this.used = used; return this; }
-        public Builder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
-        public Builder expiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; return this; }
-
-        public PasswordResetToken build() {
-            PasswordResetToken prt = new PasswordResetToken();
-            prt.id = this.id;
-            prt.token = this.token;
-            prt.userId = this.userId;
-            prt.used = this.used;
-            prt.createdAt = Optional.ofNullable(this.createdAt).orElseGet(LocalDateTime::now);
-            prt.expiresAt = Optional.ofNullable(this.expiresAt).orElseGet(() -> LocalDateTime.now().plusHours(1));
-            return prt;
-        }
+    /** Returns {@code true} when the token's validity window has closed. */
+    public boolean isExpired() {
+        return LocalDateTime.now().isAfter(expiresAt);
     }
 }

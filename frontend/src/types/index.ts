@@ -14,6 +14,8 @@ export interface User {
   portfolioUrl?: string;
   emailVerified: boolean;
   createdAt: string;
+  /** Roles from the backend JWT claim — e.g. ["ROLE_USER"] or ["ROLE_USER", "ROLE_ADMIN"] */
+  roles?: string[];
 }
 
 export interface ResumeAnalysis {

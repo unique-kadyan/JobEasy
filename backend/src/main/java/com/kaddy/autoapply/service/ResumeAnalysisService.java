@@ -8,6 +8,7 @@ import com.kaddy.autoapply.repository.ResumeAnalysisRepository;
 import com.kaddy.autoapply.repository.ResumeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
+@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class ResumeAnalysisService {
 
     private static final Logger log = LoggerFactory.getLogger(ResumeAnalysisService.class);

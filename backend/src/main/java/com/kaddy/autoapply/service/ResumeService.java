@@ -2,11 +2,14 @@ package com.kaddy.autoapply.service;
 
 import com.kaddy.autoapply.exception.BadRequestException;
 import com.kaddy.autoapply.exception.ResourceNotFoundException;
+import com.kaddy.autoapply.security.SecurityUtils;
 import com.kaddy.autoapply.model.Resume;
 import com.kaddy.autoapply.repository.ResumeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,6 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
+@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class ResumeService {
 
     private static final Logger log = LoggerFactory.getLogger(ResumeService.class);
@@ -78,9 +82,14 @@ public class ResumeService {
         return resumeRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
-    public Resume getResume(String id) {
-        return resumeRepository.findById(id)
+    @PostAuthorize("returnObject.userId == authentication.principal or hasRole('ADMIN')")
+    public Resume getResume(String userId, String id) {
+        Resume resume = resumeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Resume not found"));
+        if (!resume.getUserId().equals(userId) && !SecurityUtils.isAdmin()) {
+            throw new BadRequestException("Resume does not belong to the current user");
+        }
+        return resume;
     }
 
     public void setPrimary(String userId, String resumeId) {
@@ -89,8 +98,8 @@ public class ResumeService {
         resumeRepository.saveAll(resumes);
     }
 
-    public void delete(String id) {
-        Resume resume = getResume(id);
+    public void delete(String userId, String id) {
+        Resume resume = getResume(userId, id);
         try {
             Files.deleteIfExists(Paths.get(resume.getFilePath()));
         } catch (IOException e) {

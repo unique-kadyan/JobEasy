@@ -18,7 +18,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -64,10 +63,7 @@ public class AuthService {
         user = userRepository.save(user);
 
         String token = UUID.randomUUID().toString();
-        verificationTokenRepository.save(VerificationToken.builder()
-                .token(token)
-                .userId(user.getId())
-                .build());
+        verificationTokenRepository.save(VerificationToken.create(token, user.getId()));
 
         emailService.sendVerificationEmail(user.getEmail(), user.getName(), token);
 
@@ -119,12 +115,12 @@ public class AuthService {
         VerificationToken vt = verificationTokenRepository.findByToken(token)
                 .orElseThrow(() -> new BadRequestException("Invalid verification token"));
 
-        if (vt.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (vt.isExpired()) {
             verificationTokenRepository.delete(vt);
             throw new BadRequestException("Verification link has expired. Please request a new one.");
         }
 
-        User user = userRepository.findById(vt.getUserId())
+        User user = userRepository.findById(vt.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         user.setEmailVerified(true);
@@ -143,10 +139,7 @@ public class AuthService {
         verificationTokenRepository.deleteByUserId(user.getId());
 
         String token = UUID.randomUUID().toString();
-        verificationTokenRepository.save(VerificationToken.builder()
-                .token(token)
-                .userId(user.getId())
-                .build());
+        verificationTokenRepository.save(VerificationToken.create(token, user.getId()));
 
         emailService.sendVerificationEmail(user.getEmail(), user.getName(), token);
     }
@@ -161,10 +154,7 @@ public class AuthService {
         passwordResetTokenRepository.deleteByUserId(user.getId());
 
         String token = UUID.randomUUID().toString();
-        passwordResetTokenRepository.save(PasswordResetToken.builder()
-                .token(token)
-                .userId(user.getId())
-                .build());
+        passwordResetTokenRepository.save(PasswordResetToken.create(token, user.getId()));
 
         emailService.sendPasswordResetEmail(user.getEmail(), user.getName(), token);
     }
@@ -173,38 +163,43 @@ public class AuthService {
         PasswordResetToken prt = passwordResetTokenRepository.findByTokenAndUsedFalse(request.token())
                 .orElseThrow(() -> new BadRequestException("Invalid or expired reset token"));
 
-        if (prt.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (prt.isExpired()) {
             passwordResetTokenRepository.delete(prt);
             throw new BadRequestException("Reset link has expired. Please request a new one.");
         }
 
-        User user = userRepository.findById(prt.getUserId())
+        User user = userRepository.findById(prt.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
 
-        prt.setUsed(true);
-        passwordResetTokenRepository.save(prt);
+        passwordResetTokenRepository.save(prt.markUsed());
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private AuthResponse buildAuthResponse(User user) {
         return new AuthResponse(
-                tokenProvider.generateAccessToken(user.getId(), user.getEmail()),
-                tokenProvider.generateRefreshToken(user.getId(), user.getEmail()),
+                tokenProvider.generateAccessToken(user.getId(), user.getEmail(), user.getRoles()),
+                tokenProvider.generateRefreshToken(user.getId(), user.getEmail(), user.getRoles()),
                 toUserResponse(user)
         );
     }
 
     public static UserResponse toUserResponse(User user) {
+        java.util.List<String> roleNames = (user.getRoles() != null)
+                ? user.getRoles().stream().map(Enum::name).toList()
+                : java.util.List.of(com.kaddy.autoapply.model.enums.Role.ROLE_USER.name());
         return new UserResponse(
                 user.getId(), user.getEmail(), user.getName(),
                 user.getPhone(), user.getLocation(), user.getTitle(),
                 user.getSummary(), user.getSkills(), user.getAvatarUrl(),
                 user.getPreferences(), user.getLinkedinUrl(), user.getGithubUrl(),
-                user.getPortfolioUrl(), user.isEmailVerified(), user.getCreatedAt()
+                user.getPortfolioUrl(), user.isEmailVerified(),
+                user.getExperienceYears(), user.getTargetRoles(), user.getSkipKeywords(),
+                user.isAutoSearchEnabled(), user.getAutoSearchIntervalHours(),
+                user.getCreatedAt(), roleNames
         );
     }
 }

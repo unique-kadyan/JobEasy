@@ -18,7 +18,14 @@
     <description>Automated job application platform with AI-powered cover letters</description>
 
     <properties>
-        <java.version>21</java.version>
+        <!-- JDK runtime version — keep in sync with .java-version at the project root -->
+        <java.version>25</java.version>
+        <!--
+            Bytecode target is pinned to Java 21 because Spring Framework 6.1.x
+            (transitively required by Spring Boot 3.3.x) cannot scan class files
+            compiled above format version 65 (Java 21).  Remove this override
+            once Spring Boot is upgraded to a version that ships Framework 6.2+.
+        -->
         <maven.compiler.release>21</maven.compiler.release>
         <jjwt.version>0.12.6</jjwt.version>
         <springdoc.version>2.6.0</springdoc.version>
@@ -85,6 +92,12 @@
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j-core</artifactId>
             <version>8.10.1</version>
+        </dependency>
+
+        <!-- Caffeine in-memory cache — version managed by Spring Boot BOM -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
         </dependency>
 
         <!-- JWT -->
@@ -164,15 +177,42 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <!--
-                        Java 21 LTS: G1GC remains the default GC.
-                        ZGC (stable since Java 21) is a low-latency alternative for production.
-                        String deduplication is a G1GC-only flag — kept for heap efficiency.
-                        Virtual threads (Project Loom) are enabled via spring.threads.virtual.enabled.
+                        Generational ZGC — production GC configuration
+                        ─────────────────────────────────────────────
+                        -UseZGC             : Enable Z Garbage Collector.
+                                              Concurrent, compacting; pauses never exceed ~1 ms
+                                              regardless of heap size — ideal for low-latency APIs.
+                        -ZGenerational      : Generational mode (young/old generations); default
+                                              since Java 23, explicit here for clarity.
+                                              Short-lived objects from virtual threads are collected
+                                              in the young generation — higher throughput than
+                                              non-generational ZGC with the same pause budget.
+                        -ZUncommit          : Return unused heap pages to the OS immediately after
+                                              GC (default ON in ZGC, made explicit here).
+                                              Critical in containers: JVM heap shrinks when idle
+                                              so the pod/container never OOMs on a memory limit.
+                        -ZUncommitDelay=60  : Wait 60 s before uncommitting (avoids thrash when
+                                              load briefly drops then spikes again).
+                        -ExplicitGCInvokesConcurrent : System.gc() → concurrent ZGC cycle instead
+                                              of a stop-the-world full collection.
+                        -Xms256m / -Xmx512m : Initial and hard heap ceiling.
+                        -SoftMaxHeapSize    : Soft ceiling; ZGC tries to stay under 400 MB
+                                              and only expands to -Xmx under sustained load.
+                        -MaxMetaspaceSize   : Caps class-metadata growth; prevents metaspace leaks
+                                              from dynamic proxy / reflection-heavy frameworks.
+                        -OptimizeStringConcat : JIT-level string concat optimisation (safe with ZGC).
+                        NOTE: -UseStringDeduplication is G1GC-only and MUST NOT be set with ZGC.
                     -->
                     <jvmArguments>
-                        -XX:+UseG1GC
-                        -XX:MaxGCPauseMillis=200
-                        -XX:+UseStringDeduplication
+                        -XX:+UseZGC
+                        -XX:+ZGenerational
+                        -XX:+ZUncommit
+                        -XX:ZUncommitDelay=60
+                        -XX:+ExplicitGCInvokesConcurrent
+                        -Xms256m
+                        -Xmx512m
+                        -XX:SoftMaxHeapSize=400m
+                        -XX:MaxMetaspaceSize=128m
                         -XX:+OptimizeStringConcat
                         -Djava.security.egd=file:/dev/./urandom
                     </jvmArguments>
@@ -182,7 +222,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-XX:+UseG1GC -Xmx512m</argLine>
+                    <argLine>
+                        -XX:+UseZGC -XX:+ZGenerational -Xms128m -Xmx512m
+                        -XX:+EnableDynamicAgentLoading
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                        --add-opens java.base/java.util=ALL-UNNAMED
+                    </argLine>
                 </configuration>
             </plugin>
         </plugins>

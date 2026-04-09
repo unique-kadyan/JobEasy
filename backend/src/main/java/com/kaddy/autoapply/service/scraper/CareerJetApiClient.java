@@ -20,7 +20,7 @@ import java.util.Optional;
  * Docs: https://www.careerjet.com/partners/api/
  */
 @Component
-public class CareerJetApiClient implements JobScraper {
+public non-sealed class CareerJetApiClient implements JobScraper {
 
     private static final Logger log = LoggerFactory.getLogger(CareerJetApiClient.class);
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
@@ -82,7 +82,7 @@ public class CareerJetApiClient implements JobScraper {
             List<JobResponse> results = new ArrayList<>();
 
             for (Map<String, Object> item : jobs) {
-                results.add(new JobResponse(
+                results.add(JobResponse.unscored(
                         null,
                         buildExternalId(item),
                         "CAREERJET",
@@ -94,8 +94,7 @@ public class CareerJetApiClient implements JobScraper {
                         buildSalary(item),
                         null,
                         null,
-                        LocalDateTime.now(),
-                        null
+                        LocalDateTime.now()
                 ));
             }
 

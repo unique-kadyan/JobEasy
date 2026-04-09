@@ -1,0 +1,228 @@
+server:
+  port: 8080
+  tomcat:
+    # With virtual threads, Tomcat's thread pool becomes a thin scheduling layer.
+    # Keep max-threads low — each request uses a virtual thread, not a platform thread.
+    threads:
+      max: 200
+      min-spare: 10
+    # Allow more queued connections than threads — virtual threads are cheap to hold
+    accept-count: 500
+    max-connections: 20000
+    connection-timeout: 5000ms
+
+spring:
+  # ─── Java 21 virtual threads ──────────────────────────────────────────────
+  # Enables virtual threads for Tomcat request handling, Spring @Async, and
+  # Spring's task scheduler (@Scheduled). Each request/task gets its own
+  # virtual thread parked during I/O — no platform threads wasted on blocking.
+  threads:
+    virtual:
+      enabled: true
+
+  profiles:
+    active: local
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+    # ─── Redis (Lettuce) ────────────────────────────────────────────────────
+    redis:
+      # REDIS_URL — single-string connection URI for cloud platforms
+      # (Railway, Render, Fly.io, Heroku, etc. inject this automatically).
+      # Format:  redis://[:password@]host[:port][/db-index]
+      #          rediss://... for TLS connections
+      # Examples:
+      #   Local Docker (no password) : redis://localhost:6379
+      #   Local Docker (with password): redis://:yourpassword@localhost:6379
+      #   Cloud TLS                  : rediss://:token@region.provider.com:6380
+      # When REDIS_URL is not set the empty default is ignored and Spring
+      # falls back to the host / port / password properties below.
+      url: ${REDIS_URL:}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms # command timeout — fail fast if Redis is unresponsive
+      connect-timeout: 1000ms # TCP connect timeout
+      lettuce:
+        pool:
+          max-active: 50 # max concurrent connections
+          max-idle: 20 # max idle connections kept warm
+          min-idle: 5 # always-warm connections for burst readiness
+          max-wait: 1000ms # block timeout when pool is exhausted — then fail fast
+        shutdown-timeout: 200ms # graceful shutdown wait
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-expiry: 900000
+    refresh-token-expiry: 604800000
+
+  # ─── Email (HTTP APIs — no SMTP) ─────────────────────────────────────────────
+  email:
+    resend:
+      api-key: ${RESEND_API_KEY}
+      from: ${RESEND_FROM:Auto Apply <onboarding@resend.dev>}
+    brevo:
+      api-key: ${BREVO_API_KEY}
+      from: ${BREVO_FROM:noreply@kaddy.app}
+
+  # ─── AI Providers (free first → premium last) ────────────────────────────────
+  ai:
+    # Free tier providers (tried in this order)
+    cerebras:
+      api-key: ${CEREBRAS_API_KEY}
+      model: llama-3.3-70b
+    groq:
+      api-key: ${GROQ_API_KEY}
+      model: llama-3.3-70b-versatile
+    together:
+      api-key: ${TOGETHER_API_KEY}
+      model: meta-llama/Llama-3.3-70B-Instruct-Turbo
+    mistral:
+      api-key: ${MISTRAL_API_KEY}
+      model: mistral-small-latest
+    sambanova:
+      api-key: ${SAMBANOVA_API_KEY}
+      model: Meta-Llama-3.3-70B-Instruct
+    novita:
+      api-key: ${NOVITA_API_KEY}
+      model: meta-llama/llama-3.3-70b-instruct
+    # Premium providers (used only when all free providers are exhausted)
+    gemini:
+      api-key: ${GEMINI_API_KEY}
+      model: gemini-2.0-flash
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      model: gpt-4o
+    claude:
+      api-key: ${ANTHROPIC_API_KEY:}
+      model: claude-sonnet-4-20250514
+
+  scraper:
+    jsearch-api-key: ${JSEARCH_API_KEY}
+    cache-ttl-minutes: 60
+    adzuna:
+      app-id: ${ADZUNA_APP_ID}
+      app-key: ${ADZUNA_APP_KEY}
+      country: ${ADZUNA_COUNTRY:in}
+    serpapi:
+      api-key: ${SERPAPI_API_KEY}
+    careerjet:
+      affiliate-id: ${CAREERJET_AFFILIATE_ID}
+      locale: ${CAREERJET_LOCALE:en_IN}
+
+  payment:
+    razorpay:
+      key-id: ${RAZORPAY_KEY_ID:}
+      key-secret: ${RAZORPAY_KEY_SECRET:}
+
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:3002}
+  upload:
+    dir: ${UPLOAD_DIR:./uploads}
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+
+  # ─── MongoDB connection pool (MongoConfig.java) ──────────────────────────
+  mongodb:
+    pool:
+      max-size: ${MONGO_POOL_MAX:100} # peak concurrent DB operations
+      min-size: ${MONGO_POOL_MIN:10} # warm connections for burst readiness
+      max-wait-ms: 5000 # fail-fast when pool is exhausted
+      max-idle-ms: 60000 # evict connections idle > 60 s
+    socket:
+      connect-timeout-ms: 5000 # TCP handshake deadline
+      read-timeout-ms: 10000 # max wait for a DB response
+
+  # ─── Outbound HTTP (WebClientConfig.java) ───────────────────────────────
+  webclient:
+    connect-timeout-ms: 5000 # TCP connect to job boards / AI APIs
+    read-timeout-s: 10 # stall timeout after last byte received
+    write-timeout-s: 5 # request body write deadline
+    response-timeout-s: 15 # end-to-end SLA per outbound call
+    max-connections: 500 # Netty connection pool cap
+
+# ─── Actuator ─────────────────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: kaddy-autoapply
+
+# ─── Resilience4j ─────────────────────────────────────────────────────────────
+resilience4j:
+  circuitbreaker:
+    configs:
+      freeAiDefault:
+        sliding-window-size: 5
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 20s
+        permitted-number-of-calls-in-half-open-state: 2
+      premiumAiDefault:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      cerebrasAi:
+        base-config: freeAiDefault
+      groqAi:
+        base-config: freeAiDefault
+      togetherAi:
+        base-config: freeAiDefault
+      mistralAi:
+        base-config: freeAiDefault
+      sambanovaAi:
+        base-config: freeAiDefault
+      novitaAi:
+        base-config: freeAiDefault
+      geminiAi:
+        base-config: premiumAiDefault
+      openAi:
+        base-config: premiumAiDefault
+      claudeAi:
+        base-config: premiumAiDefault
+      jobScraper:
+        sliding-window-size: 5
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 60s
+  retry:
+    configs:
+      freeAiDefault:
+        max-attempts: 2
+        wait-duration: 500ms
+      premiumAiDefault:
+        max-attempts: 2
+        wait-duration: 1s
+    instances:
+      freeAi:
+        base-config: freeAiDefault
+      premiumAi:
+        base-config: premiumAiDefault
+      claudeAi:
+        base-config: premiumAiDefault
+      openAi:
+        base-config: premiumAiDefault
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    "[com.kaddy.autoapply]": DEBUG
+    "[org.springframework.security]": WARN
+    "[io.github.resilience4j]": INFO

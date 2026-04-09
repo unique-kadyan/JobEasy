@@ -1,5 +1,9 @@
 name: CodeQL — Security Analysis
 
+# Versions are derived from project definition files — do NOT hardcode here:
+#   Java  →  .java-version          (project root)
+#   Maven →  backend/.mvn/wrapper/maven-wrapper.properties  (via ./mvnw)
+
 on:
   push:
     branches: [ main ]
@@ -26,12 +30,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21 (Java only)
+      # JDK version read from .java-version at the repository root.
+      # Only needed for the Java analysis leg.
+      - name: Set up JDK (version from .java-version)
         if: matrix.language == 'java'
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version-file: .java-version
+          distribution: temurin
           cache: maven
 
       - name: Initialize CodeQL
@@ -43,10 +49,12 @@ jobs:
       - name: Build backend for CodeQL (Java only)
         if: matrix.language == 'java'
         working-directory: backend
-        run: mvn --batch-mode compile -DskipTests
+        run: ./mvnw --batch-mode compile -DskipTests
         env:
           MONGODB_URI: mongodb://localhost:27017/kaddy_test
-          JWT_SECRET: test-secret-key-for-codeql-analysis-only
+          # JWT_SECRET is intentionally omitted here.
+          # application-test.yml supplies a CI-safe fallback via Spring's
+          # ${JWT_SECRET:...} placeholder when the variable is not set.
 
       - name: Autobuild (JavaScript)
         if: matrix.language == 'javascript'

@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class OpenAiProvider implements AiProvider {
+public non-sealed class OpenAiProvider implements AiProvider {
 
     private static final Logger log = LoggerFactory.getLogger(OpenAiProvider.class);
 
