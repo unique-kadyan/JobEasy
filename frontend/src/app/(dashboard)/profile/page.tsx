@@ -12,8 +12,8 @@ import {
   User,
   Save,
   CheckCircle,
-  Linkedin as LinkedinIcon,
-  Github as GithubIcon,
+  Link2,
+  GitBranch,
   Globe,
   FileText,
   Briefcase,
@@ -187,7 +187,7 @@ export default function ProfilePage() {
           {editing ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <LinkedinIcon className="h-5 w-5 text-[#0077B5] shrink-0" />
+                <Link2 className="h-5 w-5 text-[#0077B5] shrink-0" />
                 <Input
                   placeholder="https://linkedin.com/in/yourprofile"
                   {...field("linkedinUrl")}
@@ -195,7 +195,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="flex items-center gap-3">
-                <GithubIcon className="h-5 w-5 text-gray-800 shrink-0" />
+                <GitBranch className="h-5 w-5 text-gray-800 shrink-0" />
                 <Input
                   placeholder="https://github.com/yourusername"
                   {...field("githubUrl")}
@@ -214,12 +214,12 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-3">
               <ProfileLink
-                icon={<LinkedinIcon className="h-5 w-5 text-[#0077B5]" />}
+                icon={<Link2 className="h-5 w-5 text-[#0077B5]" />}
                 label="LinkedIn"
                 url={user?.linkedinUrl}
               />
               <ProfileLink
-                icon={<GithubIcon className="h-5 w-5 text-gray-800" />}
+                icon={<GitBranch className="h-5 w-5 text-gray-800" />}
                 label="GitHub"
                 url={user?.githubUrl}
               />
