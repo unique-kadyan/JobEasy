@@ -1,21 +1,46 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Render Blueprint — Kaddy Auto-Apply
 #
-# Declares both services so a single "New Blueprint Instance" in the Render
-# dashboard provisions the full stack from this file.
+# Declares all three services so a single "New Blueprint Instance" in the
+# Render dashboard provisions the full stack from this file:
+#
+#   kaddy-redis     — Render managed Redis (Key Value store)
+#   kaddy-backend   — Spring Boot 3 / Java 25 (Docker runtime)
+#   kaddy-frontend  — Next.js 14 (native Node.js runtime)
 #
 # Docs: https://render.com/docs/blueprint-spec
 #
 # Usage:
 #   1. Push this file to your GitHub repository.
-#   2. In the Render dashboard → New → Blueprint → connect this repo.
-#   3. Render will create both services and prompt you for every env var
-#      marked  sync: false  (i.e., secrets not stored in this file).
-#   4. After the first deploy, copy the backend service URL and set it
-#      as NEXT_PUBLIC_API_URL on the frontend service (append /api).
+#   2. Render dashboard → New → Blueprint → connect this repo.
+#   3. Render creates all three services and prompts for every env var
+#      marked  sync: false  (secrets not stored in this file).
+#   4. After first deploy, copy the backend URL and set it as
+#      NEXT_PUBLIC_API_URL on the frontend service (append /api).
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
+
+  # ── Redis — Render managed Key Value store ─────────────────────────────────
+  #
+  # Render provisions and manages this Redis instance automatically.
+  # No external Redis Cloud account or manual credentials needed.
+  #
+  # Persistence:
+  #   Render's free-tier Redis does NOT persist data across restarts.
+  #   Upgrade to the Starter plan ($7/month) to enable AOF persistence.
+  #   For local development, Docker Redis (docker-compose.yml) still runs
+  #   with full AOF + RDB persistence via redis/redis.conf.
+  #
+  # The backend receives the full connection string automatically via the
+  # REDIS_URL env var (fromService reference below) — no manual copy-paste.
+  # ───────────────────────────────────────────────────────────────────────────
+  - type: redis
+    name: kaddy-redis
+    region: oregon
+    plan: free              # upgrade to starter for AOF persistence
+    maxmemoryPolicy: allkeys-lru   # matches redis.conf — evict LRU keys on memory pressure
+    ipAllowList: []         # empty = accessible only from services in this Render account
 
   # ── Backend — Spring Boot (Java 25 via Docker) ─────────────────────────────
   #
@@ -29,24 +54,27 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     region: oregon
-    plan: free          # upgrade to starter+ for always-on; free tier sleeps after 15 min
+    plan: free              # upgrade to starter+ for always-on (free tier sleeps after 15 min)
 
     # Health check — Spring Boot Actuator; Render polls this to determine
-    # liveness and to route traffic only after the service is healthy.
+    # liveness and routes traffic only after the service is healthy.
     healthCheckPath: /actuator/health
 
     envVars:
       # ── Database ────────────────────────────────────────────────────────────
       - key: MONGODB_URI
-        sync: false       # paste your MongoDB Atlas URI in the Render dashboard
+        sync: false         # paste your MongoDB Atlas URI in the Render dashboard
+                            # format: mongodb+srv://user:pass@cluster.mongodb.net/autoapply?appName=...
 
       # ── Redis ───────────────────────────────────────────────────────────────
-      - key: REDIS_HOST
-        sync: false       # Redis Cloud hostname (e.g. redis-xxxxx.c8.us-east-1-2.ec2.cloud.redislabs.com)
-      - key: REDIS_PORT
-        sync: false       # Redis Cloud port (e.g. 16979)
-      - key: REDIS_PASSWORD
-        sync: false       # Redis Cloud password (leave blank if unauthenticated)
+      # REDIS_URL is injected automatically from the kaddy-redis service above.
+      # The Spring app reads this via  spring.data.redis.url: ${REDIS_URL:}
+      # No REDIS_HOST / REDIS_PORT / REDIS_PASSWORD entries are needed.
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kaddy-redis
+          property: connectionString   # format: redis://:password@host:port
 
       # ── JWT ─────────────────────────────────────────────────────────────────
       - key: JWT_SECRET
@@ -55,9 +83,9 @@ services:
       # ── CORS & Frontend URL ─────────────────────────────────────────────────
       # Set these after the frontend service URL is known.
       - key: CORS_ORIGINS
-        sync: false       # e.g. https://kaddy-frontend.onrender.com
+        sync: false         # e.g. https://kaddy-frontend.onrender.com
       - key: FRONTEND_URL
-        sync: false       # same as CORS_ORIGINS (used in email reset links)
+        sync: false         # same value as CORS_ORIGINS (used in email reset links)
 
       # ── Email ───────────────────────────────────────────────────────────────
       - key: RESEND_API_KEY
@@ -65,11 +93,11 @@ services:
       - key: BREVO_API_KEY
         sync: false
       - key: MAIL_FROM
-        sync: false       # e.g. noreply@yourdomain.com
+        sync: false         # e.g. noreply@yourdomain.com
 
       # ── AI Providers ────────────────────────────────────────────────────────
       - key: AI_DEFAULT_PROVIDER
-        value: OPENAI     # change to GROQ / CLAUDE / GEMINI etc. as preferred
+        value: OPENAI       # change to GROQ / CLAUDE / GEMINI etc. as preferred
       - key: OPENAI_API_KEY
         sync: false
       - key: CLAUDE_API_KEY
@@ -113,7 +141,7 @@ services:
       - key: SPRING_THREADS_VIRTUAL_ENABLED
         value: "true"
       - key: UPLOAD_DIR
-        value: /tmp/uploads   # ephemeral — use object storage (S3/Cloudflare R2) for production
+        value: /tmp/uploads  # ephemeral on free tier — use S3/R2 for production
 
   # ── Frontend — Next.js 14 (native Node.js runtime) ─────────────────────────
   #
@@ -131,6 +159,6 @@ services:
 
     envVars:
       # Set this to the backend service URL after the first deploy.
-      # Format: https://<backend-service-name>.onrender.com/api
+      # Format: https://<kaddy-backend>.onrender.com/api
       - key: NEXT_PUBLIC_API_URL
         sync: false
