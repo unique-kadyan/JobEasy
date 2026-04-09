@@ -1,7 +1,9 @@
 package com.kaddy.autoapply.config;
 
+import io.lettuce.core.RedisURI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.interceptor.CacheErrorHandler;
@@ -11,20 +13,83 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisPassword;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.util.Map;
 
 /**
- * Redis configuration: distributed caching with per-cache TTLs.
- * Errors are logged and suppressed — cache failures degrade gracefully
+ * Redis configuration: connection factory + distributed caching with per-cache TTLs.
+ *
+ * <p>Connection strategy (in priority order):
+ * <ol>
+ *   <li><b>REDIS_URL env var</b> — full connection string injected by cloud platforms
+ *       (Render, Railway, Heroku, Fly.io). Format: {@code redis://:password@host:port}</li>
+ *   <li><b>spring.data.redis.host / port / password</b> — used for local Docker Redis
+ *       when REDIS_URL is absent.</li>
+ * </ol>
+ *
+ * <p>Cache errors are logged and suppressed — a Redis outage degrades gracefully
  * to cache-miss behaviour so the application continues to work without Redis.
  */
 @Configuration
 @EnableCaching
 public class RedisConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(RedisConfig.class);
+
+    @Value("${REDIS_URL:}")
+    private String redisUrl;
+
+    @Value("${spring.data.redis.host:localhost}")
+    private String redisHost;
+
+    @Value("${spring.data.redis.port:6379}")
+    private int redisPort;
+
+    @Value("${spring.data.redis.password:}")
+    private String redisPassword;
+
+    /**
+     * Builds a {@link LettuceConnectionFactory} that works in every environment:
+     * <ul>
+     *   <li>Cloud (Render): reads {@code REDIS_URL} env var — no profile or dashboard config needed.</li>
+     *   <li>Local Docker: falls back to {@code spring.data.redis.host/port/password} properties.</li>
+     * </ul>
+     *
+     * <p>Spring Boot's auto-configured factory is suppressed because this bean
+     * implements {@link RedisConnectionFactory} — Spring Boot's
+     * {@code @ConditionalOnMissingBean(RedisConnectionFactory.class)} backs off automatically.
+     */
+    @Bean
+    public LettuceConnectionFactory redisConnectionFactory() {
+        RedisStandaloneConfiguration config;
+
+        if (StringUtils.hasText(redisUrl)) {
+            // Cloud environment: parse full connection URL
+            // Render injects: redis://:password@hostname:port
+            RedisURI uri = RedisURI.create(redisUrl);
+            config = new RedisStandaloneConfiguration(uri.getHost(), uri.getPort());
+            if (uri.getPassword() != null && uri.getPassword().length > 0) {
+                config.setPassword(RedisPassword.of(uri.getPassword()));
+            }
+            log.info("Redis: connecting via REDIS_URL to {}:{}", uri.getHost(), uri.getPort());
+        } else {
+            // Local / dev environment: use host + port + password from Spring properties
+            config = new RedisStandaloneConfiguration(redisHost, redisPort);
+            if (StringUtils.hasText(redisPassword)) {
+                config.setPassword(RedisPassword.of(redisPassword));
+            }
+            log.info("Redis: connecting via host/port to {}:{}", redisHost, redisPort);
+        }
+
+        return new LettuceConnectionFactory(config);
+    }
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {

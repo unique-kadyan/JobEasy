@@ -11,9 +11,9 @@ server:
 spring:
   data:
     redis:
-      # Render managed Redis injects the full connection string via REDIS_URL.
-      # Format injected by Render: redis://:password@host:port
-      url: ${REDIS_URL}
+      # REDIS_URL is read programmatically in RedisConfig.java — no url property needed here.
+      # RedisConfig checks REDIS_URL env var first (Render injects it automatically),
+      # then falls back to spring.data.redis.host/port for local Docker.
       lettuce:
         pool:
           max-active: 5    # base: 50 — each connection holds a socket buffer
