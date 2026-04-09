@@ -8,10 +8,18 @@ import Button from "@/components/ui/Button";
 import { Shield, CreditCard, Lock, CheckCircle } from "lucide-react";
 import type { PaymentOrder } from "@/types";
 
+interface RazorpayInstance {
+  on(event: string, handler: () => void): void;
+  open(): void;
+}
+
+interface RazorpayConstructor {
+  new (options: Record<string, unknown>): RazorpayInstance;
+}
+
 declare global {
   interface Window {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Razorpay: any;
+    Razorpay: RazorpayConstructor;
   }
 }
 

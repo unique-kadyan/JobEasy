@@ -37,7 +37,10 @@ export default function JobsPage() {
   const [size, setSize] = useState(30);
   const [skillTags, setSkillTags] = useState<string[]>([]);
 
-  // Auto-populate skills from resume on first load
+  // Auto-populate skills from resume on first load.
+  // searchQuery and skillTags.length are intentionally excluded: re-running
+  // when the user removes a skill or types a query would reset their choices.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (resumeSkills.length > 0 && skillTags.length === 0 && !searchQuery) {
       setSkillTags(resumeSkills.slice(0, 10));
