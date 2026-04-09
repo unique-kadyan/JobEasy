@@ -73,7 +73,7 @@ JobEasy is a full-stack AI-powered job application platform that aggregates list
 ### Backend
 | Layer | Technology |
 |---|---|
-| Framework | Spring Boot 3.3.6, Java 17 |
+| Framework | Spring Boot 3.3.6, Java 21 (LTS) |
 | Database | MongoDB 7 (Spring Data MongoDB) |
 | Security | Spring Security, JWT (JJWT), OAuth2 Client |
 | HTTP Client | Spring WebFlux (WebClient) |
@@ -158,7 +158,7 @@ auto_apply_with_kaddy/
 
 | Requirement | Version |
 |---|---|
-| Java (JDK) | 17+ |
+| Java (JDK) | 21+ (LTS) |
 | Maven | 3.9+ |
 | Node.js | 20+ |
 | Docker & Docker Compose | Latest |

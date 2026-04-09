@@ -26,11 +26,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 17 (Java only)
+      - name: Set up JDK 21 (Java only)
         if: matrix.language == 'java'
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: maven
 
