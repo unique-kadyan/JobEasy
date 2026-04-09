@@ -8,5 +8,16 @@ services:
       - mongodata:/data/db
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: kaddy_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    command: redis-server --save 60 1 --loglevel warning
+    restart: unless-stopped
+
 volumes:
   mongodata:
+  redisdata:

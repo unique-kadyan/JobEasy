@@ -16,6 +16,7 @@ import com.kaddy.autoapply.repository.VerificationTokenRepository;
 import com.kaddy.autoapply.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -27,6 +28,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
+    private final TokenBlacklistService blacklistService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
@@ -34,12 +36,14 @@ public class AuthService {
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtTokenProvider tokenProvider,
+                       TokenBlacklistService blacklistService,
                        VerificationTokenRepository verificationTokenRepository,
                        PasswordResetTokenRepository passwordResetTokenRepository,
                        EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
+        this.blacklistService = blacklistService;
         this.verificationTokenRepository = verificationTokenRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.emailService = emailService;
@@ -91,6 +95,16 @@ public class AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return buildAuthResponse(user);
+    }
+
+    public void logout(String authorizationHeader) {
+        if (!StringUtils.hasText(authorizationHeader) || !authorizationHeader.startsWith("Bearer ")) {
+            return;
+        }
+        String token = authorizationHeader.substring(7);
+        if (tokenProvider.validateToken(token) && tokenProvider.isAccessToken(token)) {
+            blacklistService.blacklist(token, tokenProvider.getRemainingTtlSeconds(token));
+        }
     }
 
     public UserResponse getCurrentUser(String userId) {

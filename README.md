@@ -74,7 +74,7 @@ JobEasy is a full-stack AI-powered job application platform that aggregates list
 | Layer | Technology |
 |---|---|
 | Framework | Spring Boot 3.3.6, Java 21 (LTS) |
-| Database | MongoDB 7 (Spring Data MongoDB) |
+| Database | MongoDB 7 (Spring Data MongoDB), Redis 7 (caching + token blacklist) |
 | Security | Spring Security, JWT (JJWT), OAuth2 Client |
 | HTTP Client | Spring WebFlux (WebClient) |
 | AI | Claude, OpenAI, Gemini, Groq, Mistral, Cerebras, Together AI, Novita AI, SambaNova |
@@ -223,7 +223,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8080
 
 ### Running Locally
 
-**1. Start MongoDB**
+**1. Start MongoDB and Redis**
 ```bash
 docker-compose up -d
 ```
@@ -265,6 +265,7 @@ curl -X POST http://localhost:8080/api/auth/signup \
 |---|---|---|
 | `POST` | `/api/auth/signup` | Register a new user |
 | `POST` | `/api/auth/login` | Login, returns JWT + refresh token |
+| `POST` | `/api/auth/logout` | Invalidate the current access token |
 | `POST` | `/api/auth/refresh` | Exchange refresh token for new JWT |
 | `GET` | `/api/auth/me` | Get current authenticated user |
 

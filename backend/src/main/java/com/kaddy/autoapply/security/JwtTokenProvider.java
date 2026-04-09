@@ -66,6 +66,16 @@ public class JwtTokenProvider {
         return "access".equals(parseClaims(token).get("type", String.class));
     }
 
+    /**
+     * Returns the number of seconds until this token expires, or 0 if it has
+     * already expired. Used to set a matching TTL when blacklisting on logout.
+     */
+    public long getRemainingTtlSeconds(String token) {
+        long expiryMs = parseClaims(token).getExpiration().getTime();
+        long remainingMs = expiryMs - System.currentTimeMillis();
+        return Math.max(0L, remainingMs / 1000);
+    }
+
     private Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(key)

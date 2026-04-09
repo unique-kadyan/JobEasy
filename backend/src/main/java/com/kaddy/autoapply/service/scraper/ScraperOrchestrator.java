@@ -3,6 +3,7 @@ package com.kaddy.autoapply.service.scraper;
 import com.kaddy.autoapply.dto.response.JobResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -22,6 +23,7 @@ public class ScraperOrchestrator {
         this.scrapers = scrapers;
     }
 
+    @Cacheable(value = "jobs", key = "#query + ':' + #location + ':' + #page")
     public List<JobResponse> searchJobs(String query, String location, int page) {
         List<CompletableFuture<List<JobResponse>>> futures = scrapers.stream()
                 .map(scraper -> CompletableFuture.supplyAsync(() -> {

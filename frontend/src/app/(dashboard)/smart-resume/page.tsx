@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
@@ -26,15 +26,19 @@ export default function SmartResumePage() {
   const [payModal, setPayModal] = useState(false);
 
   // Load latest generated resume on mount
-  useQuery<GeneratedResume>({
+  const { data: latestResume } = useQuery<GeneratedResume>({
     queryKey: ["smart-resume-latest"],
-    queryFn: async () => {
+    queryFn: async (): Promise<GeneratedResume> => {
       const res = await api.get("/smart-resume/latest");
       return res.data;
     },
     retry: false,
-    onSuccess: (data: GeneratedResume) => setGenerated(data),
-  } as Parameters<typeof useQuery>[0]);
+  });
+
+  useEffect(() => {
+    if (latestResume) setGenerated(latestResume);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [latestResume]);
 
   const analyzeMutation = useMutation({
     mutationFn: async (): Promise<ResumeAnalysis> => {

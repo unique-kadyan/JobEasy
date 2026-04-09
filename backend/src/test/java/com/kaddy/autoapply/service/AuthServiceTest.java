@@ -9,6 +9,7 @@ import com.kaddy.autoapply.repository.PasswordResetTokenRepository;
 import com.kaddy.autoapply.repository.UserRepository;
 import com.kaddy.autoapply.repository.VerificationTokenRepository;
 import com.kaddy.autoapply.security.JwtTokenProvider;
+import com.kaddy.autoapply.service.TokenBlacklistService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +30,7 @@ class AuthServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtTokenProvider tokenProvider;
+    @Mock private TokenBlacklistService blacklistService;
     @Mock private VerificationTokenRepository verificationTokenRepository;
     @Mock private PasswordResetTokenRepository passwordResetTokenRepository;
     @Mock private EmailService emailService;

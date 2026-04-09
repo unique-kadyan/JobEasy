@@ -1,5 +1,6 @@
 package com.kaddy.autoapply.security;
 
+import com.kaddy.autoapply.service.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,9 +21,12 @@ import java.util.Optional;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
+    private final TokenBlacklistService blacklistService;
 
-    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider) {
+    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider,
+                                   TokenBlacklistService blacklistService) {
         this.tokenProvider = tokenProvider;
+        this.blacklistService = blacklistService;
     }
 
     @Override
@@ -30,7 +34,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         extractToken(request).ifPresent(token -> {
-            if (tokenProvider.validateToken(token) && tokenProvider.isAccessToken(token)) {
+            if (tokenProvider.validateToken(token)
+                    && tokenProvider.isAccessToken(token)
+                    && !blacklistService.isBlacklisted(token)) {
                 String userId = tokenProvider.getUserIdFromToken(token);
                 String email  = tokenProvider.getEmailFromToken(token);
 
