@@ -57,55 +57,55 @@ app:
   # ─── Email (HTTP APIs — no SMTP) ─────────────────────────────────────────────
   email:
     resend:
-      api-key: ${RESEND_API_KEY}
+      api-key: ${RESEND_API_KEY:}
       from: ${RESEND_FROM:Auto Apply <onboarding@resend.dev>}
     brevo:
-      api-key: ${BREVO_API_KEY}
+      api-key: ${BREVO_API_KEY:}
       from: ${BREVO_FROM:noreply@kaddy.app}
 
   # ─── AI Providers (free first → premium last) ────────────────────────────────
   ai:
     # Free tier providers (tried in this order)
     cerebras:
-      api-key: ${CEREBRAS_API_KEY}
+      api-key: ${CEREBRAS_API_KEY:}
       model: llama-3.3-70b
     groq:
-      api-key: ${GROQ_API_KEY}
+      api-key: ${GROQ_API_KEY:}
       model: llama-3.3-70b-versatile
     together:
-      api-key: ${TOGETHER_API_KEY}
+      api-key: ${TOGETHER_API_KEY:}
       model: meta-llama/Llama-3.3-70B-Instruct-Turbo
     mistral:
-      api-key: ${MISTRAL_API_KEY}
+      api-key: ${MISTRAL_API_KEY:}
       model: mistral-small-latest
     sambanova:
-      api-key: ${SAMBANOVA_API_KEY}
+      api-key: ${SAMBANOVA_API_KEY:}
       model: Meta-Llama-3.3-70B-Instruct
     novita:
-      api-key: ${NOVITA_API_KEY}
+      api-key: ${NOVITA_API_KEY:}
       model: meta-llama/llama-3.3-70b-instruct
     # Premium providers (used only when all free providers are exhausted)
     gemini:
-      api-key: ${GEMINI_API_KEY}
+      api-key: ${GEMINI_API_KEY:}
       model: gemini-2.0-flash
     openai:
-      api-key: ${OPENAI_API_KEY}
+      api-key: ${OPENAI_API_KEY:}
       model: gpt-4o
     claude:
       api-key: ${ANTHROPIC_API_KEY:}
       model: claude-sonnet-4-20250514
 
   scraper:
-    jsearch-api-key: ${JSEARCH_API_KEY}
+    jsearch-api-key: ${JSEARCH_API_KEY:}
     cache-ttl-minutes: 60
     adzuna:
-      app-id: ${ADZUNA_APP_ID}
-      app-key: ${ADZUNA_APP_KEY}
+      app-id: ${ADZUNA_APP_ID:}
+      app-key: ${ADZUNA_APP_KEY:}
       country: ${ADZUNA_COUNTRY:in}
     serpapi:
-      api-key: ${SERPAPI_API_KEY}
+      api-key: ${SERPAPI_API_KEY:}
     careerjet:
-      affiliate-id: ${CAREERJET_AFFILIATE_ID}
+      affiliate-id: ${CAREERJET_AFFILIATE_ID:}
       locale: ${CAREERJET_LOCALE:en_IN}
 
   payment:
