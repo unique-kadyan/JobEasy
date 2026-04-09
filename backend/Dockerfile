@@ -49,15 +49,18 @@ COPY --from=build /app/target/auto-apply-*.jar app.jar
 EXPOSE 8080
 
 # JVM flags:
-#   -XX:+UseZGC -XX:+ZGenerational  — generational ZGC for sub-ms pauses
+#   -XX:+UseZGC                     — ZGC garbage collector (generational by default in Java 21+)
 #   -Xms / -Xmx                     — tuned for Render free-tier (512 MB RAM)
 #   -XX:+EnableDynamicAgentLoading  — silences Java 25 agent warning
+#   --enable-native-access          — silences Tomcat JNI / Netty Unsafe warnings
 #   --server.port                   — reads Render's injected $PORT; falls back to 8080 locally
+#
+# NOTE: -XX:+ZGenerational was removed in Java 24; ZGC is generational by default in Java 21+.
 ENTRYPOINT ["sh", "-c", "java \
   -XX:+UseZGC \
-  -XX:+ZGenerational \
   -Xms128m \
   -Xmx400m \
   -XX:+EnableDynamicAgentLoading \
+  --enable-native-access=ALL-UNNAMED \
   -jar app.jar \
   --server.port=${PORT:-8080}"]

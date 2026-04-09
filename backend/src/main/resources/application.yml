@@ -20,25 +20,16 @@ spring:
     virtual:
       enabled: true
 
-  profiles:
-    active: local
-
   data:
     mongodb:
       uri: ${MONGODB_URI}
     # ─── Redis (Lettuce) ────────────────────────────────────────────────────
+    # url is NOT set here — setting it to an empty string causes Lettuce to
+    # reject it with "Invalid Redis URL ''".
+    # Profile overrides handle cloud vs local:
+    #   application-prod.yml  → url: ${REDIS_URL}  (Render managed Redis)
+    #   application-local.yml → host/port           (local Docker Redis)
     redis:
-      # REDIS_URL — single-string connection URI for cloud platforms
-      # (Railway, Render, Fly.io, Heroku, etc. inject this automatically).
-      # Format:  redis://[:password@]host[:port][/db-index]
-      #          rediss://... for TLS connections
-      # Examples:
-      #   Local Docker (no password) : redis://localhost:6379
-      #   Local Docker (with password): redis://:yourpassword@localhost:6379
-      #   Cloud TLS                  : rediss://:token@region.provider.com:6380
-      # When REDIS_URL is not set the empty default is ignored and Spring
-      # falls back to the host / port / password properties below.
-      url: ${REDIS_URL:}
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}

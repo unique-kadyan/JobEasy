@@ -138,6 +138,8 @@ services:
       # ── Runtime tuning ──────────────────────────────────────────────────────
       # PORT is injected automatically by Render — no manual entry needed.
       # The Dockerfile ENTRYPOINT reads ${PORT:-8080} at container start.
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod           # activates application-prod.yml (sets spring.data.redis.url)
       - key: SPRING_THREADS_VIRTUAL_ENABLED
         value: "true"
       - key: UPLOAD_DIR

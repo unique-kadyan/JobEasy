@@ -1,0 +1,10 @@
+spring:
+  data:
+    redis:
+      # Render managed Redis injects the full connection string via REDIS_URL.
+      # Format injected by Render: redis://:password@host:port
+      url: ${REDIS_URL}
+
+logging:
+  level:
+    "[com.kaddy.autoapply]": INFO   # less verbose than DEBUG in production
