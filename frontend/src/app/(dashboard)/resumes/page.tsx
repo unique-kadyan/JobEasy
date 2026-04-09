@@ -65,18 +65,20 @@ export default function ResumesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Resumes</h1>
           <p className="text-gray-500">Upload and manage your resumes</p>
         </div>
-        <div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".pdf"
-            className="hidden"
-            onChange={handleUpload}
-          />
-          <Button onClick={() => fileRef.current?.click()} loading={uploading}>
-            <Upload className="h-4 w-4" /> Upload PDF
-          </Button>
-        </div>
+        {(!resumes || resumes.length === 0) && (
+          <div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={handleUpload}
+            />
+            <Button onClick={() => fileRef.current?.click()} loading={uploading}>
+              <Upload className="h-4 w-4" /> Upload PDF
+            </Button>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
