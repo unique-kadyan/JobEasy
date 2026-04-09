@@ -157,9 +157,6 @@ export default function ResumesPage() {
           <p className="text-gray-500 mb-4">
             Upload a PDF resume to get started
           </p>
-          <Button onClick={() => fileRef.current?.click()}>
-            <Upload className="h-4 w-4" /> Upload Resume
-          </Button>
         </div>
       )}
     </div>
