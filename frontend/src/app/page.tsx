@@ -121,7 +121,7 @@ export default function LandingPage() {
             <Zap className="h-4 w-4 text-indigo-600" />
             <span>Kaddy Auto Apply</span>
           </div>
-          <p>Built with AI. Powered by Claude & GPT-4.</p>
+          <p>&copy; 2026 KadyanIndustries. All rights reserved.</p>
         </div>
       </footer>
     </div>
