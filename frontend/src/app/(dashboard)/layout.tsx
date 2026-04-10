@@ -36,7 +36,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (hydrated && isAuthenticated && user && user.onboardingCompleted === false) {
-      router.push("/onboarding");
+      router.replace("/onboarding");
     }
   }, [hydrated, isAuthenticated, user, router]);
 

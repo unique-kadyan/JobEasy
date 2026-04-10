@@ -65,9 +65,9 @@ export default function OnboardingPage() {
     setCompleting(true);
     try {
       const res = await api.post("/users/onboarding/complete");
-      if (user) setUser({ ...user, onboardingCompleted: true, ...res.data });
+      if (user) setUser({ ...user, ...res.data, onboardingCompleted: true });
     } catch {
-
+      if (user) setUser({ ...user, onboardingCompleted: true });
     } finally {
       setCompleting(false);
       router.push("/dashboard");
