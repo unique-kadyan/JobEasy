@@ -7,17 +7,17 @@ const API_URL =
     ? (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api")
     : "";
 
-const INTERVAL_UP_MS   = 25_000;
+const INTERVAL_UP_MS = 25_000;
 
 const INTERVAL_DOWN_MS = 5_000;
-const TIMEOUT_MS       = 8_000;
+const TIMEOUT_MS = 8_000;
 
 export type ServerStatus = "up" | "down" | "connecting";
 
 export function useKeepAlive(): ServerStatus {
   const [status, setStatus] = useState<ServerStatus>("connecting");
-  const statusRef  = useRef<ServerStatus>("connecting");
-  const timerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const statusRef = useRef<ServerStatus>("connecting");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
 
   const scheduleNext = useCallback((currentStatus: ServerStatus) => {

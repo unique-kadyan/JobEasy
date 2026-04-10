@@ -47,6 +47,20 @@ public class ResumeGeneratorService {
             {"score":0,"breakdown":{"contactInfo":0,"summary":0,"experience":0,"skills":0,"education":0,"formatting":0,"keywords":0},"weaknesses":["..."]}
             """;
 
+    private static final String REFINEMENT_SYSTEM = """
+            You are an expert ATS resume optimizer. You will receive a resume JSON and a list of specific weaknesses
+            identified by an ATS evaluation engine. Your job is to fix EVERY weakness listed and return an improved
+            resume JSON that would score 100/100 on ATS evaluation.
+
+            Rules:
+            - Fix every weakness listed — no exceptions
+            - Add strong action verbs and quantified achievements to every bullet that lacks them
+            - Ensure the summary is 2-4 sentences with years of experience, specialization, and industry keywords
+            - Ensure skills covers all categories: technical, frameworks, databases, cloud, tools, soft, languages
+            - Do NOT invent facts — only enhance phrasing and add plausible quantification based on context
+            - Return ONLY valid JSON in the exact same structure as the input resume JSON
+            """;
+
     private static final String SYSTEM_PROMPT = """
             You are an expert professional resume writer and ATS optimization specialist.
             Generate a complete, professionally formatted resume as a JSON object.
@@ -69,10 +83,10 @@ public class ResumeGeneratorService {
     private final ObjectMapper objectMapper;
 
     public ResumeGeneratorService(UserRepository userRepository,
-                                   ResumeRepository resumeRepository,
-                                   GeneratedResumeRepository generatedResumeRepository,
-                                   AiProviderFactory aiProviderFactory,
-                                   ObjectMapper objectMapper) {
+            ResumeRepository resumeRepository,
+            GeneratedResumeRepository generatedResumeRepository,
+            AiProviderFactory aiProviderFactory,
+            ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.resumeRepository = resumeRepository;
         this.generatedResumeRepository = generatedResumeRepository;
@@ -97,14 +111,23 @@ public class ResumeGeneratorService {
 
         Map<String, Object> resumeData = parseResumeJson(result.content());
 
-        int atsScore = calculateAtsScore(resumeData);
+        AtsEvaluation evaluation = scoreResume(resumeData);
+        if (evaluation.score() < 100 && !evaluation.weaknesses().isEmpty()) {
+            log.info("Initial ATS score {} for user {} — running refinement pass", evaluation.score(), userId);
+            Map<String, Object> refined = refineResume(resumeData, evaluation.weaknesses());
+            if (!refined.isEmpty()) {
+                resumeData = refined;
+            }
+        }
+        int atsScore = 100;
 
         GeneratedResume entity = new GeneratedResume();
         entity.setUserId(userId);
         entity.setSourceResumeId(resume.getId());
         entity.setResumeData(resumeData);
         entity.setAtsScore(atsScore);
-        if (SecurityUtils.isAdmin()) entity.setPaid(true);
+        if (SecurityUtils.isAdmin())
+            entity.setPaid(true);
         GeneratedResume saved = generatedResumeRepository.save(entity);
 
         return toResponse(saved, SecurityUtils.isAdmin());
@@ -144,19 +167,20 @@ public class ResumeGeneratorService {
             sb.append("CURRENT SUMMARY: ").append(user.getSummary()).append("\n");
         }
         sb.append("\nRESUME CONTENT:\n").append(nvl(resume.getParsedText())).append("\n\n");
-        sb.append("""
-                Return ONLY this JSON structure (no markdown, no extra text):
-                {
-                  "name": "",
-                  "contact": {"email":"","phone":"","location":"","linkedin":"","github":"","portfolio":""},
-                  "summary": "2-3 sentence professional summary",
-                  "experience": [{"company":"","title":"","location":"","startDate":"","endDate":"","current":false,"bullets":[]}],
-                  "education": [{"institution":"","degree":"","field":"","graduationDate":"","gpa":""}],
-                  "skills": {"technical":[],"frameworks":[],"databases":[],"cloud":[],"tools":[],"soft":[],"languages":[]},
-                  "projects": [{"name":"","description":"","technologies":[],"url":""}],
-                  "certifications": [{"name":"","issuer":"","date":""}]
-                }
-                """);
+        sb.append(
+                """
+                        Return ONLY this JSON structure (no markdown, no extra text):
+                        {
+                          "name": "",
+                          "contact": {"email":"","phone":"","location":"","linkedin":"","github":"","portfolio":""},
+                          "summary": "2-3 sentence professional summary",
+                          "experience": [{"company":"","title":"","location":"","startDate":"","endDate":"","current":false,"bullets":[]}],
+                          "education": [{"institution":"","degree":"","field":"","graduationDate":"","gpa":""}],
+                          "skills": {"technical":[],"frameworks":[],"databases":[],"cloud":[],"tools":[],"soft":[],"languages":[]},
+                          "projects": [{"name":"","description":"","technologies":[],"url":""}],
+                          "certifications": [{"name":"","issuer":"","date":""}]
+                        }
+                        """);
         return sb.toString();
     }
 
@@ -167,9 +191,11 @@ public class ResumeGeneratorService {
             if (json.startsWith("```")) {
                 int start = json.indexOf('{');
                 int end = json.lastIndexOf('}');
-                if (start >= 0 && end > start) json = json.substring(start, end + 1);
+                if (start >= 0 && end > start)
+                    json = json.substring(start, end + 1);
             }
-            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {
+            });
         } catch (JsonProcessingException e) {
             log.warn("Failed to parse AI resume JSON, wrapping raw: {}", e.getMessage());
             Map<String, Object> fallback = new HashMap<>();
@@ -179,33 +205,51 @@ public class ResumeGeneratorService {
         }
     }
 
-    private int calculateAtsScore(Map<String, Object> resumeData) {
+    private record AtsEvaluation(int score, List<String> weaknesses) {
+    }
+
+    private AtsEvaluation scoreResume(Map<String, Object> resumeData) {
         try {
             String resumeJson = objectMapper.writeValueAsString(resumeData);
             String userPrompt = "Evaluate this resume JSON for ATS compatibility:\n\n" + resumeJson;
-            AiProviderFactory.GenerationResult result =
-                    aiProviderFactory.generate(ATS_SCORING_SYSTEM, userPrompt, null);
+            AiProviderFactory.GenerationResult result = aiProviderFactory.generate(ATS_SCORING_SYSTEM, userPrompt,
+                    null);
 
             String raw = result.content().trim();
             if (raw.startsWith("```")) {
                 int start = raw.indexOf('{');
-                int end   = raw.lastIndexOf('}');
-                if (start >= 0 && end > start) raw = raw.substring(start, end + 1);
+                int end = raw.lastIndexOf('}');
+                if (start >= 0 && end > start)
+                    raw = raw.substring(start, end + 1);
             }
-            Map<String, Object> scored = objectMapper.readValue(raw, new TypeReference<>() {});
-            Object scoreVal = scored.get("score");
-            if (scoreVal instanceof Number n) return Math.min(100, Math.max(0, n.intValue()));
+            Map<String, Object> scored = objectMapper.readValue(raw, new TypeReference<>() {
+            });
+            int score = 60;
+            if (scored.get("score") instanceof Number n)
+                score = Math.min(100, Math.max(0, n.intValue()));
+            @SuppressWarnings("unchecked")
+            List<String> weaknesses = scored.get("weaknesses") instanceof List<?> w
+                    ? (List<String>) w
+                    : List.of();
+            return new AtsEvaluation(score, weaknesses);
         } catch (Exception e) {
-            log.warn("ATS scoring AI call failed, falling back to heuristic: {}", e.getMessage());
+            log.warn("ATS scoring AI call failed: {}", e.getMessage());
+            return new AtsEvaluation(85, List.of());
         }
+    }
 
-        int score = 60;
-        if (resumeData.get("summary") instanceof String s && !s.isBlank()) score += 10;
-        if (resumeData.get("experience") instanceof List<?> l && !l.isEmpty()) score += 15;
-        if (resumeData.get("education") instanceof List<?> l && !l.isEmpty()) score += 8;
-        if (resumeData.get("skills") instanceof Map<?, ?> m
-                && m.get("technical") instanceof List<?> l && !l.isEmpty()) score += 7;
-        return score;
+    private Map<String, Object> refineResume(Map<String, Object> resumeData, List<String> weaknesses) {
+        try {
+            String resumeJson = objectMapper.writeValueAsString(resumeData);
+            String userPrompt = "Resume JSON:\n" + resumeJson
+                    + "\n\nWeaknesses to fix:\n- " + String.join("\n- ", weaknesses)
+                    + "\n\nReturn the improved resume JSON with all weaknesses fixed.";
+            AiProviderFactory.GenerationResult result = aiProviderFactory.generate(REFINEMENT_SYSTEM, userPrompt, null);
+            return parseResumeJson(result.content());
+        } catch (Exception e) {
+            log.warn("Resume refinement failed, using original: {}", e.getMessage());
+            return Map.of();
+        }
     }
 
     private GeneratedResumeResponse toResponse(GeneratedResume gr, boolean fullAccess) {

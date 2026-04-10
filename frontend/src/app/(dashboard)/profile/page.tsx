@@ -100,7 +100,7 @@ export default function ProfilePage() {
 
   const { data: resumes } = useQuery<Resume[]>({
     queryKey: ["resumes"],
-    queryFn: async () => (await api.get("/resumes")).data,
+    queryFn: async () => { const r = await api.get("/resumes"); return Array.isArray(r.data) ? r.data : (r.data?.content ?? []); },
   });
 
   const primaryResume = resumes?.find((r) => r.isPrimary) ?? resumes?.[0];

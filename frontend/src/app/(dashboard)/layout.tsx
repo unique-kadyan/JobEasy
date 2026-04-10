@@ -35,7 +35,12 @@ export default function DashboardLayout({
   }, [hydrated, isAuthenticated, router]);
 
   useEffect(() => {
-    if (hydrated && isAuthenticated && user && user.onboardingCompleted === false) {
+    if (
+      hydrated &&
+      isAuthenticated &&
+      user &&
+      user.onboardingCompleted === false
+    ) {
       router.replace("/onboarding");
     }
   }, [hydrated, isAuthenticated, user, router]);
@@ -45,7 +50,9 @@ export default function DashboardLayout({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className={`${theme === "dark" ? "dark" : ""} min-h-screen bg-[#0d1117] dark:bg-[#0d1117] bg-gray-50`}>
+      <div
+        className={`${theme === "dark" ? "dark" : ""} min-h-screen bg-gray-50 dark:bg-[#0d1117]`}
+      >
         {user && !user.emailVerified && (
           <div className="fixed top-12 left-0 right-0 z-30 bg-amber-900/80 border-b border-amber-700 px-4 py-2 text-center text-sm text-amber-200">
             Please verify your email to unlock all features.{" "}
@@ -57,7 +64,7 @@ export default function DashboardLayout({
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email: user.email }),
-                  }
+                  },
                 )
               }
               className="underline font-medium hover:text-amber-100"
@@ -101,7 +108,8 @@ function WarmUpBanner({ status }: { status: ServerStatus }) {
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
         <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
       </span>
-      Server is starting up — this takes 30–50 seconds on first load. Page will refresh automatically.
+      Server is starting up — this takes 30–50 seconds on first load. Page will
+      refresh automatically.
     </div>
   );
 }

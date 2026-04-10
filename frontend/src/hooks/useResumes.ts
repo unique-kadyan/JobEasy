@@ -5,7 +5,11 @@ import type { Resume } from "@/types";
 export function useResumes() {
   return useQuery<Resume[]>({
     queryKey: ["resumes"],
-    queryFn: async () => (await api.get("/resumes")).data,
+    queryFn: async () => {
+      const res = await api.get("/resumes");
+      // Backend returns Spring Data Page<Resume> — extract the content array
+      return Array.isArray(res.data) ? res.data : (res.data?.content ?? []);
+    },
   });
 }
 
