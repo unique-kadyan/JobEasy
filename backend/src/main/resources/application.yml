@@ -129,6 +129,8 @@ app:
     socket:
       connect-timeout-ms: 5000
       read-timeout-ms: 10000
+    cluster:
+      server-selection-timeout-ms: 5000
 
   webclient:
     connect-timeout-ms: 5000

@@ -1,5 +1,6 @@
 package com.kaddy.autoapply.config;
 
+import com.mongodb.connection.ClusterSettings;
 import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.connection.SocketSettings;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,9 +31,14 @@ public class MongoConfig {
     @Value("${app.mongodb.socket.read-timeout-ms:10000}")
     private int readTimeoutMs;
 
+    @Value("${app.mongodb.cluster.server-selection-timeout-ms:5000}")
+    private int serverSelectionTimeoutMs;
+
     @Bean
     MongoClientSettingsBuilderCustomizer mongoPoolCustomizer() {
         return builder -> builder
+                .applyToClusterSettings((ClusterSettings.Builder cluster) -> cluster
+                        .serverSelectionTimeout(serverSelectionTimeoutMs, TimeUnit.MILLISECONDS))
                 .applyToConnectionPoolSettings((ConnectionPoolSettings.Builder pool) -> pool
                         .maxSize(maxPoolSize)
                         .minSize(minPoolSize)

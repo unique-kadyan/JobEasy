@@ -2,13 +2,11 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { Zap, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();
@@ -49,13 +47,13 @@ function ResetPasswordContent() {
 
     setLoading(true);
     try {
-      await axios.post(`${API_URL}/auth/reset-password`, {
+      await api.post("/auth/reset-password", {
         token,
         newPassword: password,
       });
       setSuccess(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Reset failed. The link may have expired.");
+      setError(err.message || "Reset failed. The link may have expired.");
     } finally {
       setLoading(false);
     }

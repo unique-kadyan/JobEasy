@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { Zap, Mail, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -20,10 +18,10 @@ export default function ForgotPasswordPage() {
     setError("");
     setLoading(true);
     try {
-      await axios.post(`${API_URL}/auth/forgot-password`, { email });
+      await api.post("/auth/forgot-password", { email });
       setSent(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Something went wrong");
+      setError(err.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }

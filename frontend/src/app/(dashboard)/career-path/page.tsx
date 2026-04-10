@@ -242,8 +242,7 @@ export default function CareerPathPage() {
 
       {error && (
         <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 text-sm text-red-700 dark:text-red-400">
-          {(error as { response?: { data?: { message?: string } } }).response?.data
-            ?.message ?? "Analysis failed. Please ensure your resume and profile are complete, then try again."}
+          {(error as Error).message || "Analysis failed. Please ensure your resume and profile are complete, then try again."}
         </div>
       )}
 

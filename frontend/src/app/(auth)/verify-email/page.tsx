@@ -2,12 +2,10 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import Button from "@/components/ui/Button";
 import { Zap, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
@@ -22,17 +20,15 @@ function VerifyEmailContent() {
       return;
     }
 
-    axios
-      .get(`${API_URL}/auth/verify-email?token=${token}`)
+    api
+      .get(`/auth/verify-email?token=${token}`)
       .then(() => {
         setStatus("success");
         setMessage("Your email has been verified successfully!");
       })
       .catch((err) => {
         setStatus("error");
-        setMessage(
-          err.response?.data?.message || "Verification failed. The link may have expired."
-        );
+        setMessage(err.message || "Verification failed. The link may have expired.");
       });
   }, [token]);
 

@@ -21,7 +21,7 @@ export default function SignupForm() {
     try {
       await signup(name, email, password);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Signup failed");
+      setError(err.message || "Signup failed.");
     } finally {
       setLoading(false);
     }

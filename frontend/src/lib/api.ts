@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useAuthStore } from "@/store/auth-store";
+import { getApiErrorMessage } from "@/lib/errors";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api",
@@ -50,7 +51,13 @@ api.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    const friendlyMessage = getApiErrorMessage(error);
+    const friendlyError = new Error(friendlyMessage);
+    Object.assign(friendlyError, {
+      status: error.response?.status,
+      originalError: error,
+    });
+    return Promise.reject(friendlyError);
   }
 );
 
