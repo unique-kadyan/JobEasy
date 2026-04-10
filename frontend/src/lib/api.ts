@@ -50,10 +50,6 @@ api.interceptors.response.use(
       }
     }
 
-    if (error.response?.status === 403) {
-      if (typeof window !== "undefined") window.location.href = "/dashboard";
-    }
-
     return Promise.reject(error);
   }
 );
@@ -61,13 +57,14 @@ api.interceptors.response.use(
 export function setSessionCookie(): void {
   if (typeof document === "undefined") return;
   const maxAge = 7 * 24 * 60 * 60;
-  document.cookie = `kaddy-session=1; path=/; max-age=${maxAge}; SameSite=Strict`;
+  const secure = location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `kaddy-session=1; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
 }
 
 export function clearSessionCookie(): void {
   if (typeof document === "undefined") return;
-  document.cookie =
-    "kaddy-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict";
+  const secure = location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `kaddy-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secure}`;
 }
 
 export default api;
