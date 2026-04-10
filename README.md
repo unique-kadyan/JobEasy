@@ -200,15 +200,15 @@ auto_apply_with_kaddy/
 │
 ├── backend/
 │   ├── Dockerfile                        # Multi-stage: Temurin 25 JDK build → JRE runtime (jammy)
-│   ├── pom.xml                           # Spring Boot 3.5, Java 25, Maven 3.9.11
+│   ├── pom.xml                           # Spring Boot 4.0.3, Java 25, Maven 3.9.11
 │   └── src/
 │       ├── main/java/com/kaddy/autoapply/
 │       │   ├── config/
 │       │   │   ├── AiConfig.java         # AiTextGenerator @Bean (wraps AiProviderFactory)
 │       │   │   ├── AsyncConfig.java      # Virtual thread executor
 │       │   │   ├── FeatureConfig.java    # Subscription tier feature gates
-│       │   │   ├── JacksonConfig.java
-│       │   │   ├── MongoConfig.java
+│       │   │   ├── JacksonConfig.java        # @Primary ObjectMapper (Jackson 2): JavaTimeModule, ISO-8601 dates
+│       │   │   ├── MongoConfig.java          # Connection pool + socket timeout tuning (spring-boot-mongodb)
 │       │   │   ├── RateLimitInterceptor.java  # Per-user Redis rate limiting (skips anonymous)
 │       │   │   ├── RedisConfig.java      # Lettuce pool, REDIS_URL programmatic config
 │       │   │   ├── SecurityConfig.java   # JWT filter chain, CORS, ForwardedHeaderFilter
