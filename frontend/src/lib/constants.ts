@@ -16,3 +16,15 @@ export const AI_PROVIDERS = [
   { value: "CLAUDE", label: "Claude (Anthropic)" },
   { value: "OPENAI", label: "GPT-4o (OpenAI)" },
 ];
+
+export const CEREBRAS_MODELS = [
+  { value: "CEREBRAS_QWEN",    label: "Qwen 3 235B Instruct" },
+  { value: "CEREBRAS_GPT_OSS", label: "OpenAI GPT OSS" },
+  { value: "CEREBRAS_GLM",     label: "Z.ai GLM 4.7" },
+  { value: "CEREBRAS_LLAMA_8B", label: "Llama 3.1 8B" },
+];
+
+export const ALL_AI_PROVIDERS = [
+  ...AI_PROVIDERS,
+  ...CEREBRAS_MODELS,
+];
