@@ -1,53 +1,40 @@
 server:
   port: 8080
   tomcat:
-    # With virtual threads, Tomcat's thread pool becomes a thin scheduling layer.
-    # Keep max-threads low — each request uses a virtual thread, not a platform thread.
     threads:
       max: 200
       min-spare: 10
-    # Allow more queued connections than threads — virtual threads are cheap to hold
     accept-count: 500
     max-connections: 20000
     connection-timeout: 5000ms
 
 spring:
-  # ─── Java 21 virtual threads ──────────────────────────────────────────────
-  # Enables virtual threads for Tomcat request handling, Spring @Async, and
-  # Spring's task scheduler (@Scheduled). Each request/task gets its own
-  # virtual thread parked during I/O — no platform threads wasted on blocking.
   threads:
     virtual:
       enabled: true
 
   jackson:
     serialization:
-      write-dates-as-timestamps: false # serialize LocalDateTime as ISO-8601 string
+      write-dates-as-timestamps: false
     deserialization:
-      fail-on-unknown-properties: false # tolerate extra fields from older clients
+      fail-on-unknown-properties: false
 
   data:
     mongodb:
       uri: ${MONGODB_URI}
-    # ─── Redis (Lettuce) ────────────────────────────────────────────────────
-    # url is NOT set here — setting it to an empty string causes Lettuce to
-    # reject it with "Invalid Redis URL ''".
-    # Profile overrides handle cloud vs local:
-    #   application-prod.yml  → url: ${REDIS_URL}  (Render managed Redis)
-    #   application-local.yml → host/port           (local Docker Redis)
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
-      timeout: 2000ms # command timeout — fail fast if Redis is unresponsive
-      connect-timeout: 1000ms # TCP connect timeout
+      timeout: 2000ms
+      connect-timeout: 1000ms
       lettuce:
         pool:
-          max-active: 50 # max concurrent connections
-          max-idle: 20 # max idle connections kept warm
-          min-idle: 5 # always-warm connections for burst readiness
-          max-wait: 1000ms # block timeout when pool is exhausted — then fail fast
-        shutdown-timeout: 200ms # graceful shutdown wait
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 1000ms
+        shutdown-timeout: 200ms
 
   servlet:
     multipart:
@@ -60,7 +47,6 @@ app:
     access-token-expiry: 3600000
     refresh-token-expiry: 604800000
 
-  # ─── Email (HTTP APIs — no SMTP) ─────────────────────────────────────────────
   email:
     resend:
       api-key: ${RESEND_API_KEY:}
@@ -69,13 +55,10 @@ app:
       api-key: ${BREVO_API_KEY:}
       from: ${BREVO_FROM:jobbotnoreply@gmail.com}
 
-  # ─── AI Providers (free first → premium last) ────────────────────────────────
   ai:
-    # Cascade order — change here without redeployment (comma-separated provider names)
     provider-order:
-      free: CEREBRAS,GROQ,TOGETHER,MISTRAL,SAMBANOVA,NOVITA
+      free: DEEPSEEK,TOGETHER_DEEPSEEK_V3,HYPERBOLIC,CEREBRAS_QWEN,GROQ,CEREBRAS,TOGETHER,MISTRAL,SAMBANOVA,NOVITA
       premium: GEMINI,OPENAI,CLAUDE
-    # Free tier providers (tried in this order)
     cerebras:
       api-key: ${CEREBRAS_API_KEY:}
       model: llama-3.3-70b
@@ -94,7 +77,12 @@ app:
     novita:
       api-key: ${NOVITA_API_KEY:}
       model: meta-llama/llama-3.3-70b-instruct
-    # Premium providers (used only when all free providers are exhausted)
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY:}
+      model: deepseek-chat
+    hyperbolic:
+      api-key: ${HYPERBOLIC_API_KEY:}
+      model: meta-llama/Llama-3.3-70B-Instruct
     gemini:
       api-key: ${GEMINI_API_KEY:}
       model: gemini-2.0-flash
@@ -107,7 +95,6 @@ app:
 
   scraper:
     cache-ttl-minutes: 60
-    # ── Paid/key-required scrapers (optional — skip gracefully when blank) ──
     jsearch-api-key: ${JSEARCH_API_KEY:}
     adzuna:
       app-id: ${ADZUNA_APP_ID:}
@@ -118,7 +105,6 @@ app:
     careerjet:
       affiliate-id: ${CAREERJET_AFFILIATE_ID:}
       locale: ${CAREERJET_LOCALE:en_IN}
-    # ── Free API key scrapers (free registration, no payment needed) ────────
     reed:
       api-key: ${REED_API_KEY:}
     jooble:
@@ -126,10 +112,6 @@ app:
     usajobs:
       api-key: ${USAJOBS_API_KEY:}
       user-agent: ${USAJOBS_USER_AGENT:kaddy@example.com}
-    # ── Free scrapers (no key needed — always active) ───────────────────────
-    # RemoteOK, Remotive, Arbeitnow, Jobicy, FindWork, Himalayas,
-    # The Muse, Working Nomads, We Work Remotely, DevITJobs,
-    # Remote.co, Jobspresso — all active with zero configuration.
 
   payment:
     razorpay:
@@ -142,26 +124,23 @@ app:
     dir: ${UPLOAD_DIR:./uploads}
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
 
-  # ─── MongoDB connection pool (MongoConfig.java) ──────────────────────────
   mongodb:
     pool:
-      max-size: ${MONGO_POOL_MAX:100} # peak concurrent DB operations
-      min-size: ${MONGO_POOL_MIN:10} # warm connections for burst readiness
-      max-wait-ms: 5000 # fail-fast when pool is exhausted
-      max-idle-ms: 60000 # evict connections idle > 60 s
+      max-size: ${MONGO_POOL_MAX:100}
+      min-size: ${MONGO_POOL_MIN:10}
+      max-wait-ms: 5000
+      max-idle-ms: 60000
     socket:
-      connect-timeout-ms: 5000 # TCP handshake deadline
-      read-timeout-ms: 10000 # max wait for a DB response
+      connect-timeout-ms: 5000
+      read-timeout-ms: 10000
 
-  # ─── Outbound HTTP (WebClientConfig.java) ───────────────────────────────
   webclient:
-    connect-timeout-ms: 5000 # TCP connect to job boards / AI APIs
-    read-timeout-s: 12 # stall timeout — must be < SCRAPER_TIMEOUT_SECONDS (15) so errors surface cleanly
-    write-timeout-s: 5 # request body write deadline
-    response-timeout-s: 13 # end-to-end SLA — kept just under scraper hard-kill at 15s
-    max-connections: 500 # Netty connection pool cap
+    connect-timeout-ms: 5000
+    read-timeout-s: 12
+    write-timeout-s: 5
+    response-timeout-s: 13
+    max-connections: 500
 
-# ─── Actuator ─────────────────────────────────────────────────────────────────
 management:
   endpoints:
     web:
@@ -174,7 +153,6 @@ management:
     tags:
       application: kaddy-autoapply
 
-# ─── Resilience4j ─────────────────────────────────────────────────────────────
 resilience4j:
   circuitbreaker:
     configs:
@@ -207,6 +185,10 @@ resilience4j:
         base-config: premiumAiDefault
       claudeAi:
         base-config: premiumAiDefault
+      deepseekAi:
+        base-config: freeAiDefault
+      hyperbolicAi:
+        base-config: freeAiDefault
       jobScraper:
         sliding-window-size: 5
         failure-rate-threshold: 60

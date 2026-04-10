@@ -1,62 +1,66 @@
 package com.kaddy.autoapply.controller;
 
 import java.time.LocalDateTime;
-
-import org.junit.jupiter.api.Test;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.http.MediaType;
-import com.kaddy.autoapply.config.FeatureConfig;
-import com.kaddy.autoapply.repository.UserRepository;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.kaddy.autoapply.dto.request.LoginRequest;
 import com.kaddy.autoapply.dto.request.SignupRequest;
 import com.kaddy.autoapply.dto.response.AuthResponse;
 import com.kaddy.autoapply.dto.response.UserResponse;
-import com.kaddy.autoapply.config.SecurityConfig;
-import com.kaddy.autoapply.security.JwtAuthenticationFilter;
-import com.kaddy.autoapply.security.JwtTokenProvider;
+import com.kaddy.autoapply.exception.GlobalExceptionHandler;
 import com.kaddy.autoapply.service.AuthService;
-import com.kaddy.autoapply.service.TokenBlacklistService;
-import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
-@WebMvcTest(AuthController.class)
-@Import({ SecurityConfig.class, JwtAuthenticationFilter.class })
-@ActiveProfiles("test")
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @MockBean
+    @Mock
     private AuthService authService;
 
-    @MockBean
-    private JwtTokenProvider jwtTokenProvider;
-    @MockBean
-    private TokenBlacklistService tokenBlacklistService;
-    @MockBean
-    private StringRedisTemplate stringRedisTemplate;
-    @MockBean
-    private FeatureConfig featureConfig;
-    @MockBean
-    private UserRepository userRepository;
+    @InjectMocks
+    private AuthController authController;
+
+    private MockMvc mockMvc;
+
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+    @BeforeEach
+    void setUp() {
+        LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
+        validator.afterPropertiesSet();
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(authController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .setValidator(validator)
+                .setMessageConverters(new JacksonJsonHttpMessageConverter())
+                .build();
+    }
 
     UserResponse userResponse = new UserResponse(
             "u1", "test@test.com", "Test", null, null, null,
             null, null, null, null, null, null, null, false, 0, null, null, false, 0,
-            LocalDateTime.now(), java.util.List.of("ROLE_USER"), null, false);
+            LocalDateTime.now(), List.of("ROLE_USER"), null, false);
 
     @Test
     void signup_shouldReturn201() throws Exception {
@@ -104,7 +108,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void protectedEndpoint_shouldReturn403WithoutToken() throws Exception {
+    void protectedEndpoint_shouldReturn4xxWithoutToken() throws Exception {
         mockMvc.perform(post("/api/applications")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))

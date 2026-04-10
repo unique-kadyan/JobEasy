@@ -1,4 +1,3 @@
-# Java / Maven
 backend/target/
 *.class
 *.jar
@@ -7,33 +6,45 @@ backend/target/
 *.log
 hs_err_pid*
 
-# IDE
 .idea/
 *.iml
 *.iws
 .vscode/extensions.json
 *.swp
 *.swo
-*.vscode*
-*.vscode.*
-.vscode.*
+.vscode/
 
-# Node
 frontend/node_modules/
 frontend/.next/
 frontend/out/
 
-# Environment
 .env
 .env.local
+.env.production
+.env.staging
 .env.*.local
+*.env
+
 backend/src/main/resources/application-local.yml
 backend/src/main/resources/application-secrets.yml
+backend/src/main/resources/application-prod.yml
 *application-local*.properties
+*application-secrets*.properties
 
-# OS
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+*.truststore
+id_rsa
+id_ed25519
+*.pub
+
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Docker
 pgdata/
+mongodata/
+uploads/

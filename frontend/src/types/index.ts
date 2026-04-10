@@ -7,6 +7,8 @@ export interface User {
   title?: string;
   summary?: string;
   skills?: Record<string, string[]>;
+  experienceYears?: number;
+  targetRoles?: string[];
   avatarUrl?: string;
   preferences?: Record<string, unknown>;
   linkedinUrl?: string;
@@ -163,19 +165,62 @@ export interface Template {
   isSystem: boolean;
 }
 
+export interface ResumeSkills {
+  technical?: string[];
+  frameworks?: string[];
+  databases?: string[];
+  cloud?: string[];
+  tools?: string[];
+  soft?: string[];
+  languages?: string[];
+}
+
 export interface Resume {
   id: string;
   filename: string;
   fileSize?: number;
   parsedText?: string;
   parsedData?: {
-    email?: string;
-    phone?: string;
-    skills?: string[];
+    name?: string;
+    contact?: {
+      email?: string;
+      phone?: string;
+      location?: string;
+      linkedin?: string;
+      github?: string;
+      portfolio?: string;
+    };
+    summary?: string;
+    experience?: Array<{
+      company: string;
+      title: string;
+      location?: string;
+      startDate?: string;
+      endDate?: string;
+      current?: boolean;
+      bullets?: string[];
+    }>;
+    education?: Array<{
+      institution: string;
+      degree?: string;
+      field?: string;
+      graduationDate?: string;
+      gpa?: string;
+    }>;
+    skills?: ResumeSkills;
+    projects?: Array<{
+      name: string;
+      description?: string;
+      technologies?: string[];
+      url?: string;
+    }>;
+    certifications?: Array<{
+      name: string;
+      issuer?: string;
+      date?: string;
+    }>;
     wordCount?: number;
-    hasExperience?: boolean;
-    hasEducation?: boolean;
-    hasProjects?: boolean;
+    experienceYears?: number;
   };
   isPrimary: boolean;
   createdAt: string;
@@ -249,6 +294,26 @@ export interface ResumeProfile {
   customTags?: Record<string, unknown>;
   version: number;
   updatedAt?: string;
+}
+
+export interface CareerCheckpoint {
+  milestone: string;
+  description: string;
+  skills: string[];
+  timelineMonths: number;
+}
+
+export interface CareerRolePath {
+  estimatedYears: number;
+  description: string;
+  mandatorySkills: string[];
+  checkpoints: CareerCheckpoint[];
+}
+
+export interface CareerPathAnalysis {
+  currentLevel: string;
+  suggestedRoles: string[];
+  careerPaths: Record<string, CareerRolePath>;
 }
 
 export interface Analytics {

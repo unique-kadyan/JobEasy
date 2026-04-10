@@ -19,34 +19,34 @@ public class JobScoringService {
 
     static final double AI_EVALUATION_THRESHOLD = 0.35;
 
-    private static final double MAX_SKILL_WEIGHT     = 0.70;
-    private static final double ROLE_BONUS           = 0.10;
-    private static final double REMOTE_BONUS         = 0.05;
-    private static final double CITY_BONUS           = 0.10;
-    private static final double SENIORITY_BONUS      = 0.05;
+    private static final double MAX_SKILL_WEIGHT = 0.70;
+    private static final double ROLE_BONUS = 0.10;
+    private static final double REMOTE_BONUS = 0.05;
+    private static final double CITY_BONUS = 0.10;
+    private static final double SENIORITY_BONUS = 0.05;
 
     private static final Map<String, int[]> SENIORITY_RANGES = Map.of(
-            "intern",       new int[]{0, 1},
-            "junior",       new int[]{0, 3},
-            "entry",        new int[]{0, 2},
-            "mid",          new int[]{2, 6},
-            "senior",       new int[]{4, 99},
-            "staff",        new int[]{6, 99},
-            "principal",    new int[]{8, 99},
-            "lead",         new int[]{5, 99}
-    );
+            "intern", new int[] { 0, 1 },
+            "junior", new int[] { 0, 3 },
+            "entry", new int[] { 0, 2 },
+            "mid", new int[] { 2, 6 },
+            "senior", new int[] { 4, 99 },
+            "staff", new int[] { 6, 99 },
+            "principal", new int[] { 8, 99 },
+            "lead", new int[] { 5, 99 });
 
     private final AiProviderFactory aiProviderFactory;
     private final SalaryNormalizationService salaryNormalizationService;
 
     public JobScoringService(AiProviderFactory aiProviderFactory,
-                             SalaryNormalizationService salaryNormalizationService) {
+            SalaryNormalizationService salaryNormalizationService) {
         this.aiProviderFactory = aiProviderFactory;
         this.salaryNormalizationService = salaryNormalizationService;
     }
 
     public JobResponse scoreLocally(User user, JobResponse job) {
-        if (user == null) return job;
+        if (user == null)
+            return job;
 
         Set<String> userSkills = extractSkills(user);
         String searchText = buildSearchText(job);
@@ -78,10 +78,10 @@ public class JobScoringService {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String systemPrompt = buildAiSystemPrompt(user);
-                String userPrompt   = buildAiUserPrompt(user, scoredJob);
+                String userPrompt = buildAiUserPrompt(user, scoredJob);
 
-                AiProviderFactory.GenerationResult result =
-                        aiProviderFactory.generate(systemPrompt, userPrompt, null);
+                AiProviderFactory.GenerationResult result = aiProviderFactory.generate(systemPrompt, userPrompt,
+                        AiProviderFactory.TaskType.FAST_TEXT);
 
                 List<String> reasoning = parseAiReasoning(result.content());
 
@@ -90,8 +90,7 @@ public class JobScoringService {
                         scoredJob.matchStrength(),
                         scoredJob.missingSkills(),
                         reasoning,
-                        scoredJob.normalizedSalaryUsd()
-                );
+                        scoredJob.normalizedSalaryUsd());
             } catch (Exception e) {
                 log.warn("AI enrichment failed for job '{}': {}", scoredJob.title(), e.getMessage());
                 return scoredJob;
@@ -105,7 +104,8 @@ public class JobScoringService {
     }
 
     public List<JobResponse> scoreAndFilterBatch(User user, List<JobResponse> jobs) {
-        if (user == null) return jobs;
+        if (user == null)
+            return jobs;
 
         Set<String> skipKeywords = normaliseKeywords(user.getSkipKeywords());
 
@@ -118,7 +118,8 @@ public class JobScoringService {
     }
 
     private Set<String> extractSkills(User user) {
-        if (user.getSkills() == null || user.getSkills().isEmpty()) return Set.of();
+        if (user.getSkills() == null || user.getSkills().isEmpty())
+            return Set.of();
 
         return user.getSkills().values().stream()
                 .filter(v -> v instanceof List<?>)
@@ -130,13 +131,14 @@ public class JobScoringService {
 
     private String buildSearchText(JobResponse job) {
         String title = job.title() != null ? job.title() : "";
-        String desc  = job.description() != null ? job.description() : "";
-        String tags  = job.tags() != null ? String.join(" ", job.tags()) : "";
+        String desc = job.description() != null ? job.description() : "";
+        String tags = job.tags() != null ? String.join(" ", job.tags()) : "";
         return (title + " " + desc + " " + tags).toLowerCase();
     }
 
     private SkillMatchResult matchSkills(Set<String> userSkills, String text) {
-        if (userSkills.isEmpty()) return new SkillMatchResult(0.0, List.of());
+        if (userSkills.isEmpty())
+            return new SkillMatchResult(0.0, List.of());
 
         List<String> matched = new ArrayList<>();
         List<String> missing = new ArrayList<>();
@@ -157,17 +159,21 @@ public class JobScoringService {
     }
 
     private double roleTitleBonus(User user, JobResponse job) {
-        if (user.getTargetRoles() == null || user.getTargetRoles().isEmpty()) return 0.0;
-        if (job.title() == null) return 0.0;
+        if (user.getTargetRoles() == null || user.getTargetRoles().isEmpty())
+            return 0.0;
+        if (job.title() == null)
+            return 0.0;
 
         String titleLower = job.title().toLowerCase();
         return user.getTargetRoles().stream()
                 .anyMatch(role -> role != null && titleLower.contains(role.toLowerCase()))
-                ? ROLE_BONUS : 0.0;
+                        ? ROLE_BONUS
+                        : 0.0;
     }
 
     private double locationBonus(User user, JobResponse job) {
-        if (job.location() == null) return 0.0;
+        if (job.location() == null)
+            return 0.0;
         String jobLoc = job.location().toLowerCase();
 
         if (jobLoc.contains("remote") || jobLoc.contains("worldwide") || jobLoc.contains("anywhere")) {
@@ -176,7 +182,8 @@ public class JobScoringService {
 
         if (user.getLocation() != null && !user.getLocation().isBlank()) {
             String userCity = user.getLocation().toLowerCase().split(",")[0].trim();
-            if (!userCity.isEmpty() && jobLoc.contains(userCity)) return CITY_BONUS;
+            if (!userCity.isEmpty() && jobLoc.contains(userCity))
+                return CITY_BONUS;
         }
 
         return 0.0;
@@ -187,20 +194,24 @@ public class JobScoringService {
         for (Map.Entry<String, int[]> entry : SENIORITY_RANGES.entrySet()) {
             if (text.contains(entry.getKey())) {
                 int[] range = entry.getValue();
-                if (exp >= range[0] && exp <= range[1]) return SENIORITY_BONUS;
+                if (exp >= range[0] && exp <= range[1])
+                    return SENIORITY_BONUS;
             }
         }
         return 0.0;
     }
 
     private String classify(double score) {
-        if (score >= 0.60) return "STRONG";
-        if (score >= 0.35) return "MODERATE";
+        if (score >= 0.60)
+            return "STRONG";
+        if (score >= 0.35)
+            return "MODERATE";
         return "WEAK";
     }
 
     private Set<String> normaliseKeywords(List<String> keywords) {
-        if (keywords == null) return Set.of();
+        if (keywords == null)
+            return Set.of();
         return keywords.stream()
                 .filter(k -> k != null && !k.isBlank())
                 .map(String::toLowerCase)
@@ -208,10 +219,11 @@ public class JobScoringService {
     }
 
     private boolean matchesSkipKeywords(JobResponse job, Set<String> skipKeywords) {
-        if (skipKeywords.isEmpty()) return false;
-        String combined = ((job.title()       != null ? job.title()       : "") + " " +
-                           (job.company()     != null ? job.company()     : "") + " " +
-                           (job.description() != null ? job.description() : "")).toLowerCase();
+        if (skipKeywords.isEmpty())
+            return false;
+        String combined = ((job.title() != null ? job.title() : "") + " " +
+                (job.company() != null ? job.company() : "") + " " +
+                (job.description() != null ? job.description() : "")).toLowerCase();
         return skipKeywords.stream().anyMatch(combined::contains);
     }
 
@@ -235,7 +247,8 @@ public class JobScoringService {
                         .filter(s -> !s.isBlank())
                         .collect(java.util.stream.Collectors.joining(", "))
                 : "not specified";
-        if (skills.isBlank()) skills = "not specified";
+        if (skills.isBlank())
+            skills = "not specified";
 
         String targetRoles = user.getTargetRoles() != null
                 ? String.join(", ", user.getTargetRoles())
@@ -276,12 +289,12 @@ public class JobScoringService {
                 job.jobType(),
                 truncate(job.description(), 800),
                 (job.matchScore() != null ? job.matchScore() * 100 : 0),
-                missing
-        );
+                missing);
     }
 
     private List<String> parseAiReasoning(String content) {
-        if (content == null || content.isBlank()) return List.of();
+        if (content == null || content.isBlank())
+            return List.of();
         try {
 
             String cleaned = content.strip()
@@ -290,20 +303,24 @@ public class JobScoringService {
                     .replaceAll("```$", "")
                     .strip();
 
-            if (!cleaned.startsWith("[")) return List.of(cleaned);
+            if (!cleaned.startsWith("["))
+                return List.of(cleaned);
 
             List<String> lines = new ArrayList<>();
             int i = 0;
             while (i < cleaned.length()) {
                 int start = cleaned.indexOf('"', i);
-                if (start == -1) break;
+                if (start == -1)
+                    break;
                 int end = cleaned.indexOf('"', start + 1);
                 while (end != -1 && cleaned.charAt(end - 1) == '\\') {
                     end = cleaned.indexOf('"', end + 1);
                 }
-                if (end == -1) break;
+                if (end == -1)
+                    break;
                 String token = cleaned.substring(start + 1, end).replace("\\\"", "\"");
-                if (!token.isBlank()) lines.add(token);
+                if (!token.isBlank())
+                    lines.add(token);
                 i = end + 1;
             }
             return Collections.unmodifiableList(lines);
@@ -314,9 +331,11 @@ public class JobScoringService {
     }
 
     private String truncate(String s, int maxLen) {
-        if (s == null) return "";
+        if (s == null)
+            return "";
         return s.length() <= maxLen ? s : s.substring(0, maxLen) + "…";
     }
 
-    private record SkillMatchResult(double ratio, List<String> missing) {}
+    private record SkillMatchResult(double ratio, List<String> missing) {
+    }
 }

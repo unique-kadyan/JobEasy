@@ -4,15 +4,15 @@
 
 ### AI-Powered Automated Job Application Platform
 
-*Aggregate. Personalise. Apply. Track — all in one place.*
+_Aggregate. Personalise. Apply. Track — all in one place._
 
 [![CI — Build & Test](https://github.com/rajeshsinghkadyan/auto_apply_with_kaddy/actions/workflows/ci.yml/badge.svg)](https://github.com/rajeshsinghkadyan/auto_apply_with_kaddy/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/rajeshsinghkadyan/auto_apply_with_kaddy/actions/workflows/codeql.yml/badge.svg)](https://github.com/rajeshsinghkadyan/auto_apply_with_kaddy/actions/workflows/codeql.yml)
 [![Security Scan](https://github.com/rajeshsinghkadyan/auto_apply_with_kaddy/actions/workflows/security.yml/badge.svg)](https://github.com/rajeshsinghkadyan/auto_apply_with_kaddy/actions/workflows/security.yml)
 [![Code Quality](https://github.com/rajeshsinghkadyan/auto_apply_with_kaddy/actions/workflows/code-quality.yml/badge.svg)](https://github.com/rajeshsinghkadyan/auto_apply_with_kaddy/actions/workflows/code-quality.yml)
 [![Java](https://img.shields.io/badge/Java-25_LTS-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/25/)
-[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.0.3-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](#license)
 
 **Live:** [kaddy-frontend.onrender.com](https://kaddy-frontend.onrender.com)
@@ -54,22 +54,42 @@ The platform is horizontally scalable: the backend runs on Java 25 virtual threa
 
 ## Key Features
 
-| Domain | Capabilities |
-|---|---|
-| **Authentication & Identity** | Stateless JWT (access + refresh tokens), Google/LinkedIn OAuth2, email verification, password reset, per-token blacklisting on logout, per-user session revocation |
-| **Onboarding Flow** | 3-step wizard (Upload Resume → Set Goals → All Set!); completes locally even when the backend is temporarily unreachable, preventing redirect loops |
-| **Resume Management** | PDF/DOC/DOCX upload with magic-byte validation, Apache PDFBox text extraction, ATS score analysis, AI-powered resume generation with Razorpay payment gate, path-traversal-safe UUID filenames |
-| **AI Keyword Generation** | When the search field is empty, `SearchKeywordGeneratorService` crafts a professional LLM-generated query from the user's skills, target roles, title, and experience — maximising job listing coverage; the generated query is returned in the response for user refinement |
-| **Job Search & Aggregation** | Multi-source parallel scraping (JSearch, SerpAPI, Adzuna, CareerJet, Arbeitnow, RemoteOK, and more), full-text search, salary and recency filters, 1-hour MongoDB TTL cache |
-| **AI Cover Letters** | 10-provider LLM cascade with automatic failover and Resilience4j circuit breakers, custom and system templates, inline editing, per-user provider preference |
-| **Application Tracking** | One-click and bulk apply (capped at 100), full status lifecycle (Saved → Applied → Interviewing → Offered / Rejected / Withdrawn), status history audit trail |
-| **Auto Search Scheduler** | Background scheduled job search using user profile, configurable interval (1–24 h), AI-driven query generation, scored and filtered results stored automatically |
-| **Stale Job Pruning** | Weekly scheduled pruner checks job URLs (HEAD request, 20 concurrent), removes listings returning 404/410, exposes a Spring Boot `HealthIndicator` |
-| **Analytics & Reporting** | Application funnel metrics, weekly activity timeline, breakdown by job board source and status, response rate calculation |
-| **Payments** | Razorpay integration for premium resume generation; HMAC-SHA256 signature verification; dev-mode mock orders when keys are blank |
-| **Rate Limiting** | Redis-backed per-user Bucket4j limits (authenticated) + Nginx per-IP zones (unauthenticated), anonymous requests bypass user lookup |
-| **Load Balancing** | Nginx reverse proxy with `least_conn` upstream, per-endpoint rate limit zones, gzip, security headers, Docker Compose horizontal scaling (`--scale api=N`) |
-| **Security & Compliance** | OWASP-aligned HTTP security headers (CSP, HSTS, X-Frame-Options), AOP audit logging, prompt injection sanitisation, OWASP Dependency Check, Trivy secret scanning |
+| Domain                        | Capabilities                                                                                                                                                                                                                                                                                        |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Authentication & Identity** | Stateless JWT (access + refresh tokens), Google/LinkedIn OAuth2, email verification, password reset, per-token blacklisting on logout, per-user session revocation                                                                                                                                  |
+| **Onboarding Flow**           | 3-step wizard (Upload Resume → Set Goals → All Set!); completes locally even when the backend is temporarily unreachable, preventing redirect loops                                                                                                                                                 |
+| **Welcome Animation**         | Falling-petal welcome screen on login ("Welcome Back, [Name]!") and signup ("Welcome to Kaddy, [Name]!") — prefetches dashboard data in background so the portal is populated when the animation ends                                                                                               |
+| **Resume Management**         | PDF upload with magic-byte validation, Apache PDFBox text extraction, structured JSON parsed data schema (contact, experience, education, skills by category, projects, certifications), ATS score analysis, AI-powered resume generation with Razorpay payment gate; upload count enforced by tier |
+| **AI Keyword Generation**     | `SearchKeywordGeneratorService` crafts an LLM-generated query from skills, target roles, title, and experience when the search field is empty; the generated query is returned in the response for user refinement                                                                                  |
+| **Job Search & Aggregation**  | Multi-source parallel scraping (JSearch, SerpAPI, Adzuna, CareerJet, Arbeitnow, RemoteOK, and more), full-text search, salary and recency filters, 1-hour MongoDB TTL cache; result count enforced by tier                                                                                          |
+| **AI Cover Letters**          | 10-provider LLM cascade with automatic failover and Resilience4j circuit breakers, custom and system templates, inline editing, per-user provider preference; daily generation count enforced by tier                                                                                               |
+| **Career Path Analysis**      | AI-powered career progression analysis (Gold+ only): suggests 3–5 realistic next roles based on resume, skills, experience, and projects; provides per-role checkpoints, mandatory skills, and estimated timelines powered by the reasoning model cascade                                           |
+| **Application Tracking**      | One-click and bulk apply (capped at 100), full status lifecycle (Saved → Applied → Interviewing → Offered / Rejected / Withdrawn), status history audit trail                                                                                                                                       |
+| **Auto Search Scheduler**     | Background scheduled job search using user profile, configurable interval (1–24 h), AI-driven query generation, scored and filtered results stored automatically (Platinum)                                                                                                                         |
+| **Stale Job Pruning**         | Weekly scheduled pruner checks job URLs (HEAD request, 20 concurrent), removes listings returning 404/410, exposes a Spring Boot `HealthIndicator`                                                                                                                                                  |
+| **Analytics & Reporting**     | Application funnel metrics, weekly activity timeline, breakdown by job board source and status, response rate calculation                                                                                                                                                                           |
+| **Payments**                  | Razorpay integration for premium resume generation; HMAC-SHA256 signature verification; dev-mode mock orders when keys are blank                                                                                                                                                                    |
+| **Rate Limiting**             | Redis-backed per-user limits (authenticated) + Nginx per-IP zones (unauthenticated); applied to search, AI cover letters, resume upload, smart resume, bulk apply, and career path endpoints; limits scale with subscription tier                                                                   |
+| **Load Balancing**            | Nginx reverse proxy with `least_conn` upstream, per-endpoint rate limit zones, gzip, security headers, Docker Compose horizontal scaling (`--scale api=N`)                                                                                                                                          |
+| **Security & Compliance**     | OWASP-aligned HTTP security headers (CSP, HSTS, X-Frame-Options), AOP audit logging, prompt injection sanitisation, OWASP Dependency Check, Trivy secret scanning; all secrets in environment variables — never committed                                                                           |
+
+---
+
+## Subscription Tiers
+
+All platform capabilities are gated by subscription tier. Every limit is enforced on both the backend (service layer) and the frontend (UI gates). No backend bypass is possible.
+
+| Capability              | Free | Gold | Platinum  |
+| ----------------------- | ---- | ---- | --------- |
+| Job results per search  | 2    | 10   | Unlimited |
+| Cover letters per day   | 3    | 25   | Unlimited |
+| Resumes stored          | 2    | 10   | Unlimited |
+| Smart resume generation | —    | ✓    | ✓         |
+| Priority job scoring    | —    | ✓    | ✓         |
+| Career path analysis    | —    | ✓    | ✓         |
+| Auto-apply              | —    | —    | ✓         |
+| Scheduled auto-search   | —    | —    | ✓         |
+| Rate limit (req/min)    | 10   | 30   | 60        |
 
 ---
 
@@ -91,7 +111,7 @@ The platform is horizontally scalable: the backend runs on Java 25 virtual threa
                          └──┬──────┬──────┬───┘
                             │      │      │   ←  --scale api=N
                 ┌───────────▼┐  ┌──▼───┐ ┌▼──────────┐
-                │  api (1)   │  │api(2)│ │  api (N)  │   Spring Boot 3.5 · Java 25
+                │  api (1)   │  │api(2)│ │  api (N)  │   Spring Boot 4.0.3 · Java 25
                 └─────┬──────┘  └──┬───┘ └─────┬─────┘   Virtual Threads · ZGC
                       └────────────┴────────────┘
                                    │
@@ -106,17 +126,17 @@ The platform is horizontally scalable: the backend runs on Java 25 virtual threa
 
 ### Design Decisions
 
-| Concern | Decision | Rationale |
-|---|---|---|
-| **Concurrency** | Java 25 virtual threads (`spring.threads.virtual.enabled=true`) | Eliminates thread-pool exhaustion under high I/O concurrency from AI and scraper calls |
-| **GC** | Generational ZGC (`-XX:+UseZGC -XX:+ZGenerational`) on Ubuntu/glibc | Sub-millisecond pauses under load; glibc (Ubuntu Jammy) is required — Alpine (musl libc) is incompatible with ZGC |
-| **AI Resilience** | Resilience4j circuit breaker + retry per provider, 10 providers total | Prevents cascading failures; free providers are tried first, premium providers escalate automatically |
-| **AI Search Keywords** | `SearchKeywordGeneratorService` with graceful fallback | When a user has no explicit query, LLM generates a professional targeted query from their profile; falls back to `targetRoles[0]` or `title` if AI is unavailable |
-| **Onboarding State** | `onboardingCompleted` set locally before navigation | Prevents infinite redirect loops if the backend is temporarily unreachable during the final onboarding step |
-| **Rate Limiting** | Redis per-user limits + Nginx per-IP zones | O(1) token-bucket per authenticated user; anonymous requests skip user-scoped rate limiting to avoid Redis lookups on public endpoints |
-| **Token Revocation** | Redis blacklist with matching TTL + per-user revocation marker | O(1) logout invalidation; password reset revokes all sessions globally |
-| **Horizontal Scaling** | Stateless JWT + Redis shared state + shared upload volume | Any instance validates any token; rate limits and session state are global across replicas |
-| **Circular Dependency** | `ApplicationEventPublisher` for `AutoApplyService ↔ CoverLetterService` | Eliminates `@Lazy` setter injection; decouples services through domain events |
+| Concern                 | Decision                                                                | Rationale                                                                                                                                                         |
+| ----------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Concurrency**         | Java 25 virtual threads (`spring.threads.virtual.enabled=true`)         | Eliminates thread-pool exhaustion under high I/O concurrency from AI and scraper calls                                                                            |
+| **GC**                  | Generational ZGC (`-XX:+UseZGC -XX:+ZGenerational`) on Ubuntu/glibc     | Sub-millisecond pauses under load; glibc (Ubuntu Jammy) is required — Alpine (musl libc) is incompatible with ZGC                                                 |
+| **AI Resilience**       | Resilience4j circuit breaker + retry per provider, 10 providers total   | Prevents cascading failures; free providers are tried first, premium providers escalate automatically                                                             |
+| **AI Search Keywords**  | `SearchKeywordGeneratorService` with graceful fallback                  | When a user has no explicit query, LLM generates a professional targeted query from their profile; falls back to `targetRoles[0]` or `title` if AI is unavailable |
+| **Onboarding State**    | `onboardingCompleted` set locally before navigation                     | Prevents infinite redirect loops if the backend is temporarily unreachable during the final onboarding step                                                       |
+| **Rate Limiting**       | Redis per-user limits + Nginx per-IP zones                              | O(1) token-bucket per authenticated user; anonymous requests skip user-scoped rate limiting to avoid Redis lookups on public endpoints                            |
+| **Token Revocation**    | Redis blacklist with matching TTL + per-user revocation marker          | O(1) logout invalidation; password reset revokes all sessions globally                                                                                            |
+| **Horizontal Scaling**  | Stateless JWT + Redis shared state + shared upload volume               | Any instance validates any token; rate limits and session state are global across replicas                                                                        |
+| **Circular Dependency** | `ApplicationEventPublisher` for `AutoApplyService ↔ CoverLetterService` | Eliminates `@Lazy` setter injection; decouples services through domain events                                                                                     |
 
 ---
 
@@ -124,52 +144,52 @@ The platform is horizontally scalable: the backend runs on Java 25 virtual threa
 
 ### Backend
 
-| Layer | Technology | Version |
-|---|---|---|
-| Language & Runtime | Java 25 LTS (Eclipse Temurin) | 25 LTS |
-| Framework | Spring Boot | 3.5 |
-| Primary Database | MongoDB (Spring Data MongoDB) | 7 |
-| Cache & Session Store | Redis 7 (Lettuce client) | 7 |
-| Security | Spring Security, JJWT, OAuth2 Client | — |
-| HTTP Client | Spring WebFlux (WebClient) | — |
-| AI Providers | Claude, OpenAI, Gemini, Groq, Mistral, Cerebras, Together AI, Novita AI, SambaNova | — |
-| Job Board APIs | JSearch (RapidAPI), SerpAPI, Adzuna, CareerJet, Arbeitnow, RemoteOK, and more | — |
-| Resilience | Resilience4j (circuit breaker, retry) | 2.2.0 |
-| Rate Limiting | Bucket4j + Caffeine | 8.10.1 |
-| PDF Processing | Apache PDFBox | 3.0.3 |
-| HTML Sanitisation | OWASP Java HTML Sanitizer | 20240325.1 |
-| Payments | Razorpay | — |
-| API Documentation | SpringDoc OpenAPI (Swagger UI) | 2.6.0 |
-| Monitoring | Spring Boot Actuator + Micrometer / Prometheus | — |
-| Build Tool | Apache Maven (via wrapper) | 3.9.11 |
+| Layer                 | Technology                                                                         | Version    |
+| --------------------- | ---------------------------------------------------------------------------------- | ---------- |
+| Language & Runtime    | Java 25 LTS (Eclipse Temurin)                                                      | 25 LTS     |
+| Framework             | Spring Boot                                                                        | 4.0.3      |
+| Primary Database      | MongoDB (Spring Data MongoDB)                                                      | 7          |
+| Cache & Session Store | Redis 7 (Lettuce client)                                                           | 7          |
+| Security              | Spring Security, JJWT, OAuth2 Client                                               | —          |
+| HTTP Client           | Spring WebFlux (WebClient)                                                         | —          |
+| AI Providers          | Claude, OpenAI, Gemini, Groq, Mistral, Cerebras, Together AI, Novita AI, SambaNova | —          |
+| Job Board APIs        | JSearch (RapidAPI), SerpAPI, Adzuna, CareerJet, Arbeitnow, RemoteOK, and more      | —          |
+| Resilience            | Resilience4j (circuit breaker, retry)                                              | 2.4.0      |
+| Rate Limiting         | Bucket4j + Caffeine                                                                | 8.10.1     |
+| PDF Processing        | Apache PDFBox                                                                      | 3.0.7      |
+| HTML Sanitisation     | OWASP Java HTML Sanitizer                                                          | 20260313.1 |
+| Payments              | Razorpay                                                                           | —          |
+| API Documentation     | SpringDoc OpenAPI (Swagger UI)                                                     | 3.0.2      |
+| Monitoring            | Spring Boot Actuator + Micrometer / Prometheus                                     | —          |
+| Build Tool            | Apache Maven (via wrapper)                                                         | 3.9.11     |
 
 ### Frontend
 
-| Layer | Technology | Version |
-|---|---|---|
-| Framework | Next.js (App Router) | 14 |
-| Language | TypeScript | 5 |
-| Styling | Tailwind CSS | 3 |
-| Server State | TanStack React Query | 5 |
-| Client State | Zustand (with localStorage persistence) | 5 |
-| Forms & Validation | React Hook Form + Zod | — |
-| Charts | Recharts | — |
-| HTTP Client | Axios (with JWT interceptors) | — |
-| Icons | Lucide React | — |
+| Layer              | Technology                              | Version |
+| ------------------ | --------------------------------------- | ------- |
+| Framework          | Next.js (App Router)                    | 16      |
+| Language           | TypeScript                              | 6       |
+| Styling            | Tailwind CSS                            | 4       |
+| Server State       | TanStack React Query                    | 5       |
+| Client State       | Zustand (with localStorage persistence) | 5       |
+| Forms & Validation | React Hook Form + Zod                   | —       |
+| Charts             | Recharts                                | —       |
+| HTTP Client        | Axios (with JWT interceptors)           | —       |
+| Icons              | Lucide React                            | —       |
 
 ### Infrastructure & Tooling
 
-| Concern | Tool |
-|---|---|
-| Containerisation | Docker + Docker Compose |
-| Docker Base Image | Eclipse Temurin 25 JRE (Ubuntu Jammy — glibc required for ZGC) |
-| Load Balancing | Nginx 1.27 (least_conn, per-endpoint rate limiting, gzip) |
-| CI/CD | GitHub Actions |
-| Static Security Analysis | CodeQL (`security-extended` queries) |
-| Dependency Vulnerability | OWASP Dependency Check (CVSSv3 ≥ 7 fails build), npm audit |
-| Container / Secret Scanning | Trivy |
-| Code Quality | SpotBugs (max effort, medium threshold), PMD |
-| PR Dependency Review | GitHub Dependency Review Action |
+| Concern                     | Tool                                                           |
+| --------------------------- | -------------------------------------------------------------- |
+| Containerisation            | Docker + Docker Compose                                        |
+| Docker Base Image           | Eclipse Temurin 25 JRE (Ubuntu Jammy — glibc required for ZGC) |
+| Load Balancing              | Nginx 1.27 (least_conn, per-endpoint rate limiting, gzip)      |
+| CI/CD                       | GitHub Actions                                                 |
+| Static Security Analysis    | CodeQL (`security-extended` queries)                           |
+| Dependency Vulnerability    | OWASP Dependency Check (CVSSv3 ≥ 7 fails build), npm audit     |
+| Container / Secret Scanning | Trivy                                                          |
+| Code Quality                | SpotBugs (max effort, medium threshold), PMD                   |
+| PR Dependency Review        | GitHub Dependency Review Action                                |
 
 ---
 
@@ -219,7 +239,8 @@ auto_apply_with_kaddy/
 │       │                                # CoverLetterService, ResumeService, AnalyticsService,
 │       │                                # PaymentService, TemplateService, TokenBlacklistService,
 │       │                                # JobScoringService, StaleJobPrunerService,
-│       │                                # AutoSearchSchedulerService, AutoApplyService
+│       │                                # AutoSearchSchedulerService, AutoApplyService,
+│       │                                # CareerPathService, ResumeParserService (structured JSON)
 │       └── test/
 │           ├── java/com/kaddy/autoapply/
 │           │   ├── AutoApplyApplicationTest.java   # Full context (CI-only, requires MongoDB + Redis)
@@ -253,7 +274,7 @@ auto_apply_with_kaddy/
 │       ├── lib/
 │       │   ├── api.ts                   # Axios client with JWT interceptors
 │       │   └── tier-features.ts         # Subscription tier feature gates
-│       ├── middleware.ts                # Edge middleware (session-based route protection)
+│       ├── proxy.ts                     # Edge middleware (session-based route protection)
 │       ├── store/
 │       │   ├── auth-store.ts            # Zustand persist store (user, tokens, tier helpers)
 │       │   └── theme-store.ts
@@ -286,16 +307,16 @@ auto_apply_with_kaddy/
 
 ### Prerequisites
 
-| Requirement | Minimum Version | Notes |
-|---|---|---|
-| Java (JDK) | **25 LTS** | [Eclipse Temurin](https://adoptium.net/) recommended |
-| Apache Maven | 3.9 | Or use `./mvnw` (wrapper included) |
-| Node.js | 20 LTS | `node --version` to verify |
-| npm | 10 | Included with Node 20 |
-| Docker Desktop | Latest | Required for MongoDB and Redis |
-| Docker Compose | v2 | Bundled with Docker Desktop |
+| Requirement    | Minimum Version | Notes                                                |
+| -------------- | --------------- | ---------------------------------------------------- |
+| Java (JDK)     | **25 LTS**      | [Eclipse Temurin](https://adoptium.net/) recommended |
+| Apache Maven   | 3.9             | Or use `./mvnw` (wrapper included)                   |
+| Node.js        | 20 LTS          | `node --version` to verify                           |
+| npm            | 10              | Included with Node 20                                |
+| Docker Desktop | Latest          | Required for MongoDB and Redis                       |
+| Docker Compose | v2              | Bundled with Docker Desktop                          |
 
-> **Java version note:** The project targets Java 25 bytecode. Spring Boot 3.5 (Spring Framework 6.3 / ASM 9.8) is required for class-file compatibility. Java 21 LTS is the minimum runtime if you cannot install Java 25.
+> **Java version note:** The project targets Java 25 bytecode. Spring Boot 4.0.3 (Spring Framework 7 / ASM 9.7) is required for class-file compatibility. Java 21 LTS is the minimum runtime if you cannot install Java 25.
 
 ---
 
@@ -382,12 +403,12 @@ npm install
 npm run dev
 ```
 
-| Service | URL |
-|---|---|
-| Frontend | http://localhost:3000 |
-| Backend API | http://localhost:8080/api |
-| Swagger UI | http://localhost:8080/swagger-ui.html |
-| Actuator health | http://localhost:8080/actuator/health |
+| Service            | URL                                       |
+| ------------------ | ----------------------------------------- |
+| Frontend           | http://localhost:3000                     |
+| Backend API        | http://localhost:8080/api                 |
+| Swagger UI         | http://localhost:8080/swagger-ui.html     |
+| Actuator health    | http://localhost:8080/actuator/health     |
 | Prometheus metrics | http://localhost:8080/actuator/prometheus |
 
 ---
@@ -421,21 +442,21 @@ JAVA_HOME=/path/to/jdk-25 ./mvnw test
 CI=true MONGODB_URI=mongodb://localhost:27017/kaddy_test ./mvnw test
 ```
 
-**Test suite summary (122 tests):**
+**Test suite summary (123 tests):**
 
-| Suite | Tests | Notes |
-|---|---|---|
-| `AutoApplyApplicationTest` | 1 | Full Spring context; skipped locally, runs in CI where MongoDB + Redis are available |
-| `AiProviderFactoryTest` | 11 | Free → premium cascade, preferred provider, unavailable provider handling |
-| `AuthControllerTest` | 6 | Signup, login, validation, protected endpoints |
-| `GlobalExceptionHandlerTest` | 13 | All exception types mapped to correct HTTP status codes |
-| `ApplicationServiceTest` | 12 | Apply, bulk apply, status transitions, ownership checks |
-| `PaymentServiceTest` | 12 | Order creation, signature verification, dev mode mock orders |
-| `ResumeAnalysisServiceTest` | 12 | ATS scoring, AI analysis |
-| `JobServiceTest` | 9 | DB + fallback pagination, source filtering, caching |
-| `AuthServiceTest` | 6 | Signup, login, refresh, password reset |
-| `RateLimitFilterTest` | 10 | Per-IP and per-user rate limiting |
-| Others | 30 | JWT, exception hierarchy, resume parsing, templates, users |
+| Suite                        | Tests | Notes                                                                                |
+| ---------------------------- | ----- | ------------------------------------------------------------------------------------ |
+| `AutoApplyApplicationTest`   | 1     | Full Spring context; skipped locally, runs in CI where MongoDB + Redis are available |
+| `AiProviderFactoryTest`      | 11    | Free → premium cascade, preferred provider, unavailable provider handling            |
+| `AuthControllerTest`         | 6     | Signup, login, validation, protected endpoints                                       |
+| `GlobalExceptionHandlerTest` | 13    | All exception types mapped to correct HTTP status codes                              |
+| `ApplicationServiceTest`     | 12    | Apply, bulk apply, status transitions, ownership checks                              |
+| `PaymentServiceTest`         | 12    | Order creation, signature verification, dev mode mock orders                         |
+| `ResumeAnalysisServiceTest`  | 12    | ATS scoring, AI analysis                                                             |
+| `JobServiceTest`             | 9     | DB + fallback pagination, source filtering, caching                                  |
+| `AuthServiceTest`            | 6     | Signup, login, refresh, password reset                                               |
+| `RateLimitFilterTest`        | 10    | Per-IP and per-user rate limiting                                                    |
+| Others                       | 30    | JWT, exception hierarchy, resume parsing, templates, users                           |
 
 > `AutoApplyApplicationTest` is annotated with `@EnabledIfEnvironmentVariable(named = "CI", matches = "true")` and only runs in GitHub Actions where MongoDB and Redis are provisioned as service containers.
 
@@ -445,37 +466,37 @@ CI=true MONGODB_URI=mongodb://localhost:27017/kaddy_test ./mvnw test
 
 ### Authentication
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/api/auth/signup` | — | Register and receive JWT tokens |
-| `POST` | `/api/auth/login` | — | Login and receive JWT tokens |
-| `POST` | `/api/auth/refresh` | Refresh token | Exchange refresh token for new access token |
-| `POST` | `/api/auth/logout` | Bearer | Blacklist current tokens |
-| `POST` | `/api/auth/forgot-password` | — | Send password reset email |
-| `POST` | `/api/auth/reset-password` | — | Apply new password with reset token |
+| Method | Endpoint                    | Auth          | Description                                 |
+| ------ | --------------------------- | ------------- | ------------------------------------------- |
+| `POST` | `/api/auth/signup`          | —             | Register and receive JWT tokens             |
+| `POST` | `/api/auth/login`           | —             | Login and receive JWT tokens                |
+| `POST` | `/api/auth/refresh`         | Refresh token | Exchange refresh token for new access token |
+| `POST` | `/api/auth/logout`          | Bearer        | Blacklist current tokens                    |
+| `POST` | `/api/auth/forgot-password` | —             | Send password reset email                   |
+| `POST` | `/api/auth/reset-password`  | —             | Apply new password with reset token         |
 
 ### Jobs
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/jobs/search` | Optional | Search jobs; `query` is optional — omit to trigger AI keyword generation from user profile |
-| `GET` | `/api/jobs/{id}` | Optional | Get job details |
-| `GET` | `/api/jobs/{id}/summarize` | Bearer | AI-generated job summary (Gold+ tier) |
-| `GET` | `/api/jobs/{id}/match` | Bearer | Personalised match score for authenticated user |
-| `GET` | `/api/jobs/source-counts` | Optional | Job count by source board |
+| Method | Endpoint                   | Auth     | Description                                                                                |
+| ------ | -------------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `GET`  | `/api/jobs/search`         | Optional | Search jobs; `query` is optional — omit to trigger AI keyword generation from user profile |
+| `GET`  | `/api/jobs/{id}`           | Optional | Get job details                                                                            |
+| `GET`  | `/api/jobs/{id}/summarize` | Bearer   | AI-generated job summary (Gold+ tier)                                                      |
+| `GET`  | `/api/jobs/{id}/match`     | Bearer   | Personalised match score for authenticated user                                            |
+| `GET`  | `/api/jobs/source-counts`  | Optional | Job count by source board                                                                  |
 
 **Job search query parameters:**
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `query` | `string` | `""` | Search terms; if empty and user is authenticated, AI generates query from profile |
-| `location` | `string` | — | Location filter |
-| `source` | `string` | — | Filter by board (`INDEED`, `LINKEDIN`, etc.) |
-| `page` | `int` | `0` | Zero-based page number |
-| `size` | `int` | `30` | Results per page |
-| `minSalary` | `long` | — | Minimum normalised salary (USD) |
-| `maxSalary` | `long` | — | Maximum normalised salary (USD) |
-| `maxAgeDays` | `int` | `30` | Only return jobs posted within N days |
+| Parameter    | Type     | Default | Description                                                                       |
+| ------------ | -------- | ------- | --------------------------------------------------------------------------------- |
+| `query`      | `string` | `""`    | Search terms; if empty and user is authenticated, AI generates query from profile |
+| `location`   | `string` | —       | Location filter                                                                   |
+| `source`     | `string` | —       | Filter by board (`INDEED`, `LINKEDIN`, etc.)                                      |
+| `page`       | `int`    | `0`     | Zero-based page number                                                            |
+| `size`       | `int`    | `30`    | Results per page                                                                  |
+| `minSalary`  | `long`   | —       | Minimum normalised salary (USD)                                                   |
+| `maxSalary`  | `long`   | —       | Maximum normalised salary (USD)                                                   |
+| `maxAgeDays` | `int`    | `30`    | Only return jobs posted within N days                                             |
 
 **Response includes `generatedQuery`** when AI keyword generation was used:
 
@@ -492,40 +513,70 @@ CI=true MONGODB_URI=mongodb://localhost:27017/kaddy_test ./mvnw test
 
 ### Resumes & Profile
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/users/profile` | Bearer | Get authenticated user profile |
-| `PUT` | `/api/users/profile` | Bearer | Update profile, skills, and target roles |
-| `POST` | `/api/resumes/upload` | Bearer | Upload PDF/DOC/DOCX resume |
-| `GET` | `/api/resumes` | Bearer | List uploaded resumes |
-| `DELETE` | `/api/resumes/{id}` | Bearer | Delete a resume |
+| Method   | Endpoint              | Auth   | Description                              |
+| -------- | --------------------- | ------ | ---------------------------------------- |
+| `GET`    | `/api/users/profile`  | Bearer | Get authenticated user profile           |
+| `PUT`    | `/api/users/profile`  | Bearer | Update profile, skills, and target roles |
+| `POST`   | `/api/resumes/upload` | Bearer | Upload PDF/DOC/DOCX resume               |
+| `GET`    | `/api/resumes`        | Bearer | List uploaded resumes                    |
+| `DELETE` | `/api/resumes/{id}`   | Bearer | Delete a resume                          |
 
 ### Applications
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/api/applications` | Bearer | Apply to a single job |
-| `POST` | `/api/applications/bulk-apply` | Bearer | Apply to multiple jobs (max 100) |
-| `GET` | `/api/applications` | Bearer | List applications with filters |
-| `PUT` | `/api/applications/{id}/status` | Bearer | Update application status |
+| Method | Endpoint                        | Auth   | Description                      |
+| ------ | ------------------------------- | ------ | -------------------------------- |
+| `POST` | `/api/applications`             | Bearer | Apply to a single job            |
+| `POST` | `/api/applications/bulk-apply`  | Bearer | Apply to multiple jobs (max 100) |
+| `GET`  | `/api/applications`             | Bearer | List applications with filters   |
+| `PUT`  | `/api/applications/{id}/status` | Bearer | Update application status        |
 
 ### Cover Letters & Templates
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
+| Method | Endpoint                      | Auth   | Description                        |
+| ------ | ----------------------------- | ------ | ---------------------------------- |
 | `POST` | `/api/cover-letters/generate` | Bearer | Generate AI cover letter for a job |
-| `GET` | `/api/cover-letters` | Bearer | List user's cover letters |
-| `GET` | `/api/templates` | Bearer | List system + user templates |
-| `POST` | `/api/templates` | Bearer | Create a custom template |
+| `GET`  | `/api/cover-letters`          | Bearer | List user's cover letters          |
+| `GET`  | `/api/templates`              | Bearer | List system + user templates       |
+| `POST` | `/api/templates`              | Bearer | Create a custom template           |
+
+### Career Path
+
+| Method | Endpoint                   | Auth   | Tier  | Description                                                                            |
+| ------ | -------------------------- | ------ | ----- | -------------------------------------------------------------------------------------- |
+| `GET`  | `/api/career-path/analyze` | Bearer | Gold+ | AI career path analysis: current level, suggested roles, checkpoints, mandatory skills |
+
+**Response:**
+
+```json
+{
+  "currentLevel": "MID",
+  "suggestedRoles": ["Senior Backend Engineer", "Tech Lead", "Staff Engineer"],
+  "careerPaths": {
+    "Senior Backend Engineer": {
+      "estimatedYears": 2,
+      "description": "Lead complex backend systems with ownership of critical services",
+      "mandatorySkills": ["System Design", "Java", "Distributed Systems"],
+      "checkpoints": [
+        {
+          "milestone": "Own a production service end-to-end",
+          "description": "Design, build, and operate a critical service with full ownership",
+          "skills": ["System Design", "Observability"],
+          "timelineMonths": 6
+        }
+      ]
+    }
+  }
+}
+```
 
 ### Analytics
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/analytics/summary` | Bearer | Application funnel metrics |
-| `GET` | `/api/analytics/timeline` | Bearer | Weekly application activity |
-| `GET` | `/api/analytics/by-source` | Bearer | Breakdown by job board |
-| `GET` | `/api/analytics/by-status` | Bearer | Breakdown by application status |
+| Method | Endpoint                   | Auth   | Description                     |
+| ------ | -------------------------- | ------ | ------------------------------- |
+| `GET`  | `/api/analytics/summary`   | Bearer | Application funnel metrics      |
+| `GET`  | `/api/analytics/timeline`  | Bearer | Weekly application activity     |
+| `GET`  | `/api/analytics/by-source` | Bearer | Breakdown by job board          |
+| `GET`  | `/api/analytics/by-status` | Bearer | Breakdown by application status |
 
 ---
 
@@ -535,10 +586,10 @@ The platform uses a **free → premium cascade** with automatic failover. Provid
 
 **Default order:**
 
-| Tier | Order |
-|---|---|
-| Free | Cerebras → Groq → Together AI → Mistral → SambaNova → Novita |
-| Premium | Gemini → OpenAI → Claude |
+| Tier    | Order                                                        |
+| ------- | ------------------------------------------------------------ |
+| Free    | Cerebras → Groq → Together AI → Mistral → SambaNova → Novita |
+| Premium | Gemini → OpenAI → Claude                                     |
 
 Free providers are always tried before premium. If all free providers fail, the cascade escalates to premium. If all providers fail, a `503 Service Unavailable` is returned.
 
@@ -551,34 +602,34 @@ export AI_PREMIUM_ORDER=OPENAI,CLAUDE,GEMINI
 
 **Supported providers:**
 
-| Provider | Env var | Free tier |
-|---|---|---|
-| Cerebras | `CEREBRAS_API_KEY` | Yes |
-| Groq | `GROQ_API_KEY` | Yes |
-| Together AI | `TOGETHER_API_KEY` | Yes |
-| Mistral | `MISTRAL_API_KEY` | Yes |
-| SambaNova | `SAMBANOVA_API_KEY` | Yes |
-| Novita AI | `NOVITA_API_KEY` | Yes |
-| Gemini | `GEMINI_API_KEY` | Limited |
-| OpenAI | `OPENAI_API_KEY` | No |
-| Claude (Anthropic) | `ANTHROPIC_API_KEY` | No |
+| Provider           | Env var             | Free tier |
+| ------------------ | ------------------- | --------- |
+| Cerebras           | `CEREBRAS_API_KEY`  | Yes       |
+| Groq               | `GROQ_API_KEY`      | Yes       |
+| Together AI        | `TOGETHER_API_KEY`  | Yes       |
+| Mistral            | `MISTRAL_API_KEY`   | Yes       |
+| SambaNova          | `SAMBANOVA_API_KEY` | Yes       |
+| Novita AI          | `NOVITA_API_KEY`    | Yes       |
+| Gemini             | `GEMINI_API_KEY`    | Limited   |
+| OpenAI             | `OPENAI_API_KEY`    | No        |
+| Claude (Anthropic) | `ANTHROPIC_API_KEY` | No        |
 
 ---
 
 ## Security Posture
 
-| Control | Implementation |
-|---|---|
-| **Transport** | HTTPS enforced via Nginx; HSTS header on all responses |
-| **Authentication** | Stateless JWT (RS256); refresh tokens stored server-side in Redis with TTL |
-| **Authorization** | Spring Security method-level `@PreAuthorize`; `SecurityUtils.assertOwnerOrAdmin()` for resource ownership checks |
-| **Rate Limiting** | Bucket4j per-user (authenticated) + Nginx per-IP zone (unauthenticated); anonymous users bypass user-scoped Redis lookups |
-| **Input Validation** | Bean Validation (`@Valid`) on all DTOs; OWASP HTML Sanitizer for user-supplied HTML content; prompt injection sanitisation for AI inputs |
-| **File Upload** | Magic-byte validation (PDF/DOC/DOCX); UUID filenames; 10 MB size limit; path-traversal prevention |
-| **CORS** | Configured via `CORS_ORIGINS` env var; restrictive defaults |
-| **Security Headers** | CSP, X-Frame-Options (DENY), X-Content-Type-Options, Referrer-Policy, Permissions-Policy via `SecurityHeadersFilter` |
-| **Dependency Scanning** | OWASP Dependency Check in CI (CVSSv3 ≥ 7 blocks merge); npm audit; Trivy container + secrets scan |
-| **Code Analysis** | CodeQL `security-extended` on every push; SpotBugs + PMD code quality gates |
+| Control                 | Implementation                                                                                                                           |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Transport**           | HTTPS enforced via Nginx; HSTS header on all responses                                                                                   |
+| **Authentication**      | Stateless JWT (RS256); refresh tokens stored server-side in Redis with TTL                                                               |
+| **Authorization**       | Spring Security method-level `@PreAuthorize`; `SecurityUtils.assertOwnerOrAdmin()` for resource ownership checks                         |
+| **Rate Limiting**       | Bucket4j per-user (authenticated) + Nginx per-IP zone (unauthenticated); anonymous users bypass user-scoped Redis lookups                |
+| **Input Validation**    | Bean Validation (`@Valid`) on all DTOs; OWASP HTML Sanitizer for user-supplied HTML content; prompt injection sanitisation for AI inputs |
+| **File Upload**         | Magic-byte validation (PDF/DOC/DOCX); UUID filenames; 10 MB size limit; path-traversal prevention                                        |
+| **CORS**                | Configured via `CORS_ORIGINS` env var; restrictive defaults                                                                              |
+| **Security Headers**    | CSP, X-Frame-Options (DENY), X-Content-Type-Options, Referrer-Policy, Permissions-Policy via `SecurityHeadersFilter`                     |
+| **Dependency Scanning** | OWASP Dependency Check in CI (CVSSv3 ≥ 7 blocks merge); npm audit; Trivy container + secrets scan                                        |
+| **Code Analysis**       | CodeQL `security-extended` on every push; SpotBugs + PMD code quality gates                                                              |
 
 ---
 
@@ -586,12 +637,12 @@ export AI_PREMIUM_ORDER=OPENAI,CLAUDE,GEMINI
 
 Every push to `main` and every pull request runs four GitHub Actions workflows:
 
-| Workflow | What it checks |
-|---|---|
-| **CI — Build & Test** | Maven build + 122 unit/web-layer tests (JDK 25, MongoDB 7, Redis 7) + Next.js lint, type-check, and build |
-| **CodeQL** | Static security analysis with `security-extended` query suite |
-| **Security Scan** | OWASP Dependency Check, npm audit, Trivy (container + secrets), GitHub Dependency Review |
-| **Code Quality** | SpotBugs (max effort, medium threshold) + PMD |
+| Workflow              | What it checks                                                                                            |
+| --------------------- | --------------------------------------------------------------------------------------------------------- |
+| **CI — Build & Test** | Maven build + 123 unit/web-layer tests (JDK 25, MongoDB 7, Redis 7) + Next.js lint, type-check, and build |
+| **CodeQL**            | Static security analysis with `security-extended` query suite                                             |
+| **Security Scan**     | OWASP Dependency Check, npm audit, Trivy (container + secrets), GitHub Dependency Review                  |
+| **Code Quality**      | SpotBugs (max effort, medium threshold) + PMD                                                             |
 
 Additionally, a `keep-alive` workflow pings deployed Render services on a schedule to prevent free-tier sleep.
 
@@ -603,11 +654,11 @@ The project ships with a `render.yaml` Blueprint that provisions the entire stac
 
 ### Services
 
-| Service | Type | Runtime |
-|---|---|---|
-| `kaddy-redis` | Key-Value (Redis) | Render managed |
-| `kaddy-backend` | Web service | Docker (Eclipse Temurin 25, Ubuntu Jammy) |
-| `kaddy-frontend` | Web service | Node.js 20 |
+| Service          | Type              | Runtime                                   |
+| ---------------- | ----------------- | ----------------------------------------- |
+| `kaddy-redis`    | Key-Value (Redis) | Render managed                            |
+| `kaddy-backend`  | Web service       | Docker (Eclipse Temurin 25, Ubuntu Jammy) |
+| `kaddy-frontend` | Web service       | Node.js 20                                |
 
 ### Deploy to Render
 
@@ -618,12 +669,12 @@ The project ships with a `render.yaml` Blueprint that provisions the entire stac
 
 ### Required Render Environment Variables
 
-| Variable | Service | Description |
-|---|---|---|
-| `MONGODB_URI` | Backend | MongoDB Atlas connection string |
-| `CORS_ORIGINS` | Backend | Frontend URL (e.g. `https://kaddy-frontend.onrender.com`) |
-| `FRONTEND_URL` | Backend | Same as `CORS_ORIGINS` (used in email links) |
-| `NEXT_PUBLIC_API_URL` | Frontend | Backend URL + `/api` |
+| Variable              | Service  | Description                                               |
+| --------------------- | -------- | --------------------------------------------------------- |
+| `MONGODB_URI`         | Backend  | MongoDB Atlas connection string                           |
+| `CORS_ORIGINS`        | Backend  | Frontend URL (e.g. `https://kaddy-frontend.onrender.com`) |
+| `FRONTEND_URL`        | Backend  | Same as `CORS_ORIGINS` (used in email links)              |
+| `NEXT_PUBLIC_API_URL` | Frontend | Backend URL + `/api`                                      |
 
 `JWT_SECRET` is auto-generated by Render. `REDIS_URL` is injected automatically from the `kaddy-redis` service.
 
@@ -638,14 +689,14 @@ The `backend/Dockerfile` uses a **multi-stage build**:
 
 **JVM tuning for Render free tier (512 MB RAM):**
 
-| Flag | Value | Purpose |
-|---|---|---|
-| `-XX:+UseZGC -XX:+ZGenerational` | — | Generational ZGC; sub-millisecond GC pauses |
-| `-Xms32m -Xmx180m` | 32–180 MB heap | Stays well within 512 MB container limit |
-| `-XX:SoftMaxHeapSize=150m` | 150 MB | ZGC tries to stay under this before expanding |
-| `-XX:MaxMetaspaceSize=96m` | 96 MB | Prevents metaspace growth from reflection-heavy frameworks |
-| `-XX:ReservedCodeCacheSize=32m` | 32 MB | JIT code cache |
-| `-XX:MaxDirectMemorySize=32m` | 32 MB | Netty direct buffers (WebFlux) |
+| Flag                             | Value          | Purpose                                                    |
+| -------------------------------- | -------------- | ---------------------------------------------------------- |
+| `-XX:+UseZGC -XX:+ZGenerational` | —              | Generational ZGC; sub-millisecond GC pauses                |
+| `-Xms32m -Xmx180m`               | 32–180 MB heap | Stays well within 512 MB container limit                   |
+| `-XX:SoftMaxHeapSize=150m`       | 150 MB         | ZGC tries to stay under this before expanding              |
+| `-XX:MaxMetaspaceSize=96m`       | 96 MB          | Prevents metaspace growth from reflection-heavy frameworks |
+| `-XX:ReservedCodeCacheSize=32m`  | 32 MB          | JIT code cache                                             |
+| `-XX:MaxDirectMemorySize=32m`    | 32 MB          | Netty direct buffers (WebFlux)                             |
 
 ---
 

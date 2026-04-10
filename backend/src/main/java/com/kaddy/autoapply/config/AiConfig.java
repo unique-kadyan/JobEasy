@@ -11,6 +11,6 @@ public class AiConfig {
     @Bean
     AiTextGenerator aiTextGenerator(AiProviderFactory factory) {
         return (systemPrompt, userPrompt) ->
-                factory.generate(systemPrompt, userPrompt, null).content();
+                factory.generate(systemPrompt, userPrompt, (String) null).content();
     }
 }

@@ -5,24 +5,23 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-@Component
 public class GroqAiProvider extends OpenAiCompatibleProvider {
 
     private static final Logger log = LoggerFactory.getLogger(GroqAiProvider.class);
 
-    public GroqAiProvider(
-            WebClient.Builder builder,
-            @Value("${app.ai.groq.api-key:}") String apiKey,
-            @Value("${app.ai.groq.model:llama-3.3-70b-versatile}") String model) {
+    private final String providerName;
+
+    public GroqAiProvider(WebClient.Builder builder, String apiKey, String model, String providerName) {
         super(builder, "https://api.groq.com/openai", apiKey, model);
+        this.providerName = providerName;
     }
 
     @Override
-    public String getName() { return "GROQ"; }
+    public String getName() {
+        return providerName;
+    }
 
     @Override
     @CircuitBreaker(name = "groqAi", fallbackMethod = "fallback")

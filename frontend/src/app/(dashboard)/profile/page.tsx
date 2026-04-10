@@ -36,6 +36,8 @@ function ProfileCompletion({ user }: { user: UserType | null }) {
     { label: "Location", done: !!user.location },
     { label: "Job title", done: !!user.title },
     { label: "Summary", done: !!user.summary },
+    { label: "Experience", done: (user.experienceYears ?? 0) > 0 },
+    { label: "Target roles", done: (user.targetRoles?.length ?? 0) > 0 },
     { label: "LinkedIn", done: !!user.linkedinUrl },
     { label: "GitHub", done: !!user.githubUrl },
   ];
@@ -93,6 +95,8 @@ export default function ProfilePage() {
     location: user?.location ?? "",
     title: user?.title ?? "",
     summary: user?.summary ?? "",
+    experienceYears: String(user?.experienceYears ?? ""),
+    targetRoles: (user?.targetRoles ?? []).join(", "),
     linkedinUrl: user?.linkedinUrl ?? "",
     githubUrl: user?.githubUrl ?? "",
     portfolioUrl: user?.portfolioUrl ?? "",
@@ -122,7 +126,16 @@ export default function ProfilePage() {
     },
   });
 
-  const handleSave = () => updateMutation.mutate(form);
+  const handleSave = () => {
+    const payload: Record<string, unknown> = { ...form };
+    const exp = parseInt(form.experienceYears, 10);
+    payload.experienceYears = isNaN(exp) ? 0 : exp;
+    payload.targetRoles = form.targetRoles
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    updateMutation.mutate(payload);
+  };
 
   const field = (key: keyof typeof form) => ({
     value: form[key],
@@ -137,7 +150,11 @@ export default function ProfilePage() {
     return Object.values(skills).flat() as string[];
   })();
 
-  const parsedSkills = primaryResume?.parsedData?.skills ?? [];
+  const parsedSkills: string[] = (() => {
+    const s = primaryResume?.parsedData?.skills;
+    if (!s) return [];
+    return Object.values(s).flat().filter(Boolean) as string[];
+  })();
 
   const githubUsername = (() => {
     const url = user?.githubUrl;
@@ -228,14 +245,29 @@ export default function ProfilePage() {
               </div>
               <Input label="Job Title" placeholder="Senior Software Engineer" {...field("title")} />
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Professional Summary
                 </label>
                 <textarea
-                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   rows={4}
                   placeholder="A brief summary of your experience and career goals..."
                   {...field("summary")}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Years of Experience"
+                  type="number"
+                  min="0"
+                  max="50"
+                  placeholder="e.g. 5"
+                  {...field("experienceYears")}
+                />
+                <Input
+                  label="Target Roles"
+                  placeholder="e.g. Software Engineer, Backend Developer"
+                  {...field("targetRoles")}
                 />
               </div>
             </>
@@ -247,12 +279,28 @@ export default function ProfilePage() {
                 <InfoRow label="Phone" value={user?.phone} />
                 <InfoRow label="Location" value={user?.location} />
                 <InfoRow label="Title" value={user?.title} />
+                <InfoRow
+                  label="Experience"
+                  value={(user?.experienceYears ?? 0) > 0 ? `${user!.experienceYears} years` : undefined}
+                />
                 <InfoRow label="Member since" value={user?.createdAt ? formatDate(user.createdAt) : undefined} />
               </div>
               {user?.summary && (
-                <div className="pt-2 border-t border-gray-100">
-                  <p className="text-xs font-medium text-gray-500 mb-1">Summary</p>
-                  <p className="text-sm text-gray-700">{user.summary}</p>
+                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Summary</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{user.summary}</p>
+                </div>
+              )}
+              {user?.targetRoles && user.targetRoles.length > 0 && (
+                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Target Roles</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {user.targetRoles.map((role) => (
+                      <span key={role} className="rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2.5 py-0.5 text-xs font-medium">
+                        {role}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -352,27 +400,28 @@ export default function ProfilePage() {
                         key={repo.id}
                         className="py-3 border-b border-gray-50 last:border-0"
                       >
-                        {}
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <div className="flex items-center justify-between gap-3 min-w-0">
                           <a
                             href={repo.html_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm font-semibold text-indigo-600 hover:underline shrink-0"
+                            className="text-sm font-semibold text-indigo-600 hover:underline truncate shrink-0 max-w-[40%]"
                           >
                             {repo.name}
                           </a>
-                          {techs.map((t) => (
-                            <span
-                              key={t}
-                              className="rounded-full bg-indigo-50 text-indigo-700 px-2 py-0.5 text-xs font-medium"
-                            >
-                              {t}
+                          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                            {techs.map((t) => (
+                              <span
+                                key={t}
+                                className="rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 text-xs font-medium whitespace-nowrap"
+                              >
+                                {t}
+                              </span>
+                            ))}
+                            <span className="flex items-center gap-0.5 text-xs text-gray-400 whitespace-nowrap ml-1">
+                              <Star className="h-3 w-3" /> {repo.stargazers_count}
                             </span>
-                          ))}
-                          <span className="ml-auto flex items-center gap-0.5 text-xs text-gray-400 shrink-0">
-                            <Star className="h-3 w-3" /> {repo.stargazers_count}
-                          </span>
+                          </div>
                         </div>
                         {repo.description && (
                           <p className="text-xs text-gray-500 mt-1 line-clamp-2">
@@ -463,11 +512,11 @@ export default function ProfilePage() {
                     ` · ${(primaryResume.fileSize / 1024).toFixed(0)} KB`}
                 </p>
                 <div className="flex gap-3 mt-2 text-xs text-gray-500">
-                  {primaryResume.parsedData?.hasExperience && <span>✓ Experience</span>}
-                  {primaryResume.parsedData?.hasEducation && <span>✓ Education</span>}
-                  {primaryResume.parsedData?.hasProjects && <span>✓ Projects</span>}
+                  {(primaryResume.parsedData?.experience?.length ?? 0) > 0 && <span>✓ Experience</span>}
+                  {(primaryResume.parsedData?.education?.length ?? 0) > 0 && <span>✓ Education</span>}
+                  {(primaryResume.parsedData?.projects?.length ?? 0) > 0 && <span>✓ Projects</span>}
                   {primaryResume.parsedData?.wordCount && (
-                    <span>{primaryResume.parsedData.wordCount as number} words</span>
+                    <span>{primaryResume.parsedData.wordCount} words</span>
                   )}
                 </div>
               </div>

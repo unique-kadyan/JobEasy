@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const API_URL =
   typeof window !== "undefined"
@@ -8,7 +8,6 @@ const API_URL =
     : "";
 
 const INTERVAL_UP_MS = 25_000;
-
 const INTERVAL_DOWN_MS = 5_000;
 const TIMEOUT_MS = 8_000;
 
@@ -19,48 +18,49 @@ export function useKeepAlive(): ServerStatus {
   const statusRef = useRef<ServerStatus>("connecting");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
-
-  const scheduleNext = useCallback((currentStatus: ServerStatus) => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    const delay = currentStatus === "up" ? INTERVAL_UP_MS : INTERVAL_DOWN_MS;
-    timerRef.current = setTimeout(runPing, delay);
-  }, []);
-
-  const runPing = useCallback(async () => {
-    if (!mountedRef.current) return;
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-    try {
-      const res = await fetch(`${API_URL}/ping`, {
-        cache: "no-store",
-        signal: controller.signal,
-      });
-      if (!mountedRef.current) return;
-      const next: ServerStatus = res.ok ? "up" : "down";
-      statusRef.current = next;
-      setStatus(next);
-      scheduleNext(next);
-    } catch {
-      if (!mountedRef.current) return;
-      statusRef.current = "down";
-      setStatus("down");
-      scheduleNext("down");
-    } finally {
-      clearTimeout(timeout);
-    }
-  }, [scheduleNext]);
+  const pingRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
+
+    const scheduleNext = (currentStatus: ServerStatus) => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      const delay = currentStatus === "up" ? INTERVAL_UP_MS : INTERVAL_DOWN_MS;
+      timerRef.current = setTimeout(() => pingRef.current?.(), delay);
+    };
+
+    const runPing = async () => {
+      if (!mountedRef.current) return;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+      try {
+        const res = await fetch(`${API_URL}/ping`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!mountedRef.current) return;
+        const next: ServerStatus = res.ok ? "up" : "down";
+        statusRef.current = next;
+        setStatus(next);
+        scheduleNext(next);
+      } catch {
+        if (!mountedRef.current) return;
+        statusRef.current = "down";
+        setStatus("down");
+        scheduleNext("down");
+      } finally {
+        clearTimeout(timeout);
+      }
+    };
+
+    pingRef.current = runPing;
 
     runPing();
 
     const onVisible = () => {
       if (document.visibilityState === "visible") {
         if (timerRef.current) clearTimeout(timerRef.current);
-        runPing();
+        pingRef.current?.();
       }
     };
     document.addEventListener("visibilitychange", onVisible);
@@ -70,7 +70,7 @@ export function useKeepAlive(): ServerStatus {
       if (timerRef.current) clearTimeout(timerRef.current);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [runPing]);
+  }, []);
 
   return status;
 }

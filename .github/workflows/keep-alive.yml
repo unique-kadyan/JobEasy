@@ -1,39 +1,13 @@
 name: Keep Render Instances Alive
 
-# HOW THIS ACHIEVES ~1-MINUTE EFFECTIVE FREQUENCY
-#
-# GitHub enforces a minimum of 5 minutes per individual cron schedule.
-# This workflow uses 5 entries, each running every 5 minutes but offset
-# by 1 minute from each other:
-#
-#   Entry 1:  :00, :05, :10, :15, :20, :25, :30, :35, :40, :45, :50, :55
-#   Entry 2:  :01, :06, :11, :16, :21, :26, :31, :36, :41, :46, :51, :56
-#   Entry 3:  :02, :07, :12, :17, :22, :27, :32, :37, :42, :47, :52, :57
-#   Entry 4:  :03, :08, :13, :18, :23, :28, :33, :38, :43, :48, :53, :58
-#   Entry 5:  :04, :09, :14, :19, :24, :29, :34, :39, :44, :49, :54, :59
-#
-# Together they cover every minute of every hour. Each individual entry
-# complies with GitHub's 5-minute minimum.
-#
-# ROLE IN THE SYSTEM
-# This workflow is the cold-start rescue net only. Once either service wakes
-# up, its built-in scheduler (SelfPingScheduler / instrumentation.ts) pings
-# both services every 20 s — well under Render's 35-second freeze threshold —
-# so the services stay alive indefinitely without needing this workflow.
-#
-# One-time setup:
-#   Repo → Settings → Secrets and variables → Actions → New repository secret
-#   RENDER_BACKEND_URL  — e.g. https://kaddy-backend.onrender.com
-#   RENDER_FRONTEND_URL — e.g. https://kaddy-frontend.onrender.com
-
 on:
   schedule:
-    - cron: "0/5 * * * *"   # fires at :00, :05, :10 ...
-    - cron: "1/5 * * * *"   # fires at :01, :06, :11 ...
-    - cron: "2/5 * * * *"   # fires at :02, :07, :12 ...
-    - cron: "3/5 * * * *"   # fires at :03, :08, :13 ...
-    - cron: "4/5 * * * *"   # fires at :04, :09, :14 ...
-  workflow_dispatch:         # manual trigger for testing
+    - cron: "0/5 * * * *"
+    - cron: "1/5 * * * *"
+    - cron: "2/5 * * * *"
+    - cron: "3/5 * * * *"
+    - cron: "4/5 * * * *"
+  workflow_dispatch:
 
 jobs:
   wake:

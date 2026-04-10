@@ -1,10 +1,5 @@
 name: CI — Build & Test
 
-# Versions are derived from project definition files — do NOT hardcode here:
-#   Java  →  .java-version          (project root)
-#   Maven →  backend/.mvn/wrapper/maven-wrapper.properties  (via ./mvnw)
-#   Node  →  frontend/.nvmrc
-
 on:
   push:
     branches: [ main ]
@@ -12,7 +7,6 @@ on:
     branches: [ main ]
 
 jobs:
-  # ── Backend ─────────────────────────────────────────────────────────────────
   backend:
     name: Backend (Java / Maven)
     runs-on: ubuntu-latest
@@ -41,8 +35,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # JDK version read from .java-version at the repository root.
-      # Maven version pinned in backend/.mvn/wrapper/maven-wrapper.properties.
       - name: Set up JDK (version from .java-version)
         uses: actions/setup-java@v4
         with:
@@ -55,9 +47,6 @@ jobs:
         run: ./mvnw --batch-mode verify
         env:
           MONGODB_URI: mongodb://localhost:27017/kaddy_test
-          # JWT_SECRET is intentionally omitted here.
-          # application-test.yml supplies a CI-safe fallback via Spring's
-          # ${JWT_SECRET:...} placeholder when the variable is not set.
 
       - name: Upload test results
         if: always()
@@ -73,7 +62,6 @@ jobs:
           name: backend-coverage
           path: backend/target/site/jacoco/
 
-  # ── Frontend ─────────────────────────────────────────────────────────────────
   frontend:
     name: Frontend (Node / Next.js)
     runs-on: ubuntu-latest
@@ -81,9 +69,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Node version read from frontend/.nvmrc.
-      # npm version is managed by the Node.js release (package.json engines field
-      # documents the minimum requirement).
       - name: Set up Node.js (version from frontend/.nvmrc)
         uses: actions/setup-node@v4
         with:

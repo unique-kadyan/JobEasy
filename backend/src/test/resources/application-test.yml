@@ -1,13 +1,9 @@
 spring:
   threads:
     virtual:
-      enabled: false    # avoids redisConnectionFactoryVirtualThreads which fails on empty REDIS_URL
+      enabled: false
   data:
     mongodb:
-      # MONGODB_URI must be set as an environment variable.
-      # CI:        set automatically by the ci.yml workflow (local Docker service, no credentials).
-      # Local dev: export MONGODB_URI=mongodb://localhost:27017/autoapply  (or your Atlas URI).
-      # No default credentials are stored here — never commit real connection strings.
       uri: ${MONGODB_URI:mongodb://localhost:27017/autoapply}
     redis:
       url: "redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}"

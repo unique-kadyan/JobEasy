@@ -104,7 +104,6 @@ public class User {
     public void setSubscriptionTier(SubscriptionTier subscriptionTier) { this.subscriptionTier = subscriptionTier; }
 
     public Set<Role> getRoles() {
-
         return roles != null ? roles : EnumSet.of(Role.ROLE_USER);
     }
     public LocalDateTime getCreatedAt() { return createdAt; }

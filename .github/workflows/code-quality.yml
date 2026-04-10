@@ -1,9 +1,5 @@
 name: Code Quality — SpotBugs & PMD
 
-# Versions are derived from project definition files — do NOT hardcode here:
-#   Java  →  .java-version          (project root)
-#   Maven →  backend/.mvn/wrapper/maven-wrapper.properties  (via ./mvnw)
-
 on:
   push:
     branches: [ main ]
@@ -21,7 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # JDK version read from .java-version at the repository root.
       - name: Set up JDK (version from .java-version)
         uses: actions/setup-java@v4
         with:
@@ -34,9 +29,6 @@ jobs:
         run: ./mvnw --batch-mode compile -DskipTests
         env:
           MONGODB_URI: mongodb://localhost:27017/kaddy_test
-          # JWT_SECRET is intentionally omitted here.
-          # application-test.yml supplies a CI-safe fallback via Spring's
-          # ${JWT_SECRET:...} placeholder when the variable is not set.
 
       - name: Run SpotBugs
         working-directory: backend
@@ -61,7 +53,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # JDK version read from .java-version at the repository root.
       - name: Set up JDK (version from .java-version)
         uses: actions/setup-java@v4
         with:

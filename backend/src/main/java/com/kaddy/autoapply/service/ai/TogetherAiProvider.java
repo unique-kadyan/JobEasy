@@ -1,28 +1,29 @@
 package com.kaddy.autoapply.service.ai;
 
-import com.kaddy.autoapply.exception.AiServiceException;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-@Component
+import com.kaddy.autoapply.exception.AiServiceException;
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+
 public class TogetherAiProvider extends OpenAiCompatibleProvider {
 
     private static final Logger log = LoggerFactory.getLogger(TogetherAiProvider.class);
 
-    public TogetherAiProvider(
-            WebClient.Builder builder,
-            @Value("${app.ai.together.api-key:}") String apiKey,
-            @Value("${app.ai.together.model:meta-llama/Llama-3.3-70B-Instruct-Turbo}") String model) {
+    private final String providerName;
+
+    public TogetherAiProvider(WebClient.Builder builder, String apiKey, String model, String providerName) {
         super(builder, "https://api.together.xyz", apiKey, model);
+        this.providerName = providerName;
     }
 
     @Override
-    public String getName() { return "TOGETHER"; }
+    public String getName() {
+        return providerName;
+    }
 
     @Override
     @CircuitBreaker(name = "togetherAi", fallbackMethod = "fallback")

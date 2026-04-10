@@ -1,5 +1,6 @@
 package com.kaddy.autoapply.service;
 
+import com.kaddy.autoapply.config.FeatureConfig;
 import com.kaddy.autoapply.exception.BadRequestException;
 import com.kaddy.autoapply.exception.ResourceNotFoundException;
 import com.kaddy.autoapply.model.Resume;
@@ -40,6 +41,7 @@ public class ResumeService {
     private final UserRepository userRepository;
     private final JobService jobService;
     private final ResumeProfileService resumeProfileService;
+    private final FeatureConfig featureConfig;
     private final String uploadDir;
     private final Executor executor;
 
@@ -48,6 +50,7 @@ public class ResumeService {
                          UserRepository userRepository,
                          @Lazy JobService jobService,
                          @Lazy ResumeProfileService resumeProfileService,
+                         FeatureConfig featureConfig,
                          @Value("${app.upload.dir}") String uploadDir,
                          @Qualifier("virtualThreadExecutor") Executor executor) {
         this.resumeRepository = resumeRepository;
@@ -55,6 +58,7 @@ public class ResumeService {
         this.userRepository = userRepository;
         this.jobService = jobService;
         this.resumeProfileService = resumeProfileService;
+        this.featureConfig = featureConfig;
         this.uploadDir = uploadDir;
         this.executor = executor;
     }
@@ -68,6 +72,21 @@ public class ResumeService {
         String contentType = file.getContentType();
         if (!"application/pdf".equals(contentType)) {
             throw new BadRequestException("Only PDF files are supported");
+        }
+
+        if (!SecurityUtils.isAdmin()) {
+            User owner = userRepository.findById(userId)
+                    .orElseThrow(() -> new BadRequestException("User not found"));
+            int maxResumes = featureConfig.maxResumesUploaded(owner.getSubscriptionTier());
+            if (maxResumes != Integer.MAX_VALUE) {
+                long existing = resumeRepository.findByUserIdOrderByCreatedAtDesc(userId).size();
+                if (existing >= maxResumes) {
+                    throw new BadRequestException(
+                            "Resume limit of " + maxResumes + " reached on your "
+                            + owner.getSubscriptionTier().name().toLowerCase()
+                            + " plan. Delete an existing resume or upgrade to upload more.");
+                }
+            }
         }
 
         try {
@@ -150,7 +169,18 @@ public class ResumeService {
         if (user != null && user.getTitle() != null && !user.getTitle().isBlank()) {
             return user.getTitle();
         }
-        if (parsedData != null && parsedData.get("skills") instanceof java.util.Collection<?> skills) {
+        if (parsedData == null) return "";
+        Object skillsRaw = parsedData.get("skills");
+        if (skillsRaw instanceof Map<?, ?> skillsMap) {
+            return skillsMap.values().stream()
+                    .filter(v -> v instanceof List<?>)
+                    .flatMap(v -> ((List<?>) v).stream())
+                    .map(Object::toString)
+                    .limit(5)
+                    .reduce((a, b) -> a + " " + b)
+                    .orElse("");
+        }
+        if (skillsRaw instanceof java.util.Collection<?> skills) {
             return skills.stream().limit(5)
                     .map(Object::toString)
                     .reduce((a, b) -> a + " " + b)

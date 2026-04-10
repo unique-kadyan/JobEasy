@@ -19,6 +19,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
@@ -91,9 +92,9 @@ public class GlobalExceptionHandler {
                 "Method '" + ex.getMethod() + "' not supported for this endpoint", req);
     }
 
-    @ExceptionHandler(NoResourceFoundException.class)
+    @ExceptionHandler({NoResourceFoundException.class, NoHandlerFoundException.class})
     public ResponseEntity<ApiError> handleNoResource(
-            NoResourceFoundException ex, HttpServletRequest req) {
+            Exception ex, HttpServletRequest req) {
         return build(HttpStatus.NOT_FOUND, "No endpoint found for " + req.getRequestURI(), req);
     }
 

@@ -108,7 +108,7 @@ export default function OnboardingPage() {
 
               {uploadDone ? (
                 <div className="flex items-center gap-2 text-green-700 bg-green-50 rounded-lg px-4 py-3 text-sm">
-                  <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                  <CheckCircle className="h-4 w-4 shrink-0" />
                   Resume uploaded successfully!
                 </div>
               ) : (

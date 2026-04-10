@@ -1,6 +1,5 @@
 services:
 
-  # ── MongoDB ──────────────────────────────────────────────────────────────────
   mongodb:
     image: mongo:7
     container_name: kaddy_mongodb
@@ -16,34 +15,13 @@ services:
       - kaddy_internal
       - default
 
-  # ── Redis ─────────────────────────────────────────────────────────────────────
-  #
-  # Persistence is provided by TWO complementary mechanisms:
-  #
-  #   AOF (appendonly.aof) — every write command is logged and fsynced to disk
-  #   once per second.  On restart Redis replays the log, recovering all data
-  #   except at most the last second of writes before a hard crash.
-  #
-  #   RDB (dump.rdb) — periodic binary snapshot (every 60 s if ≥ 10 000
-  #   changes, every 5 min if ≥ 100, every 1 h if ≥ 1).  Provides a fast
-  #   full-state backup alongside the AOF.
-  #
-  # Both files are written to /data inside the container, which is backed by the
-  # named Docker volume `redisdata`.  The volume survives container restarts,
-  # re-creations, and image upgrades — Redis always wakes up with full state.
-  #
-  # Authentication: set REDIS_PASSWORD in your .env file.  The same value must
-  # be provided to the Spring app via REDIS_PASSWORD so Lettuce can authenticate.
-  # ─────────────────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: kaddy_redis
     ports:
       - "6379:6379"
     volumes:
-      # Named volume holds AOF + RDB files — persists across restarts/upgrades
       - redisdata:/data
-      # Mount our custom redis.conf read-only into the container
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
     command: >
       redis-server /usr/local/etc/redis/redis.conf
@@ -55,7 +33,6 @@ services:
       - default
     restart: unless-stopped
     healthcheck:
-      # Use AUTH only when a password is set; gracefully handle empty password.
       test: >
         sh -c '
           if [ -n "$$REDIS_PASSWORD" ]; then
@@ -72,9 +49,6 @@ services:
 networks:
   kaddy_internal:
     driver: bridge
-    # This is the same network declared in docker-compose.lb.yml.
-    # Both files must reference the same name so services can reach each other.
-    # The lb override file marks it as "external: false" which is the default.
 
 volumes:
   mongodata:

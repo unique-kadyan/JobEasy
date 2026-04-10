@@ -106,7 +106,8 @@ public class ResumeGeneratorService {
 
         String userPrompt = buildPrompt(user, resume);
 
-        AiProviderFactory.GenerationResult result = aiProviderFactory.generate(SYSTEM_PROMPT, userPrompt, null);
+        AiProviderFactory.GenerationResult result = aiProviderFactory.generate(
+                SYSTEM_PROMPT, userPrompt, AiProviderFactory.TaskType.RESUME_GENERATION);
         log.info("Resume generated for user {} using {}", userId, result.providerName());
 
         Map<String, Object> resumeData = parseResumeJson(result.content());
@@ -213,7 +214,7 @@ public class ResumeGeneratorService {
             String resumeJson = objectMapper.writeValueAsString(resumeData);
             String userPrompt = "Evaluate this resume JSON for ATS compatibility:\n\n" + resumeJson;
             AiProviderFactory.GenerationResult result = aiProviderFactory.generate(ATS_SCORING_SYSTEM, userPrompt,
-                    null);
+                    AiProviderFactory.TaskType.REASONING);
 
             String raw = result.content().trim();
             if (raw.startsWith("```")) {
@@ -244,7 +245,8 @@ public class ResumeGeneratorService {
             String userPrompt = "Resume JSON:\n" + resumeJson
                     + "\n\nWeaknesses to fix:\n- " + String.join("\n- ", weaknesses)
                     + "\n\nReturn the improved resume JSON with all weaknesses fixed.";
-            AiProviderFactory.GenerationResult result = aiProviderFactory.generate(REFINEMENT_SYSTEM, userPrompt, null);
+            AiProviderFactory.GenerationResult result = aiProviderFactory.generate(REFINEMENT_SYSTEM, userPrompt,
+                    AiProviderFactory.TaskType.RESUME_GENERATION);
             return parseResumeJson(result.content());
         } catch (Exception e) {
             log.warn("Resume refinement failed, using original: {}", e.getMessage());

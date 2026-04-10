@@ -1,27 +1,21 @@
 package com.kaddy.autoapply.exception;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kaddy.autoapply.config.SecurityConfig;
 import com.kaddy.autoapply.controller.AuthController;
 import com.kaddy.autoapply.dto.request.SignupRequest;
-import com.kaddy.autoapply.security.JwtAuthenticationFilter;
-import com.kaddy.autoapply.security.JwtTokenProvider;
 import com.kaddy.autoapply.service.AuthService;
-import com.kaddy.autoapply.service.TokenBlacklistService;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import com.kaddy.autoapply.config.FeatureConfig;
-import com.kaddy.autoapply.repository.UserRepository;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -30,189 +24,190 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(AuthController.class)
-@Import({ SecurityConfig.class, JwtAuthenticationFilter.class })
-@ActiveProfiles("test")
+@ExtendWith(MockitoExtension.class)
 class GlobalExceptionHandlerTest {
 
-        @Autowired
-        MockMvc mockMvc;
-        @Autowired
-        ObjectMapper objectMapper;
-        @MockBean
-        AuthService authService;
+    @Mock
+    private AuthService authService;
 
-        @MockBean
-        JwtTokenProvider jwtTokenProvider;
-        @MockBean
-        TokenBlacklistService tokenBlacklistService;
-        @MockBean
-        StringRedisTemplate stringRedisTemplate;
-        @MockBean
-        FeatureConfig featureConfig;
-        @MockBean
-        UserRepository userRepository;
+    @InjectMocks
+    private AuthController authController;
 
-        private static final AtomicInteger ipSuffix = new AtomicInteger(0);
+    private MockMvc mockMvc;
 
-        private MockHttpServletRequestBuilder uniqueIp(MockHttpServletRequestBuilder req) {
-                return req.header("X-Forwarded-For", "10.99.0." + ipSuffix.incrementAndGet());
-        }
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-        @Test
-        void invalidEmail_shouldReturn400WithApiError() throws Exception {
-                String body = """
-                                {"email":"not-an-email","password":"password123","name":"Test"}
-                                """;
-                mockMvc.perform(uniqueIp(post("/api/auth/signup"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(body))
-                                .andExpect(status().isBadRequest())
-                                .andExpect(jsonPath("$.status").value(400))
-                                .andExpect(jsonPath("$.message").exists())
-                                .andExpect(jsonPath("$.path").value("/api/auth/signup"))
-                                .andExpect(jsonPath("$.timestamp").exists());
-        }
+    private static final AtomicInteger ipSuffix = new AtomicInteger(0);
 
-        @Test
-        void shortPassword_shouldReturn400() throws Exception {
-                String body = """
-                                {"email":"a@b.com","password":"12","name":"Test"}
-                                """;
-                mockMvc.perform(uniqueIp(post("/api/auth/signup"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(body))
-                                .andExpect(status().isBadRequest())
-                                .andExpect(jsonPath("$.status").value(400));
-        }
+    @BeforeEach
+    void setUp() {
+        LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
+        validator.afterPropertiesSet();
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(authController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .setValidator(validator)
+                .setMessageConverters(new JacksonJsonHttpMessageConverter())
+                .build();
+    }
 
-        @Test
-        void duplicateSignup_shouldReturn400WithAppExceptionMessage() throws Exception {
-                when(authService.signup(any())).thenThrow(new BadRequestException("Email already registered"));
+    private MockHttpServletRequestBuilder uniqueIp(MockHttpServletRequestBuilder req) {
+        return req.header("X-Forwarded-For", "10.99.0." + ipSuffix.incrementAndGet());
+    }
 
-                String body = objectMapper.writeValueAsString(
-                                new SignupRequest("dup@test.com", "password123", "Test"));
+    @Test
+    void invalidEmail_shouldReturn400WithApiError() throws Exception {
+        String body = """
+                {"email":"not-an-email","password":"password123","name":"Test"}
+                """;
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.path").value("/api/auth/signup"))
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
 
-                mockMvc.perform(uniqueIp(post("/api/auth/signup"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(body))
-                                .andExpect(status().isBadRequest())
-                                .andExpect(jsonPath("$.status").value(400))
-                                .andExpect(jsonPath("$.message").value("Email already registered"))
-                                .andExpect(jsonPath("$.path").value("/api/auth/signup"));
-        }
+    @Test
+    void shortPassword_shouldReturn400() throws Exception {
+        String body = """
+                {"email":"a@b.com","password":"12","name":"Test"}
+                """;
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
 
-        @Test
-        void malformedJson_shouldReturn400() throws Exception {
-                mockMvc.perform(uniqueIp(post("/api/auth/signup"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{this is not json}"))
-                                .andExpect(status().isBadRequest())
-                                .andExpect(jsonPath("$.status").value(400));
-        }
+    @Test
+    void duplicateSignup_shouldReturn400WithAppExceptionMessage() throws Exception {
+        when(authService.signup(any())).thenThrow(new BadRequestException("Email already registered"));
 
-        @Test
-        void wrongContentType_shouldReturn400() throws Exception {
-                mockMvc.perform(uniqueIp(post("/api/auth/signup"))
-                                .contentType(MediaType.TEXT_PLAIN)
-                                .content("some text"))
-                                .andExpect(status().isBadRequest());
-        }
+        String body = objectMapper.writeValueAsString(
+                new SignupRequest("dup@test.com", "password123", "Test"));
 
-        @Test
-        void noToken_shouldReturn4xxOnProtectedEndpoint() throws Exception {
-                mockMvc.perform(get("/api/users/me"))
-                                .andExpect(status().is4xxClientError());
-        }
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Email already registered"))
+                .andExpect(jsonPath("$.path").value("/api/auth/signup"));
+    }
 
-        @Test
-        @WithMockUser
-        void unknownRoute_shouldReturn404WithApiError() throws Exception {
-                mockMvc.perform(get("/api/this-route-does-not-exist"))
-                                .andExpect(status().isNotFound())
-                                .andExpect(jsonPath("$.status").value(404));
-        }
+    @Test
+    void malformedJson_shouldReturn400() throws Exception {
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{this is not json}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
 
-        @Test
-        void resourceNotFound_shouldReturn404() throws Exception {
-                when(authService.signup(any())).thenThrow(new ResourceNotFoundException("User not found"));
+    @Test
+    void wrongContentType_shouldReturn400() throws Exception {
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
+                .contentType(MediaType.TEXT_PLAIN)
+                .content("some text"))
+                .andExpect(status().isBadRequest());
+    }
 
-                String body = objectMapper.writeValueAsString(
-                                new SignupRequest("a@b.com", "password123", "Test"));
+    @Test
+    void noToken_shouldReturn4xxOnProtectedEndpoint() throws Exception {
+        mockMvc.perform(get("/api/users/me"))
+                .andExpect(status().is4xxClientError());
+    }
 
-                mockMvc.perform(uniqueIp(post("/api/auth/signup"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(body))
-                                .andExpect(status().isNotFound())
-                                .andExpect(jsonPath("$.status").value(404))
-                                .andExpect(jsonPath("$.message").value("User not found"));
-        }
+    @Test
+    void unknownRoute_shouldReturn404WithApiError() throws Exception {
+        mockMvc.perform(get("/api/this-route-does-not-exist"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+    }
 
-        @Test
-        void wrongMethod_shouldReturn405() throws Exception {
-                mockMvc.perform(uniqueIp(delete("/api/auth/login"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{}"))
-                                .andExpect(status().isMethodNotAllowed())
-                                .andExpect(jsonPath("$.status").value(405));
-        }
+    @Test
+    void resourceNotFound_shouldReturn404() throws Exception {
+        when(authService.signup(any())).thenThrow(new ResourceNotFoundException("User not found"));
 
-        @Test
-        void aiServiceUnavailable_shouldReturn503() throws Exception {
-                when(authService.signup(any())).thenThrow(new AiServiceException("All AI providers unavailable"));
+        String body = objectMapper.writeValueAsString(
+                new SignupRequest("a@b.com", "password123", "Test"));
 
-                String body = objectMapper.writeValueAsString(
-                                new SignupRequest("a@b.com", "password123", "Test"));
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("User not found"));
+    }
 
-                mockMvc.perform(uniqueIp(post("/api/auth/signup"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(body))
-                                .andExpect(status().isServiceUnavailable())
-                                .andExpect(jsonPath("$.status").value(503));
-        }
+    @Test
+    void wrongMethod_shouldReturn405() throws Exception {
+        mockMvc.perform(uniqueIp(delete("/api/auth/login"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.status").value(405));
+    }
 
-        @Test
-        void rateLimitExceeded_shouldReturn429() throws Exception {
-                when(authService.signup(any())).thenThrow(new RateLimitException("Too many requests"));
+    @Test
+    void aiServiceUnavailable_shouldReturn503() throws Exception {
+        when(authService.signup(any())).thenThrow(new AiServiceException("All AI providers unavailable"));
 
-                String body = objectMapper.writeValueAsString(
-                                new SignupRequest("a@b.com", "password123", "Test"));
+        String body = objectMapper.writeValueAsString(
+                new SignupRequest("a@b.com", "password123", "Test"));
 
-                mockMvc.perform(uniqueIp(post("/api/auth/signup"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(body))
-                                .andExpect(status().isTooManyRequests())
-                                .andExpect(jsonPath("$.status").value(429));
-        }
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.status").value(503));
+    }
 
-        @Test
-        void unexpectedException_shouldReturn500() throws Exception {
-                when(authService.signup(any())).thenThrow(new RuntimeException("Something went wrong internally"));
+    @Test
+    void rateLimitExceeded_shouldReturn429() throws Exception {
+        when(authService.signup(any())).thenThrow(new RateLimitException("Too many requests"));
 
-                String body = objectMapper.writeValueAsString(
-                                new SignupRequest("a@b.com", "password123", "Test"));
+        String body = objectMapper.writeValueAsString(
+                new SignupRequest("a@b.com", "password123", "Test"));
 
-                mockMvc.perform(uniqueIp(post("/api/auth/signup"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(body))
-                                .andExpect(status().isInternalServerError())
-                                .andExpect(jsonPath("$.status").value(500))
-                                .andExpect(jsonPath("$.path").value("/api/auth/signup"));
-        }
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.status").value(429));
+    }
 
-        @Test
-        void errorBody_shouldAlwaysHaveAllRequiredFields() throws Exception {
-                when(authService.signup(any())).thenThrow(new BadRequestException("test"));
+    @Test
+    void unexpectedException_shouldReturn500() throws Exception {
+        when(authService.signup(any())).thenThrow(new RuntimeException("Something went wrong internally"));
 
-                String body = objectMapper.writeValueAsString(
-                                new SignupRequest("a@b.com", "password123", "Test"));
+        String body = objectMapper.writeValueAsString(
+                new SignupRequest("a@b.com", "password123", "Test"));
 
-                mockMvc.perform(uniqueIp(post("/api/auth/signup"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(body))
-                                .andExpect(jsonPath("$.status").exists())
-                                .andExpect(jsonPath("$.message").exists())
-                                .andExpect(jsonPath("$.path").exists())
-                                .andExpect(jsonPath("$.timestamp").exists());
-        }
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.path").value("/api/auth/signup"));
+    }
+
+    @Test
+    void errorBody_shouldAlwaysHaveAllRequiredFields() throws Exception {
+        when(authService.signup(any())).thenThrow(new BadRequestException("test"));
+
+        String body = objectMapper.writeValueAsString(
+                new SignupRequest("a@b.com", "password123", "Test"));
+
+        mockMvc.perform(uniqueIp(post("/api/auth/signup"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(jsonPath("$.status").exists())
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.path").exists())
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
 }

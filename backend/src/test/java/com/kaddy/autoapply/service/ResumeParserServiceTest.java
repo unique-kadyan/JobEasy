@@ -17,42 +17,57 @@ class ResumeParserServiceTest {
                 "John Doe\njohn@example.com\n+1-555-123-4567\nExperience with Java and Python"
         );
 
-        assertEquals("john@example.com", data.get("email"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> contact = (Map<String, Object>) data.get("contact");
+        assertNotNull(contact);
+        assertEquals("john@example.com", contact.get("email"));
     }
 
     @Test
     void parseStructuredData_shouldExtractPhone() {
         Map<String, Object> data = parser.parseStructuredData(
-                "Contact: 555-123-4567"
+                "Jane Smith\nContact: 555-123-4567"
         );
 
-        assertNotNull(data.get("phone"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> contact = (Map<String, Object>) data.get("contact");
+        assertNotNull(contact);
+        assertNotNull(contact.get("phone"));
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void parseStructuredData_shouldExtractSkills() {
+    void parseStructuredData_shouldExtractSkillsByCategory() {
         Map<String, Object> data = parser.parseStructuredData(
                 "Skills: Java, Python, React, Spring Boot, Docker, AWS"
         );
 
-        List<String> skills = (List<String>) data.get("skills");
+        Map<String, List<String>> skills = (Map<String, List<String>>) data.get("skills");
         assertNotNull(skills);
-        assertTrue(skills.contains("java"));
-        assertTrue(skills.contains("python"));
-        assertTrue(skills.contains("react"));
-        assertTrue(skills.contains("docker"));
+        assertTrue(skills.containsKey("technical"));
+        assertTrue(skills.containsKey("frameworks"));
+        assertTrue(skills.containsKey("cloud"));
+        assertTrue(skills.containsKey("tools"));
+        assertTrue(skills.get("technical").contains("java"));
+        assertTrue(skills.get("technical").contains("python"));
+        assertTrue(skills.get("frameworks").contains("react"));
+        assertTrue(skills.get("tools").contains("docker"));
+        assertTrue(skills.get("cloud").contains("aws"));
     }
 
     @Test
-    void parseStructuredData_shouldDetectSections() {
-        Map<String, Object> data = parser.parseStructuredData(
-                "Education\nBS Computer Science\nExperience\nSoftware Engineer\nProjects\nOpen source"
-        );
+    void parseStructuredData_shouldReturnConsistentStructureKeys() {
+        Map<String, Object> data = parser.parseStructuredData("Some resume text");
 
-        assertEquals(true, data.get("hasExperience"));
-        assertEquals(true, data.get("hasEducation"));
-        assertEquals(true, data.get("hasProjects"));
+        assertTrue(data.containsKey("contact"));
+        assertTrue(data.containsKey("summary"));
+        assertTrue(data.containsKey("experience"));
+        assertTrue(data.containsKey("education"));
+        assertTrue(data.containsKey("skills"));
+        assertTrue(data.containsKey("projects"));
+        assertTrue(data.containsKey("certifications"));
+        assertTrue(data.containsKey("wordCount"));
+        assertTrue(data.containsKey("experienceYears"));
     }
 
     @Test

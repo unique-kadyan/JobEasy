@@ -1,5 +1,6 @@
 package com.kaddy.autoapply.service;
 
+import com.kaddy.autoapply.config.FeatureConfig;
 import com.kaddy.autoapply.dto.request.CoverLetterRequest;
 import com.kaddy.autoapply.dto.response.CoverLetterResponse;
 import com.kaddy.autoapply.exception.BadRequestException;
@@ -22,10 +23,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -52,28 +56,34 @@ public class CoverLetterService {
 
     private static final long LOOKUP_TIMEOUT_SECONDS = 5;
 
-    private final CoverLetterRepository  coverLetterRepository;
-    private final UserRepository         userRepository;
-    private final TemplateRepository     templateRepository;
-    private final JobService             jobService;
-    private final AiProviderFactory      aiProviderFactory;
-    private final Executor               executor;
+    private final CoverLetterRepository coverLetterRepository;
+    private final UserRepository userRepository;
+    private final TemplateRepository templateRepository;
+    private final JobService jobService;
+    private final AiProviderFactory aiProviderFactory;
+    private final Executor executor;
     private final AutoApplyJobRepository autoApplyJobRepository;
+    private final FeatureConfig featureConfig;
+    private final StringRedisTemplate redis;
 
     public CoverLetterService(CoverLetterRepository coverLetterRepository,
-                               UserRepository userRepository,
-                               TemplateRepository templateRepository,
-                               JobService jobService,
-                               AiProviderFactory aiProviderFactory,
-                               @Qualifier("virtualThreadExecutor") Executor executor,
-                               AutoApplyJobRepository autoApplyJobRepository) {
-        this.coverLetterRepository  = coverLetterRepository;
-        this.userRepository         = userRepository;
-        this.templateRepository     = templateRepository;
-        this.jobService             = jobService;
-        this.aiProviderFactory      = aiProviderFactory;
-        this.executor               = executor;
+            UserRepository userRepository,
+            TemplateRepository templateRepository,
+            JobService jobService,
+            AiProviderFactory aiProviderFactory,
+            @Qualifier("virtualThreadExecutor") Executor executor,
+            AutoApplyJobRepository autoApplyJobRepository,
+            FeatureConfig featureConfig,
+            StringRedisTemplate redis) {
+        this.coverLetterRepository = coverLetterRepository;
+        this.userRepository = userRepository;
+        this.templateRepository = templateRepository;
+        this.jobService = jobService;
+        this.aiProviderFactory = aiProviderFactory;
+        this.executor = executor;
         this.autoApplyJobRepository = autoApplyJobRepository;
+        this.featureConfig = featureConfig;
+        this.redis = redis;
     }
 
     @Async
@@ -94,6 +104,24 @@ public class CoverLetterService {
 
     @PreAuthorize("isAuthenticated()")
     public CoverLetterResponse generate(String userId, CoverLetterRequest request) {
+        if (!SecurityUtils.isAdmin()) {
+            User limitUser = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            int maxPerDay = featureConfig.maxCoverLettersPerDay(limitUser.getSubscriptionTier());
+            if (maxPerDay != Integer.MAX_VALUE) {
+                String dailyKey = "cl:daily:" + userId + ":" + LocalDate.now();
+                Long count = redis.opsForValue().increment(dailyKey);
+                if (count != null && count == 1) {
+                    redis.expire(dailyKey, Duration.ofHours(25));
+                }
+                if (count != null && count > maxPerDay) {
+                    throw new BadRequestException(
+                            "Daily cover letter limit of " + maxPerDay + " reached on your "
+                            + limitUser.getSubscriptionTier().name().toLowerCase()
+                            + " plan. Upgrade to generate more.");
+                }
+            }
+        }
 
         CompletableFuture<User> userFuture = CompletableFuture.supplyAsync(
                 () -> userRepository.findById(userId)
@@ -105,12 +133,12 @@ public class CoverLetterService {
                 executor);
 
         User user;
-        Job  job;
+        Job job;
         try {
             CompletableFuture.allOf(userFuture, jobFuture)
                     .get(LOOKUP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             user = userFuture.join();
-            job  = jobFuture.join();
+            job = jobFuture.join();
         } catch (TimeoutException e) {
             throw new BadRequestException("Data lookup timed out — please retry");
         } catch (InterruptedException e) {
@@ -118,7 +146,8 @@ public class CoverLetterService {
             throw new BadRequestException("Request interrupted");
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
-            if (cause instanceof RuntimeException re) throw re;
+            if (cause instanceof RuntimeException re)
+                throw re;
             throw new BadRequestException("Failed to load required data: " + cause.getMessage());
         }
 
@@ -137,11 +166,11 @@ public class CoverLetterService {
 
         Optional<Template> templateOpt = Optional.ofNullable(request.templateId())
                 .flatMap(templateRepository::findById);
-        templateOpt.ifPresent(t ->
-                prompt.append("\nTEMPLATE STYLE:\n").append(t.getContent()).append("\n"));
+        templateOpt.ifPresent(t -> prompt.append("\nTEMPLATE STYLE:\n").append(t.getContent()).append("\n"));
 
-        AiProviderFactory.GenerationResult result =
-                aiProviderFactory.generate(SYSTEM_PROMPT, prompt.toString(), request.provider());
+        AiProviderFactory.GenerationResult result = (request.provider() != null && !request.provider().isBlank())
+                ? aiProviderFactory.generate(SYSTEM_PROMPT, prompt.toString(), request.provider())
+                : aiProviderFactory.generate(SYSTEM_PROMPT, prompt.toString(), AiProviderFactory.TaskType.COVER_LETTER);
 
         CoverLetter cl = coverLetterRepository.save(CoverLetter.builder()
                 .userId(userId)
@@ -209,7 +238,6 @@ public class CoverLetterService {
                 optJob.map(Job::getId).orElse(null),
                 optJob.map(Job::getTitle).orElse(null),
                 optJob.map(Job::getCompany).orElse(null),
-                cl.getContent(), cl.getAiProvider(), cl.getAiModel(), cl.getCreatedAt()
-        );
+                cl.getContent(), cl.getAiProvider(), cl.getAiModel(), cl.getCreatedAt());
     }
 }

@@ -218,7 +218,7 @@ public class JobService {
                 "\n\nDescription:\n" + (job.getDescription() != null ? job.getDescription() : "");
         try {
             AiProviderFactory.GenerationResult result =
-                    aiProviderFactory.generate(SUMMARIZE_SYSTEM, userPrompt, null);
+                    aiProviderFactory.generate(SUMMARIZE_SYSTEM, userPrompt, AiProviderFactory.TaskType.FAST_TEXT);
             job.setAiSummary(result.content());
             jobRepository.save(job);
         } catch (Exception e) {

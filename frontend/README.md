@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kaddy Auto-Apply — Frontend
 
-## Getting Started
+Next.js 16 (App Router) · TypeScript 6 · Tailwind CSS 4 · React 19
 
-First, run the development server:
+This is the frontend for the [Kaddy Auto-Apply](../README.md) platform. See the root README for full architecture, API reference, and deployment instructions.
+
+## Development
 
 ```bash
+# Install dependencies
+npm install
+
+# Start the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Set `NEXT_PUBLIC_API_URL` in a `.env.local` file:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8080/api
+```
 
-## Learn More
+## Available Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Script        | Description                              |
+| ------------- | ---------------------------------------- |
+| `npm run dev` | Start Next.js development server         |
+| `npm run build` | Production build                       |
+| `npm run start` | Start production server                |
+| `npm run lint` | Run ESLint across `src/`               |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Key Directories
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Path | Purpose |
+| ---- | ------- |
+| `src/app/(auth)/` | Login, signup, forgot-password, reset-password, verify-email |
+| `src/app/(dashboard)/` | Dashboard, jobs, applications, resumes, cover-letters, profile, settings, smart-resume |
+| `src/app/onboarding/` | 3-step onboarding wizard |
+| `src/components/` | Shared UI components and feature-specific components |
+| `src/hooks/` | Data-fetching hooks (TanStack Query) |
+| `src/lib/api.ts` | Axios client with JWT interceptors |
+| `src/lib/tier-features.ts` | Subscription tier feature gates |
+| `src/store/` | Zustand stores (auth, theme) |
+| `src/types/` | TypeScript interfaces |
+| `src/proxy.ts` | Edge route protection (session-based redirects) |

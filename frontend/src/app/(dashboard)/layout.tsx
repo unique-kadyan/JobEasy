@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useThemeStore } from "@/store/theme-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
+import WelcomeScreen from "@/components/layout/WelcomeScreen";
 import { useKeepAlive } from "@/hooks/useKeepAlive";
 import type { ServerStatus } from "@/hooks/useKeepAlive";
 
@@ -21,7 +22,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, welcomeScreen, setWelcomeScreen } = useAuthStore();
   const { theme } = useThemeStore();
   const [hydrated, setHydrated] = useState(false);
   const serverStatus = useKeepAlive();
@@ -29,6 +30,14 @@ export default function DashboardLayout({
   useEffect(() => {
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
 
   useEffect(() => {
     if (hydrated && !isAuthenticated) router.push("/login");
@@ -50,9 +59,7 @@ export default function DashboardLayout({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div
-        className={`${theme === "dark" ? "dark" : ""} min-h-screen bg-gray-50 dark:bg-[#0d1117]`}
-      >
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0d1117]">
         {user && !user.emailVerified && (
           <div className="fixed top-12 left-0 right-0 z-30 bg-amber-900/80 border-b border-amber-700 px-4 py-2 text-center text-sm text-amber-200">
             Please verify your email to unlock all features.{" "}
@@ -80,6 +87,14 @@ export default function DashboardLayout({
           <div className="max-w-[1400px] mx-auto px-6 py-6">{children}</div>
         </main>
       </div>
+
+      {welcomeScreen?.show && (
+        <WelcomeScreen
+          type={welcomeScreen.type}
+          userName={welcomeScreen.userName}
+          onComplete={() => setWelcomeScreen(null)}
+        />
+      )}
     </QueryClientProvider>
   );
 }

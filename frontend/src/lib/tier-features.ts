@@ -7,6 +7,9 @@ export interface TierCapabilities {
   smartResume: boolean;
   priorityScoring: boolean;
   coverLetterAi: boolean;
+  maxCoverLettersPerDay: number;
+  maxResumesUploaded: number;
+  careerPath: boolean;
 }
 
 const TIER_CAPS: Record<SubscriptionTier, TierCapabilities> = {
@@ -17,6 +20,9 @@ const TIER_CAPS: Record<SubscriptionTier, TierCapabilities> = {
     smartResume: false,
     priorityScoring: false,
     coverLetterAi: true,
+    maxCoverLettersPerDay: 3,
+    maxResumesUploaded: 2,
+    careerPath: false,
   },
   GOLD: {
     maxJobResults: 10,
@@ -25,6 +31,9 @@ const TIER_CAPS: Record<SubscriptionTier, TierCapabilities> = {
     smartResume: true,
     priorityScoring: true,
     coverLetterAi: true,
+    maxCoverLettersPerDay: 25,
+    maxResumesUploaded: 10,
+    careerPath: true,
   },
   PLATINUM: {
     maxJobResults: Number.MAX_SAFE_INTEGER,
@@ -33,6 +42,9 @@ const TIER_CAPS: Record<SubscriptionTier, TierCapabilities> = {
     smartResume: true,
     priorityScoring: true,
     coverLetterAi: true,
+    maxCoverLettersPerDay: Number.MAX_SAFE_INTEGER,
+    maxResumesUploaded: Number.MAX_SAFE_INTEGER,
+    careerPath: true,
   },
 };
 

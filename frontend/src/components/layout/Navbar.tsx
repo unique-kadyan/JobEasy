@@ -32,6 +32,7 @@ const NAV_LINKS = [
   { href: "/resumes", label: "Resumes" },
   { href: "/smart-resume", label: "Smart Resume" },
   { href: "/cover-letters", label: "Cover Letters" },
+  { href: "/career-path", label: "Career Path" },
 ];
 
 const TIER_BADGE: Record<string, { label: string; className: string }> = {

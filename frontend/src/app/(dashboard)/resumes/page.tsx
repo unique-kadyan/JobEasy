@@ -2,8 +2,9 @@
 
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import api from "@/lib/api";
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { FileText, Upload, Star, Trash2, Loader2 } from "lucide-react";
@@ -19,7 +20,6 @@ export default function ResumesPage() {
     queryKey: ["resumes"],
     queryFn: async () => {
       const res = await api.get("/resumes", { params: { page: 0, size: 20 } });
-
       return Array.isArray(res.data) ? res.data : (res.data.content ?? []);
     },
   });
@@ -28,12 +28,16 @@ export default function ResumesPage() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await api.post("/resumes/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await api.post("/resumes/upload", formData);
       return res.data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["resumes"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      toast.success("Resume uploaded successfully!");
+    },
+    onError: () => {
+      toast.error("Failed to upload resume. Please try a valid PDF file.");
+    },
   });
 
   const setPrimaryMutation = useMutation({
@@ -47,7 +51,10 @@ export default function ResumesPage() {
     mutationFn: async (id: string) => {
       await api.delete(`/resumes/${id}`);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["resumes"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      toast.success("Resume deleted.");
+    },
   });
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,23 +73,25 @@ export default function ResumesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Resumes</h1>
-          <p className="text-gray-500">Upload and manage your resumes</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Resumes
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400">
+            Upload and manage your resumes
+          </p>
         </div>
-        {(!resumes || resumes.length === 0) && (
-          <div>
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".pdf"
-              className="hidden"
-              onChange={handleUpload}
-            />
-            <Button onClick={() => fileRef.current?.click()} loading={uploading}>
-              <Upload className="h-4 w-4" /> Upload PDF
-            </Button>
-          </div>
-        )}
+        <div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".pdf"
+            className="hidden"
+            onChange={handleUpload}
+          />
+          <Button onClick={() => fileRef.current?.click()} loading={uploading}>
+            <Upload className="h-4 w-4" /> Upload PDF
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -95,40 +104,52 @@ export default function ResumesPage() {
             <Card key={resume.id}>
               <CardContent className="py-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
-                    <FileText className="h-5 w-5 text-indigo-600" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-900/30 shrink-0">
+                    <FileText className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-gray-900 truncate">
+                      <p className="font-medium text-gray-900 dark:text-white truncate">
                         {resume.filename}
                       </p>
                       {resume.isPrimary && (
-                        <Badge className="bg-yellow-100 text-yellow-700">
+                        <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 shrink-0">
                           <Star className="h-3 w-3 mr-1" /> Primary
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Uploaded {formatDate(resume.createdAt)}
                       {resume.fileSize &&
                         ` · ${(resume.fileSize / 1024).toFixed(0)} KB`}
                     </p>
-                    {resume.parsedData?.skills && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {(resume.parsedData.skills as string[])
-                          .map((skill) => (
-                            <Badge
-                              key={skill}
-                              className="bg-gray-100 text-gray-600"
-                            >
-                              {skill}
-                            </Badge>
-                          ))}
-                      </div>
-                    )}
+                    {resume.parsedData?.skills &&
+                      (() => {
+                        const allSkills = Object.values(
+                          resume.parsedData.skills
+                        )
+                          .flat()
+                          .filter(Boolean) as string[];
+                        return allSkills.length > 0 ? (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {allSkills.slice(0, 8).map((skill) => (
+                              <Badge
+                                key={skill}
+                                className="bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                              >
+                                {skill}
+                              </Badge>
+                            ))}
+                            {allSkills.length > 8 && (
+                              <Badge className="bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                                +{allSkills.length - 8} more
+                              </Badge>
+                            )}
+                          </div>
+                        ) : null;
+                      })()}
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 shrink-0">
                     {!resume.isPrimary && (
                       <Button
                         variant="ghost"
@@ -155,13 +176,18 @@ export default function ResumesPage() {
         </div>
       ) : (
         <div className="text-center py-16">
-          <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-1">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 mx-auto mb-4">
+            <FileText className="h-8 w-8 text-indigo-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
             No resumes yet
           </h3>
-          <p className="text-gray-500 mb-4">
-            Upload a PDF resume to get started
+          <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">
+            Upload your PDF resume to get started with AI-powered job matching
           </p>
+          <Button onClick={() => fileRef.current?.click()} loading={uploading}>
+            <Upload className="h-4 w-4" /> Upload PDF Resume
+          </Button>
         </div>
       )}
     </div>

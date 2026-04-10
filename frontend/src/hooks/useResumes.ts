@@ -7,7 +7,6 @@ export function useResumes() {
     queryKey: ["resumes"],
     queryFn: async () => {
       const res = await api.get("/resumes");
-      // Backend returns Spring Data Page<Resume> — extract the content array
       return Array.isArray(res.data) ? res.data : (res.data?.content ?? []);
     },
   });
@@ -19,8 +18,8 @@ export function useResumeSkills(): string[] {
   if (!resumes || resumes.length === 0) return [];
 
   const primary = resumes.find((r) => r.isPrimary) || resumes[0];
+  const skills = primary?.parsedData?.skills;
+  if (!skills) return [];
 
-  if (!primary?.parsedData?.skills) return [];
-
-  return primary.parsedData.skills;
+  return Object.values(skills).flat().filter(Boolean) as string[];
 }

@@ -1,21 +1,23 @@
 package com.kaddy.autoapply.config;
 
-import com.kaddy.autoapply.service.ai.CerebrasAiProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
-/**
- * Registers one CerebrasAiProvider bean per model.
- * Each bean is an independent strategy — the AiProviderFactory selects
- * the right one by name (e.g. "CEREBRAS_QWEN", "CEREBRAS_LLAMA_8B").
- */
+import com.kaddy.autoapply.service.ai.CerebrasAiProvider;
+
 @Configuration
 public class CerebrasConfig {
 
     @Value("${app.ai.cerebras.api-key:}")
     private String apiKey;
+
+    @Bean
+    CerebrasAiProvider cerebras(WebClient.Builder builder,
+            @Value("${app.ai.cerebras.model:llama-3.3-70b}") String model) {
+        return new CerebrasAiProvider(builder, apiKey, model, "CEREBRAS");
+    }
 
     @Bean
     CerebrasAiProvider cerebrasQwen(WebClient.Builder builder,

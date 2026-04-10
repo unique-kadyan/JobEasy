@@ -21,10 +21,10 @@ class AiProviderFactoryTest {
     @BeforeEach
     void setUp() {
         cerebras = mockProvider("CEREBRAS", true);
-        groq     = mockProvider("GROQ", true);
-        openai   = mockProvider("OPENAI", true);
-        claude   = mockProvider("CLAUDE", true);
-        factory  = new AiProviderFactory(List.of(cerebras, groq, openai, claude),
+        groq = mockProvider("GROQ", true);
+        openai = mockProvider("OPENAI", true);
+        claude = mockProvider("CLAUDE", true);
+        factory = new AiProviderFactory(List.of(cerebras, groq, openai, claude),
                 "CEREBRAS,GROQ,TOGETHER,MISTRAL,SAMBANOVA,NOVITA",
                 "GEMINI,OPENAI,CLAUDE");
     }
@@ -79,7 +79,7 @@ class AiProviderFactoryTest {
         when(cerebras.generateText(any(), any())).thenThrow(new AiServiceException("cerebras down"));
         when(groq.generateText(any(), any())).thenReturn("from groq");
 
-        var result = factory.generate("sys", "user", null);
+        var result = factory.generate("sys", "user", (String) null);
 
         assertEquals("GROQ", result.providerName());
         verify(cerebras).generateText(any(), any());
@@ -94,7 +94,7 @@ class AiProviderFactoryTest {
                 "GEMINI,OPENAI,CLAUDE");
         when(groq.generateText(any(), any())).thenReturn("from groq");
 
-        var result = factory.generate("sys", "user", null);
+        var result = factory.generate("sys", "user", (String) null);
 
         assertEquals("GROQ", result.providerName());
         verify(unavailableCerebras, never()).generateText(any(), any());
@@ -106,7 +106,7 @@ class AiProviderFactoryTest {
         when(groq.generateText(any(), any())).thenThrow(new AiServiceException("down"));
         when(openai.generateText(any(), any())).thenReturn("from openai");
 
-        var result = factory.generate("sys", "user", null);
+        var result = factory.generate("sys", "user", (String) null);
 
         assertEquals("OPENAI", result.providerName());
         verify(cerebras).generateText(any(), any());
@@ -122,7 +122,7 @@ class AiProviderFactoryTest {
         when(openai.generateText(any(), any())).thenThrow(new AiServiceException("down"));
         when(claude.generateText(any(), any())).thenReturn("from claude");
 
-        var result = factory.generate("sys", "user", null);
+        var result = factory.generate("sys", "user", (String) null);
 
         assertEquals("CLAUDE", result.providerName());
     }
@@ -135,7 +135,7 @@ class AiProviderFactoryTest {
         when(claude.generateText(any(), any())).thenThrow(new AiServiceException("down"));
 
         var ex = assertThrows(AiServiceException.class,
-                () -> factory.generate("sys", "user", null));
+                () -> factory.generate("sys", "user", (String) null));
 
         assertTrue(ex.getMessage().contains("All AI providers are currently unavailable"));
         assertEquals(503, ex.getStatusCode());
@@ -148,14 +148,14 @@ class AiProviderFactoryTest {
                 "GEMINI,OPENAI,CLAUDE");
 
         assertThrows(AiServiceException.class,
-                () -> factory.generate("sys", "user", null));
+                () -> factory.generate("sys", "user", (String) null));
     }
 
     @Test
     void generationResult_shouldHoldContentAndProviderName() {
         when(cerebras.generateText("sys", "user")).thenReturn("hello world");
 
-        var result = factory.generate("sys", "user", null);
+        var result = factory.generate("sys", "user", (String) null);
 
         assertEquals("hello world", result.content());
         assertEquals("CEREBRAS", result.providerName());

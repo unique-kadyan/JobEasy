@@ -18,11 +18,17 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(@NonNull InterceptorRegistry registry) {
         registry.addInterceptor(rateLimitInterceptor)
                 .addPathPatterns(
-                        "/api/jobs/search",
                         "/api/auth/login",
                         "/api/auth/signup",
                         "/api/auth/forgot-password",
-                        "/api/auth/reset-password"
+                        "/api/auth/reset-password",
+                        "/api/jobs/search",
+                        "/api/jobs/*/summarize",
+                        "/api/cover-letters/generate",
+                        "/api/resumes/upload",
+                        "/api/smart-resume/**",
+                        "/api/applications/bulk-apply",
+                        "/api/career-path/**"
                 );
     }
 }

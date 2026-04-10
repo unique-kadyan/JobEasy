@@ -3,16 +3,24 @@ import { persist } from "zustand/middleware";
 import type { User } from "@/types";
 import { getTierFeatures } from "@/lib/tier-features";
 
+export interface WelcomeScreen {
+  show: boolean;
+  type: "login" | "signup";
+  userName: string;
+}
+
 interface AuthState {
   user: User | null;
   accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
+  welcomeScreen: WelcomeScreen | null;
 
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
   setUser: (user: User) => void;
   logout: () => void;
+  setWelcomeScreen: (screen: WelcomeScreen | null) => void;
 
   hasRole: (role: string) => boolean;
 
@@ -27,6 +35,7 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
+      welcomeScreen: null,
 
       setAuth: (user, accessToken, refreshToken) =>
         set({ user, accessToken, refreshToken, isAuthenticated: true }),
@@ -42,7 +51,10 @@ export const useAuthStore = create<AuthState>()(
           accessToken: null,
           refreshToken: null,
           isAuthenticated: false,
+          welcomeScreen: null,
         }),
+
+      setWelcomeScreen: (screen) => set({ welcomeScreen: screen }),
 
       hasRole: (role: string) => get().user?.roles?.includes(role) ?? false,
 
@@ -60,6 +72,14 @@ export const useAuthStore = create<AuthState>()(
         return getTierFeatures(user.subscriptionTier).autoApply;
       },
     }),
-    { name: "kaddy-auth" }
+    {
+      name: "kaddy-auth",
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    }
   )
 );

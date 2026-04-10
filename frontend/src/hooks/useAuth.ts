@@ -5,13 +5,18 @@ import type { AuthResponse } from "@/types";
 
 export function useAuth() {
   const router = useRouter();
-  const { setAuth, logout: clearAuth, user, isAuthenticated, hasRole } =
+  const { setAuth, logout: clearAuth, setWelcomeScreen, user, isAuthenticated, hasRole } =
     useAuthStore();
 
   const login = async (email: string, password: string): Promise<void> => {
     const res = await api.post<AuthResponse>("/auth/login", { email, password });
     setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
     setSessionCookie();
+    setWelcomeScreen({
+      show: true,
+      type: "login",
+      userName: res.data.user.name?.split(" ")[0] ?? "there",
+    });
     router.push("/dashboard");
   };
 
@@ -27,6 +32,11 @@ export function useAuth() {
     });
     setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
     setSessionCookie();
+    setWelcomeScreen({
+      show: true,
+      type: "signup",
+      userName: res.data.user.name?.split(" ")[0] ?? name.split(" ")[0],
+    });
     router.push("/dashboard");
   };
 

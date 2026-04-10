@@ -33,8 +33,8 @@ public class SearchKeywordGeneratorService {
     public String generateKeywords(User user, String location) {
         String userPrompt = buildUserPrompt(user, location);
         try {
-            AiProviderFactory.GenerationResult result =
-                    aiProviderFactory.generate(SYSTEM_PROMPT, userPrompt, null);
+            AiProviderFactory.GenerationResult result = aiProviderFactory.generate(SYSTEM_PROMPT, userPrompt,
+                    AiProviderFactory.TaskType.FAST_TEXT);
             String keyword = sanitize(result.content());
             if (!keyword.isBlank()) {
                 log.info("AI generated search keywords '{}' for user {}", keyword, user.getId());
@@ -67,8 +67,8 @@ public class SearchKeywordGeneratorService {
 
         if (user.getTargetRoles() != null && !user.getTargetRoles().isEmpty()) {
             sb.append("Target roles: ")
-              .append(String.join(", ", user.getTargetRoles()))
-              .append("\n");
+                    .append(String.join(", ", user.getTargetRoles()))
+                    .append("\n");
         }
 
         if (user.getTitle() != null && !user.getTitle().isBlank()) {
@@ -81,7 +81,7 @@ public class SearchKeywordGeneratorService {
 
         if (location != null && !location.isBlank()) {
             sb.append("Target location: ").append(location)
-              .append(" (do NOT add this to the query)\n");
+                    .append(" (do NOT add this to the query)\n");
         }
 
         sb.append("\nReturn ONE search query string only — no explanation, no punctuation.");
@@ -99,7 +99,8 @@ public class SearchKeywordGeneratorService {
     }
 
     private String sanitize(String raw) {
-        if (raw == null) return "";
+        if (raw == null)
+            return "";
         return raw
                 .replaceAll("[\"'`*_#]", "")
                 .replaceAll("[\\n\\r]+", " ")

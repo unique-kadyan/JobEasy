@@ -1,21 +1,14 @@
 name: Security — Dependency & Secret Scan
 
-# Versions are derived from project definition files — do NOT hardcode here:
-#   Java  →  .java-version          (project root)
-#   Maven →  backend/.mvn/wrapper/maven-wrapper.properties  (via ./mvnw)
-#   Node  →  frontend/.nvmrc
-
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
   schedule:
-    # Runs every Sunday at 06:00 UTC
     - cron: "0 6 * * 0"
 
 jobs:
-  # ── OWASP Dependency Check (Java) ─────────────────────────────────────────
   owasp-backend:
     name: OWASP Dependency Check — Backend
     runs-on: ubuntu-latest
@@ -26,7 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # JDK version read from .java-version at the repository root.
       - name: Set up JDK (version from .java-version)
         uses: actions/setup-java@v4
         with:
@@ -60,7 +52,6 @@ jobs:
           sarif_file: backend/target/dependency-check-report.sarif
         continue-on-error: true
 
-  # ── npm Audit (Frontend) ──────────────────────────────────────────────────
   npm-audit:
     name: npm Audit — Frontend
     runs-on: ubuntu-latest
@@ -68,7 +59,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Node version read from frontend/.nvmrc.
       - name: Set up Node.js (version from frontend/.nvmrc)
         uses: actions/setup-node@v4
         with:
@@ -85,7 +75,6 @@ jobs:
         run: npm audit --audit-level=high
         continue-on-error: true
 
-  # ── Secret Scanning with Trivy ────────────────────────────────────────────
   secret-scan:
     name: Secret Scan — Trivy
     runs-on: ubuntu-latest
@@ -116,7 +105,6 @@ jobs:
           sarif_file: trivy-secrets.sarif
         continue-on-error: true
 
-  # ── Dependency Review (PRs only) ──────────────────────────────────────────
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
