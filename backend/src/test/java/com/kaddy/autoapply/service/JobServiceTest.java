@@ -46,6 +46,7 @@ class JobServiceTest {
     @Mock UserRepository userRepository;
     @Mock FeatureConfig featureConfig;
     @Mock AiProviderFactory aiProviderFactory;
+    @Mock SearchKeywordGeneratorService keywordGeneratorService;
     @Mock Executor executor;
 
     @InjectMocks

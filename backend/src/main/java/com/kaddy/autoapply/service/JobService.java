@@ -165,8 +165,6 @@ public class JobService {
             candidates = candidates.stream()
                     .filter(j -> salaryInRange(j, minSalary, maxSalary))
                     .toList();
-            totalElements = candidates.size();
-            totalPages    = candidates.isEmpty() ? 0 : (int) Math.ceil((double) candidates.size() / size);
         }
 
         if (maxAgeDays > 0) {
@@ -174,8 +172,6 @@ public class JobService {
             candidates = candidates.stream()
                     .filter(j -> j.datePosted() == null || !j.datePosted().isBefore(cutoff))
                     .toList();
-            totalElements = candidates.size();
-            totalPages    = candidates.isEmpty() ? 0 : (int) Math.ceil((double) candidates.size() / size);
         }
 
         if (!SecurityUtils.isAdmin()) {

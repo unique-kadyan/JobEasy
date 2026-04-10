@@ -8,7 +8,10 @@ import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
+import com.kaddy.autoapply.config.FeatureConfig;
+import com.kaddy.autoapply.repository.UserRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -43,6 +46,12 @@ class AuthControllerTest {
     private JwtTokenProvider jwtTokenProvider;
     @MockBean
     private TokenBlacklistService tokenBlacklistService;
+    @MockBean
+    private StringRedisTemplate stringRedisTemplate;
+    @MockBean
+    private FeatureConfig featureConfig;
+    @MockBean
+    private UserRepository userRepository;
 
     UserResponse userResponse = new UserResponse(
             "u1", "test@test.com", "Test", null, null, null,
