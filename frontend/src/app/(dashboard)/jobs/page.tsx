@@ -76,12 +76,11 @@ export default function JobsPage() {
     return locs;
   })();
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (resumeSkills.length > 0 && skillTags.length === 0 && !searchQuery) {
       setSkillTags(resumeSkills.slice(0, 10));
     }
-  }, [resumeSkills]);
+  }, [resumeSkills, skillTags.length, searchQuery]);
 
   const { data: pagedJobs, isLoading } = useJobSearch(
     searchQuery,
