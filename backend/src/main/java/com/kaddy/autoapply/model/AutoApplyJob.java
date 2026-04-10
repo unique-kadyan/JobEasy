@@ -19,6 +19,7 @@ public class AutoApplyJob {
 
     private String status = "QUEUED";
     private String failureReason;
+    private String coverLetterId;
 
     private LocalDateTime queuedAt;
     private LocalDateTime startedAt;
@@ -51,6 +52,9 @@ public class AutoApplyJob {
 
     public String getFailureReason() { return failureReason; }
     public void setFailureReason(String failureReason) { this.failureReason = failureReason; }
+
+    public String getCoverLetterId() { return coverLetterId; }
+    public void setCoverLetterId(String coverLetterId) { this.coverLetterId = coverLetterId; }
 
     public LocalDateTime getQueuedAt() { return queuedAt; }
     public void setQueuedAt(LocalDateTime queuedAt) { this.queuedAt = queuedAt; }

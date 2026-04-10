@@ -43,6 +43,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     && !blacklistService.isBlacklisted(token)) {
 
                 String userId = tokenProvider.getUserIdFromToken(token);
+
+                if (blacklistService.isUserRevoked(userId)) {
+                    return;
+                }
+
                 String email  = tokenProvider.getEmailFromToken(token);
 
                 List<GrantedAuthority> authorities = tokenProvider.getRolesFromToken(token)

@@ -16,6 +16,7 @@ export interface User {
   createdAt: string;
   roles?: string[];
   subscriptionTier?: "FREE" | "GOLD" | "PLATINUM";
+  onboardingCompleted?: boolean;
 }
 
 export interface ResumeAnalysis {
@@ -108,7 +109,7 @@ export interface AuthResponse {
 export interface Job {
   id: string;
   externalId?: string;
-  source: "INDEED" | "LINKEDIN";
+  source: string;
   title: string;
   company: string;
   location: string;
@@ -119,6 +120,9 @@ export interface Job {
   jobType?: string;
   datePosted?: string;
   matchScore?: number;
+  matchStrength?: string;
+  missingSkills?: string[];
+  aiSummary?: string;
 }
 
 export interface CoverLetter {
@@ -264,4 +268,6 @@ export interface PagedResponse<T> {
   totalElements: number;
   number: number;
   size: number;
+
+  generatedQuery?: string;
 }

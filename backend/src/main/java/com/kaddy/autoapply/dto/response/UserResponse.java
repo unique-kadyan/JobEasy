@@ -28,5 +28,6 @@ public record UserResponse(
         int autoSearchIntervalHours,
         LocalDateTime createdAt,
         List<String> roles,
-        SubscriptionTier subscriptionTier
+        SubscriptionTier subscriptionTier,
+        boolean onboardingCompleted
 ) {}

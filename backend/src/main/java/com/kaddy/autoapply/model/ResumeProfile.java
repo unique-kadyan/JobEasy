@@ -8,14 +8,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-/**
- * One document per user — the canonical, tag-based resume profile.
- *
- * Every section is a named tag (contact, summary, skills, experience…).
- * The UI iterates these tags dynamically; no hardcoded section rendering needed.
- *
- * Extend without schema changes: add new keys to customTags.
- */
 @Document(collection = "resume_profiles")
 public class ResumeProfile {
 

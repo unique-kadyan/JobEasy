@@ -11,6 +11,7 @@ import com.kaddy.autoapply.model.enums.SubscriptionTier;
 import com.kaddy.autoapply.security.SecurityUtils;
 import com.kaddy.autoapply.repository.JobRepository;
 import com.kaddy.autoapply.repository.UserRepository;
+import com.kaddy.autoapply.service.ai.AiProviderFactory;
 import com.kaddy.autoapply.service.scraper.ScraperOrchestrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,53 +38,89 @@ public class JobService {
 
     private static final long SEARCH_TIMEOUT_SECONDS = 30;
 
-    private final JobRepository       jobRepository;
-    private final ScraperOrchestrator scraperOrchestrator;
-    private final JobScoringService   jobScoringService;
-    private final UserRepository      userRepository;
-    private final FeatureConfig       featureConfig;
-    private final Executor            executor;
+    private static final String SUMMARIZE_SYSTEM = """
+            You are a concise technical recruiter. Summarize this job posting in 3-4 bullet points \
+            covering: role, key requirements, tech stack, and work arrangement. \
+            Be direct. No filler. Use plain text, no markdown.""";
+
+    private final JobRepository                 jobRepository;
+    private final ScraperOrchestrator           scraperOrchestrator;
+    private final JobScoringService             jobScoringService;
+    private final UserRepository                userRepository;
+    private final FeatureConfig                 featureConfig;
+    private final AiProviderFactory             aiProviderFactory;
+    private final SearchKeywordGeneratorService keywordGeneratorService;
+    private final Executor                      executor;
 
     public JobService(JobRepository jobRepository,
                       ScraperOrchestrator scraperOrchestrator,
                       JobScoringService jobScoringService,
                       UserRepository userRepository,
                       FeatureConfig featureConfig,
+                      AiProviderFactory aiProviderFactory,
+                      SearchKeywordGeneratorService keywordGeneratorService,
                       @Qualifier("virtualThreadExecutor") Executor executor) {
-        this.jobRepository       = jobRepository;
-        this.scraperOrchestrator = scraperOrchestrator;
-        this.jobScoringService   = jobScoringService;
-        this.userRepository      = userRepository;
-        this.featureConfig       = featureConfig;
-        this.executor            = executor;
+        this.jobRepository           = jobRepository;
+        this.scraperOrchestrator     = scraperOrchestrator;
+        this.jobScoringService       = jobScoringService;
+        this.userRepository          = userRepository;
+        this.featureConfig           = featureConfig;
+        this.aiProviderFactory       = aiProviderFactory;
+        this.keywordGeneratorService = keywordGeneratorService;
+        this.executor                = executor;
     }
 
     public PagedResponse<JobResponse> searchJobs(String query, String location,
                                                  String source, int page, int size) {
-        return searchJobs(query, location, source, page, size, null, null, null);
+        return searchJobs(query, location, source, page, size, null, null, null, 30);
     }
 
     public PagedResponse<JobResponse> searchJobs(String query, String location,
                                                  String source, int page, int size,
                                                  String userId) {
-        return searchJobs(query, location, source, page, size, userId, null, null);
+        return searchJobs(query, location, source, page, size, userId, null, null, 30);
     }
 
     public PagedResponse<JobResponse> searchJobs(String query, String location,
                                                  String source, int page, int size,
                                                  String userId, Long minSalary, Long maxSalary) {
+        return searchJobs(query, location, source, page, size, userId, minSalary, maxSalary, 30);
+    }
+
+    public PagedResponse<JobResponse> searchJobs(String query, String location,
+                                                 String source, int page, int size,
+                                                 String userId, Long minSalary, Long maxSalary,
+                                                 int maxAgeDays) {
+
+        User user = (userId != null) ? userRepository.findById(userId).orElse(null) : null;
+
+        String effectiveQuery = (query != null) ? query.strip() : "";
+        String generatedQuery = null;
+
+        if (effectiveQuery.isBlank() && user != null) {
+            String aiKeyword = keywordGeneratorService.generateKeywords(user, location);
+            if (!aiKeyword.isBlank()) {
+                generatedQuery = aiKeyword;
+                effectiveQuery = aiKeyword;
+                log.info("Using AI-generated keyword '{}' for userId={}", effectiveQuery, userId);
+            } else {
+
+                log.info("Skipping search for userId={}: no query and no profile context", userId);
+                return new PagedResponse<>(List.of(), 0, 0, page, size, null);
+            }
+        }
+
+        final String searchQuery = effectiveQuery;
 
         CompletableFuture<List<JobResponse>> scrapeFuture = CompletableFuture.supplyAsync(
-                () -> scraperOrchestrator.searchJobs(query, location, page), executor);
+                () -> scraperOrchestrator.searchJobs(searchQuery, location, page), executor);
 
         CompletableFuture<Page<Job>> dbFuture = CompletableFuture.supplyAsync(
                 () -> (source != null && !source.isBlank())
-                        ? jobRepository.searchJobsBySource(query, source, PageRequest.of(page, size))
-                        : jobRepository.searchJobs(query, PageRequest.of(page, size)),
+                        ? jobRepository.searchJobsBySource(searchQuery, source, PageRequest.of(page, size))
+                        : jobRepository.searchJobs(searchQuery, PageRequest.of(page, size)),
                 executor);
 
-        List<JobResponse> scraped;
-        Page<Job>         dbPage;
         try {
             CompletableFuture.allOf(scrapeFuture, dbFuture)
                     .get(SEARCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -95,8 +132,8 @@ public class JobService {
             log.warn("Job search error: {}", e.getCause().getMessage());
         }
 
-        scraped = scrapeFuture.getNow(List.of());
-        dbPage  = dbFuture.getNow(null);
+        List<JobResponse> scraped = scrapeFuture.getNow(List.of());
+        Page<Job>         dbPage  = dbFuture.getNow(null);
 
         if (!scraped.isEmpty()) {
             final List<JobResponse> toCache = scraped;
@@ -112,7 +149,6 @@ public class JobService {
             totalElements = dbPage.getTotalElements();
             totalPages    = dbPage.getTotalPages();
         } else {
-
             int total = scraped.size();
             int from  = page * size;
             int to    = Math.min(from + size, total);
@@ -121,17 +157,22 @@ public class JobService {
             totalPages    = total == 0 ? 0 : (int) Math.ceil((double) total / size);
         }
 
-        User user = null;
-        if (userId != null) {
-            user = userRepository.findById(userId).orElse(null);
-            if (user != null) {
-                candidates = jobScoringService.scoreAndFilterBatch(user, candidates);
-            }
+        if (user != null) {
+            candidates = jobScoringService.scoreAndFilterBatch(user, candidates);
         }
 
         if (minSalary != null || maxSalary != null) {
             candidates = candidates.stream()
                     .filter(j -> salaryInRange(j, minSalary, maxSalary))
+                    .toList();
+            totalElements = candidates.size();
+            totalPages    = candidates.isEmpty() ? 0 : (int) Math.ceil((double) candidates.size() / size);
+        }
+
+        if (maxAgeDays > 0) {
+            LocalDateTime cutoff = LocalDateTime.now().minusDays(maxAgeDays);
+            candidates = candidates.stream()
+                    .filter(j -> j.datePosted() == null || !j.datePosted().isBefore(cutoff))
                     .toList();
             totalElements = candidates.size();
             totalPages    = candidates.isEmpty() ? 0 : (int) Math.ceil((double) candidates.size() / size);
@@ -147,7 +188,7 @@ public class JobService {
             }
         }
 
-        return new PagedResponse<>(candidates, totalElements, totalPages, page, size);
+        return new PagedResponse<>(candidates, totalElements, totalPages, page, size, generatedQuery);
     }
 
     public Map<String, Long> getSourceCounts(String query, String location) {
@@ -159,6 +200,44 @@ public class JobService {
 
     public JobResponse getJob(String id) {
         return toJobResponse(getJobEntity(id));
+    }
+
+    public JobResponse summarize(String jobId, String userId) {
+
+        if (!SecurityUtils.isAdmin()) {
+            SubscriptionTier tier = userRepository.findById(userId != null ? userId : "")
+                    .map(u -> u.getSubscriptionTier() != null ? u.getSubscriptionTier() : SubscriptionTier.FREE)
+                    .orElse(SubscriptionTier.FREE);
+            if (!featureConfig.canSummarize(tier)) {
+                throw new com.kaddy.autoapply.exception.BadRequestException(
+                        "Job summarization requires a Gold or Platinum subscription.");
+            }
+        }
+        Job job = getJobEntity(jobId);
+        if (job.getAiSummary() != null && !job.getAiSummary().isBlank()) {
+            return toJobResponse(job);
+        }
+        String userPrompt = "Job Title: " + job.getTitle() +
+                "\nCompany: " + job.getCompany() +
+                "\n\nDescription:\n" + (job.getDescription() != null ? job.getDescription() : "");
+        try {
+            AiProviderFactory.GenerationResult result =
+                    aiProviderFactory.generate(SUMMARIZE_SYSTEM, userPrompt, null);
+            job.setAiSummary(result.content());
+            jobRepository.save(job);
+        } catch (Exception e) {
+            log.warn("AI summarize failed for job {}: {}", jobId, e.getMessage());
+        }
+        return toJobResponse(job);
+    }
+
+    public JobResponse matchJob(String userId, String jobId) {
+        Job job = getJobEntity(jobId);
+        JobResponse base = toJobResponse(job);
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) return base;
+        List<JobResponse> scored = jobScoringService.scoreAndFilterBatch(user, List.of(base));
+        return scored.isEmpty() ? base : scored.get(0);
     }
 
     @Cacheable(value = "jobs", key = "#id")
@@ -201,6 +280,6 @@ public class JobService {
                 job.getTitle(), job.getCompany(), job.getLocation(),
                 job.getUrl(), job.getDescription(), job.getSalary(),
                 job.getTags(), job.getJobType(), job.getDatePosted()
-        );
+        ).withSummary(job.getAiSummary());
     }
 }

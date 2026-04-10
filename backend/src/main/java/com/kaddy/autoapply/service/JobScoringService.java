@@ -226,9 +226,16 @@ public class JobScoringService {
     }
 
     private String buildAiUserPrompt(User user, JobResponse job) {
+
         String skills = user.getSkills() != null
-                ? String.join(", ", user.getSkills().keySet())
+                ? user.getSkills().values().stream()
+                        .filter(v -> v instanceof List<?>)
+                        .flatMap(v -> ((List<?>) v).stream())
+                        .map(Object::toString)
+                        .filter(s -> !s.isBlank())
+                        .collect(java.util.stream.Collectors.joining(", "))
                 : "not specified";
+        if (skills.isBlank()) skills = "not specified";
 
         String targetRoles = user.getTargetRoles() != null
                 ? String.join(", ", user.getTargetRoles())

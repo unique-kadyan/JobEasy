@@ -88,6 +88,11 @@ public class UserController {
                 userService.updateAutoSearchSchedule((String) auth.getPrincipal(), request));
     }
 
+    @PostMapping("/onboarding/complete")
+    public ResponseEntity<UserResponse> completeOnboarding(Authentication auth) {
+        return ResponseEntity.ok(userService.completeOnboarding((String) auth.getPrincipal()));
+    }
+
     @DeleteMapping("/account")
     public ResponseEntity<Void> deleteAccount(Authentication auth) {
         userService.deleteAccount((String) auth.getPrincipal());

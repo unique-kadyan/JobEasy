@@ -3,8 +3,10 @@ package com.kaddy.autoapply.service.ai;
 import com.kaddy.autoapply.exception.AiServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,21 +16,25 @@ public class AiProviderFactory {
 
     private static final Logger log = LoggerFactory.getLogger(AiProviderFactory.class);
 
-    private static final List<String> FREE_PROVIDERS = List.of(
-            "CEREBRAS", "GROQ", "TOGETHER", "MISTRAL", "SAMBANOVA", "NOVITA"
-    );
-
-    private static final List<String> PREMIUM_PROVIDERS = List.of(
-            "GEMINI", "OPENAI", "CLAUDE"
-    );
-
     public record GenerationResult(String content, String providerName) {}
 
     private final Map<String, AiProvider> providerMap;
+    private final List<String> freeProviderOrder;
+    private final List<String> premiumProviderOrder;
 
-    public AiProviderFactory(List<AiProvider> providers) {
+    public AiProviderFactory(
+            List<AiProvider> providers,
+            @Value("${app.ai.provider-order.free:CEREBRAS,GROQ,TOGETHER,MISTRAL,SAMBANOVA,NOVITA}")
+            String freeOrder,
+            @Value("${app.ai.provider-order.premium:GEMINI,OPENAI,CLAUDE}")
+            String premiumOrder) {
         this.providerMap = new HashMap<>();
         providers.forEach(p -> providerMap.put(p.getName().toUpperCase(), p));
+        this.freeProviderOrder    = Arrays.stream(freeOrder.split(","))
+                                          .map(String::trim).map(String::toUpperCase).toList();
+        this.premiumProviderOrder = Arrays.stream(premiumOrder.split(","))
+                                          .map(String::trim).map(String::toUpperCase).toList();
+        log.info("AI provider order — free: {}, premium: {}", freeProviderOrder, premiumProviderOrder);
     }
 
     public GenerationResult generate(String systemPrompt, String userPrompt, String preferred) {
@@ -49,7 +55,7 @@ public class AiProviderFactory {
             }
         }
 
-        for (String name : FREE_PROVIDERS) {
+        for (String name : freeProviderOrder) {
             AiProvider p = providerMap.get(name);
             if (p == null || !p.isAvailable()) continue;
             try {
@@ -63,7 +69,7 @@ public class AiProviderFactory {
 
         log.warn("All free AI providers failed. Falling back to premium providers.");
 
-        for (String name : PREMIUM_PROVIDERS) {
+        for (String name : premiumProviderOrder) {
             AiProvider p = providerMap.get(name);
             if (p == null || !p.isAvailable()) continue;
             try {

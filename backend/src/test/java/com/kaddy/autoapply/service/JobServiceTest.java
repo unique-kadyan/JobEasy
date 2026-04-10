@@ -24,24 +24,29 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
+import com.kaddy.autoapply.config.FeatureConfig;
 import com.kaddy.autoapply.dto.response.JobResponse;
 import com.kaddy.autoapply.dto.response.PagedResponse;
 import com.kaddy.autoapply.exception.ResourceNotFoundException;
 import com.kaddy.autoapply.model.Job;
 import com.kaddy.autoapply.model.enums.JobSource;
+
 import com.kaddy.autoapply.repository.JobRepository;
+import com.kaddy.autoapply.repository.UserRepository;
+import com.kaddy.autoapply.service.ai.AiProviderFactory;
 import com.kaddy.autoapply.service.scraper.ScraperOrchestrator;
 import java.util.concurrent.Executor;
 
 @ExtendWith(MockitoExtension.class)
 class JobServiceTest {
 
-    @Mock
-    JobRepository jobRepository;
-    @Mock
-    ScraperOrchestrator scraperOrchestrator;
-    @Mock
-    Executor executor;
+    @Mock JobRepository jobRepository;
+    @Mock ScraperOrchestrator scraperOrchestrator;
+    @Mock JobScoringService jobScoringService;
+    @Mock UserRepository userRepository;
+    @Mock FeatureConfig featureConfig;
+    @Mock AiProviderFactory aiProviderFactory;
+    @Mock Executor executor;
 
     @InjectMocks
     JobService jobService;
@@ -53,6 +58,7 @@ class JobServiceTest {
     void setUp() {
 
         lenient().doAnswer(inv -> { ((Runnable) inv.getArgument(0)).run(); return null; }).when(executor).execute(any());
+        lenient().when(featureConfig.maxJobResults(any())).thenReturn(Integer.MAX_VALUE);
 
         dbJob = Job.builder()
                 .id("db1").externalId("ext1").source(JobSource.INDEED)
@@ -64,7 +70,7 @@ class JobServiceTest {
         scrapedJob = new JobResponse(null, "ext2", "INDEED",
                 "Frontend Dev", "StartupCo", "NYC",
                 "https://example.com/2", null, null, null, "FULL_TIME",
-                LocalDateTime.now(), null, null, null, null, null);
+                LocalDateTime.now(), null, null, null, null, null, null);
     }
 
     @Test
@@ -193,6 +199,6 @@ class JobServiceTest {
         return new JobResponse(null, externalId, "INDEED",
                 "Dev", "Co", "NY",
                 "https://x.com", null, null, null, "FULL_TIME",
-                LocalDateTime.now(), null, externalId, null, null, null);
+                LocalDateTime.now(), null, externalId, null, null, null, null);
     }
 }

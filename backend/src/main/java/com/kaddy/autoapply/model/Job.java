@@ -39,6 +39,7 @@ public class Job {
     private LocalDateTime datePosted;
     private LocalDateTime scrapedAt;
     private LocalDateTime expiresAt;
+    private String aiSummary;
 
     public Job() {
         this.scrapedAt = LocalDateTime.now();
@@ -78,6 +79,7 @@ public class Job {
     public LocalDateTime getDatePosted() { return datePosted; }
     public LocalDateTime getScrapedAt() { return scrapedAt; }
     public LocalDateTime getExpiresAt() { return expiresAt; }
+    public String getAiSummary() { return aiSummary; }
 
     public void setId(String id) { this.id = id; }
     public void setExternalId(String externalId) { this.externalId = externalId; }
@@ -93,6 +95,7 @@ public class Job {
     public void setDatePosted(LocalDateTime datePosted) { this.datePosted = datePosted; }
     public void setScrapedAt(LocalDateTime scrapedAt) { this.scrapedAt = scrapedAt; }
     public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
+    public void setAiSummary(String aiSummary) { this.aiSummary = aiSummary; }
 
     public static Builder builder() {
         return new Builder();
@@ -114,6 +117,7 @@ public class Job {
         private LocalDateTime datePosted;
         private LocalDateTime scrapedAt;
         private LocalDateTime expiresAt;
+        private String aiSummary;
 
         private Builder() {}
 
@@ -131,6 +135,7 @@ public class Job {
         public Builder datePosted(LocalDateTime datePosted) { this.datePosted = datePosted; return this; }
         public Builder scrapedAt(LocalDateTime scrapedAt) { this.scrapedAt = scrapedAt; return this; }
         public Builder expiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; return this; }
+        public Builder aiSummary(String aiSummary) { this.aiSummary = aiSummary; return this; }
 
         public Job build() {
             Job job = new Job();
@@ -148,6 +153,7 @@ public class Job {
             job.datePosted = this.datePosted;
             job.scrapedAt = Optional.ofNullable(this.scrapedAt).orElseGet(LocalDateTime::now);
             job.expiresAt = this.expiresAt;
+            job.aiSummary = this.aiSummary;
             return job;
         }
     }

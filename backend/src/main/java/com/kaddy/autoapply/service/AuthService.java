@@ -85,10 +85,18 @@ public class AuthService {
         if (!tokenProvider.validateToken(refreshToken)) {
             throw new BadRequestException("Invalid refresh token");
         }
+        if (!tokenProvider.isRefreshToken(refreshToken)) {
+            throw new BadRequestException("Token is not a refresh token");
+        }
+        if (blacklistService.isBlacklisted(refreshToken)) {
+            throw new BadRequestException("Refresh token has been revoked");
+        }
 
         String userId = tokenProvider.getUserIdFromToken(refreshToken);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        blacklistService.blacklist(refreshToken, tokenProvider.getRemainingTtlSeconds(refreshToken));
 
         return buildAuthResponse(user);
     }
@@ -171,6 +179,8 @@ public class AuthService {
         userRepository.save(user);
 
         passwordResetTokenRepository.save(prt.markUsed());
+
+        blacklistService.revokeAllForUser(user.getId());
     }
 
     private AuthResponse buildAuthResponse(User user) {
@@ -193,7 +203,8 @@ public class AuthService {
                 user.getPortfolioUrl(), user.isEmailVerified(),
                 user.getExperienceYears(), user.getTargetRoles(), user.getSkipKeywords(),
                 user.isAutoSearchEnabled(), user.getAutoSearchIntervalHours(),
-                user.getCreatedAt(), roleNames, user.getSubscriptionTier()
+                user.getCreatedAt(), roleNames, user.getSubscriptionTier(),
+                user.isOnboardingCompleted()
         );
     }
 }

@@ -47,6 +47,7 @@ public class User {
 
     private List<String> skipKeywords;
 
+    private boolean onboardingCompleted;
     private boolean autoSearchEnabled;
     private int autoSearchIntervalHours;
     private Map<String, Object> autoSearchParams;
@@ -91,6 +92,8 @@ public class User {
     public List<String> getTargetRoles() { return targetRoles; }
     public List<String> getNotInterestedReasons() { return notInterestedReasons; }
     public List<String> getSkipKeywords() { return skipKeywords; }
+    public boolean isOnboardingCompleted() { return onboardingCompleted; }
+    public void setOnboardingCompleted(boolean onboardingCompleted) { this.onboardingCompleted = onboardingCompleted; }
     public boolean isAutoSearchEnabled() { return autoSearchEnabled; }
     public int getAutoSearchIntervalHours() { return autoSearchIntervalHours; }
     public Map<String, Object> getAutoSearchParams() { return autoSearchParams; }
@@ -149,6 +152,7 @@ public class User {
         private List<String> targetRoles, notInterestedReasons, skipKeywords;
         private Set<Role> roles;
         private SubscriptionTier subscriptionTier = SubscriptionTier.FREE;
+        private boolean onboardingCompleted = false;
         private boolean autoSearchEnabled = false;
         private int autoSearchIntervalHours = 24;
         private Map<String, Object> autoSearchParams;
@@ -179,6 +183,7 @@ public class User {
         public Builder skipKeywords(List<String> keywords) { this.skipKeywords = keywords; return this; }
         public Builder roles(Set<Role> roles) { this.roles = roles; return this; }
         public Builder subscriptionTier(SubscriptionTier tier) { this.subscriptionTier = tier; return this; }
+        public Builder onboardingCompleted(boolean v) { this.onboardingCompleted = v; return this; }
         public Builder autoSearchEnabled(boolean enabled) { this.autoSearchEnabled = enabled; return this; }
         public Builder autoSearchIntervalHours(int hours) { this.autoSearchIntervalHours = hours; return this; }
         public Builder autoSearchParams(Map<String, Object> params) { this.autoSearchParams = params; return this; }
@@ -211,6 +216,7 @@ public class User {
             user.skipKeywords = skipKeywords;
             user.roles = roles != null ? roles : EnumSet.of(Role.ROLE_USER);
             user.subscriptionTier = subscriptionTier != null ? subscriptionTier : SubscriptionTier.FREE;
+            user.onboardingCompleted = onboardingCompleted;
             user.autoSearchEnabled = autoSearchEnabled;
             user.autoSearchIntervalHours = autoSearchIntervalHours;
             user.autoSearchParams = autoSearchParams;

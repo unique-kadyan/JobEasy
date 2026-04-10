@@ -67,7 +67,12 @@ public class ApplicationService {
         return toResponse(app, job);
     }
 
+    private static final int BULK_APPLY_LIMIT = 100;
+
     public List<ApplicationResponse> bulkApply(String userId, List<ApplyRequest> requests) {
+        if (requests.size() > BULK_APPLY_LIMIT) {
+            throw new BadRequestException("Bulk apply is limited to " + BULK_APPLY_LIMIT + " jobs per request");
+        }
         return requests.stream()
                 .map(req -> {
                     try {
@@ -160,9 +165,7 @@ public class ApplicationService {
     private Application findOwned(String id, String userId) {
         Application app = applicationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found: " + id));
-        if (!app.getUserId().equals(userId) && !SecurityUtils.isAdmin()) {
-            throw new BadRequestException("Application does not belong to the current user");
-        }
+        SecurityUtils.assertOwnerOrAdmin(app.getUserId(), userId);
         return app;
     }
 

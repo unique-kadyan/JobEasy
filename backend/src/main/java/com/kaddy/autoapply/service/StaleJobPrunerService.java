@@ -21,6 +21,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class StaleJobPrunerService {
@@ -40,6 +41,13 @@ public class StaleJobPrunerService {
     private final JobRepository jobRepository;
     private final WebClient webClient;
     private final Executor executor;
+
+    private final AtomicReference<LocalDateTime> lastRunAt = new AtomicReference<>();
+
+    private final AtomicInteger lastRunDeletedCount = new AtomicInteger(0);
+
+    public LocalDateTime getLastRunAt()       { return lastRunAt.get(); }
+    public int           getLastRunDeletedCount() { return lastRunDeletedCount.get(); }
 
     public StaleJobPrunerService(JobRepository jobRepository,
                                  WebClient.Builder webClientBuilder,
@@ -75,6 +83,9 @@ public class StaleJobPrunerService {
         } else {
             log.info("Stale job pruner: all {} URLs still reachable", candidates.size());
         }
+
+        lastRunAt.set(LocalDateTime.now());
+        lastRunDeletedCount.set(idsToDelete.size());
     }
 
     private List<String> checkUrls(List<Job> candidates) {

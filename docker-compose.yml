@@ -12,6 +12,9 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-}
+    networks:
+      - kaddy_internal
+      - default
 
   # ── Redis ─────────────────────────────────────────────────────────────────────
   #
@@ -47,6 +50,9 @@ services:
       --requirepass "${REDIS_PASSWORD:-}"
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    networks:
+      - kaddy_internal
+      - default
     restart: unless-stopped
     healthcheck:
       # Use AUTH only when a password is set; gracefully handle empty password.
@@ -62,6 +68,13 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+networks:
+  kaddy_internal:
+    driver: bridge
+    # This is the same network declared in docker-compose.lb.yml.
+    # Both files must reference the same name so services can reach each other.
+    # The lb override file marks it as "external: false" which is the default.
 
 volumes:
   mongodata:

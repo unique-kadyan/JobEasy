@@ -7,5 +7,11 @@ public record PagedResponse<T>(
         long totalElements,
         int totalPages,
         int number,
-        int size
-) {}
+        int size,
+        String generatedQuery
+) {
+
+    public PagedResponse(List<T> content, long totalElements, int totalPages, int number, int size) {
+        this(content, totalElements, totalPages, number, size, null);
+    }
+}

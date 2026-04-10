@@ -47,12 +47,11 @@ public non-sealed class JoobleApiClient implements JobScraper {
         }
 
         try {
-            Map<String, Object> requestBody = Map.of(
-                    "keywords", query,
-                    "location", Optional.ofNullable(location).orElse(""),
-                    "page", page + 1,
-                    "resultonpage", 20
-            );
+            Map<String, Object> requestBody = new java.util.HashMap<>();
+            requestBody.put("keywords", query != null ? query : "");
+            requestBody.put("location", location != null ? location : "");
+            requestBody.put("page", page + 1);
+            requestBody.put("resultonpage", 20);
 
             Map<String, Object> response = webClient.post()
                     .uri("/api/" + apiKey)

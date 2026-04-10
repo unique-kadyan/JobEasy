@@ -68,9 +68,11 @@ public class ScraperOrchestrator {
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                     .get(FANOUT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
-            log.warn("ScraperOrchestrator: fanout ceiling reached — returning partial results");
+            log.warn("ScraperOrchestrator: fanout ceiling reached — cancelling slow scrapers and returning partial results");
+            futures.forEach(f -> f.cancel(true));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            futures.forEach(f -> f.cancel(true));
             log.warn("ScraperOrchestrator: interrupted while waiting for scrapers");
         } catch (ExecutionException e) {
             log.error("ScraperOrchestrator: unexpected execution error", e.getCause());

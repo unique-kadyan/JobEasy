@@ -146,10 +146,7 @@ public class PaymentService {
 
     private Map<String, Object> callRazorpayCreateOrder(Map<String, Object> body) {
         if (keyId.isBlank() || keySecret.isBlank()) {
-
-            log.warn("Razorpay keys not configured — returning mock order for development");
-            return Map.of("id", "order_dev_" + System.currentTimeMillis(),
-                    "amount", body.get("amount"), "currency", "INR");
+            throw new BadRequestException("Payment gateway is not configured. Please contact support.");
         }
         try {
             String credentials = java.util.Base64.getEncoder()
@@ -171,7 +168,10 @@ public class PaymentService {
     }
 
     private boolean verifySignature(String orderId, String paymentId, String signature) {
-        if (keySecret.isBlank()) return true;
+        if (keySecret.isBlank()) {
+            log.error("Cannot verify payment signature: Razorpay key secret is not configured");
+            return false;
+        }
         try {
             String payload = orderId + "|" + paymentId;
             Mac mac = Mac.getInstance("HmacSHA256");

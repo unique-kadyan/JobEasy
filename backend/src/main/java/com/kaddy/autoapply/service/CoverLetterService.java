@@ -4,11 +4,14 @@ import com.kaddy.autoapply.dto.request.CoverLetterRequest;
 import com.kaddy.autoapply.dto.response.CoverLetterResponse;
 import com.kaddy.autoapply.exception.BadRequestException;
 import com.kaddy.autoapply.exception.ResourceNotFoundException;
+import com.kaddy.autoapply.model.event.AutoApplyJobQueuedEvent;
 import com.kaddy.autoapply.security.SecurityUtils;
+import com.kaddy.autoapply.model.AutoApplyJob;
 import com.kaddy.autoapply.model.CoverLetter;
 import com.kaddy.autoapply.model.Job;
 import com.kaddy.autoapply.model.Template;
 import com.kaddy.autoapply.model.User;
+import com.kaddy.autoapply.repository.AutoApplyJobRepository;
 import com.kaddy.autoapply.repository.CoverLetterRepository;
 import com.kaddy.autoapply.repository.TemplateRepository;
 import com.kaddy.autoapply.repository.UserRepository;
@@ -16,8 +19,10 @@ import com.kaddy.autoapply.service.ai.AiProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -47,25 +52,44 @@ public class CoverLetterService {
 
     private static final long LOOKUP_TIMEOUT_SECONDS = 5;
 
-    private final CoverLetterRepository coverLetterRepository;
-    private final UserRepository        userRepository;
-    private final TemplateRepository    templateRepository;
-    private final JobService            jobService;
-    private final AiProviderFactory     aiProviderFactory;
-    private final Executor              executor;
+    private final CoverLetterRepository  coverLetterRepository;
+    private final UserRepository         userRepository;
+    private final TemplateRepository     templateRepository;
+    private final JobService             jobService;
+    private final AiProviderFactory      aiProviderFactory;
+    private final Executor               executor;
+    private final AutoApplyJobRepository autoApplyJobRepository;
 
     public CoverLetterService(CoverLetterRepository coverLetterRepository,
                                UserRepository userRepository,
                                TemplateRepository templateRepository,
                                JobService jobService,
                                AiProviderFactory aiProviderFactory,
-                               @Qualifier("virtualThreadExecutor") Executor executor) {
-        this.coverLetterRepository = coverLetterRepository;
-        this.userRepository        = userRepository;
-        this.templateRepository    = templateRepository;
-        this.jobService            = jobService;
-        this.aiProviderFactory     = aiProviderFactory;
-        this.executor              = executor;
+                               @Qualifier("virtualThreadExecutor") Executor executor,
+                               AutoApplyJobRepository autoApplyJobRepository) {
+        this.coverLetterRepository  = coverLetterRepository;
+        this.userRepository         = userRepository;
+        this.templateRepository     = templateRepository;
+        this.jobService             = jobService;
+        this.aiProviderFactory      = aiProviderFactory;
+        this.executor               = executor;
+        this.autoApplyJobRepository = autoApplyJobRepository;
+    }
+
+    @Async
+    @EventListener
+    public void onAutoApplyJobQueued(AutoApplyJobQueuedEvent event) {
+        try {
+            CoverLetterResponse cl = generate(event.userId(),
+                    new CoverLetterRequest(event.jobId(), null, null));
+            autoApplyJobRepository.findById(event.autoApplyJobId()).ifPresent(aj -> {
+                aj.setCoverLetterId(cl.id());
+                autoApplyJobRepository.save(aj);
+            });
+        } catch (Exception e) {
+            log.debug("Cover letter generation failed for auto-apply job {}: {}",
+                    event.autoApplyJobId(), e.getMessage());
+        }
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -165,9 +189,7 @@ public class CoverLetterService {
     private CoverLetter findOwned(String userId, String id) {
         CoverLetter cl = coverLetterRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cover letter not found"));
-        if (!cl.getUserId().equals(userId) && !SecurityUtils.isAdmin()) {
-            throw new BadRequestException("Cover letter does not belong to the current user");
-        }
+        SecurityUtils.assertOwnerOrAdmin(cl.getUserId(), userId);
         return cl;
     }
 

@@ -71,6 +71,10 @@ app:
 
   # ─── AI Providers (free first → premium last) ────────────────────────────────
   ai:
+    # Cascade order — change here without redeployment (comma-separated provider names)
+    provider-order:
+      free: CEREBRAS,GROQ,TOGETHER,MISTRAL,SAMBANOVA,NOVITA
+      premium: GEMINI,OPENAI,CLAUDE
     # Free tier providers (tried in this order)
     cerebras:
       api-key: ${CEREBRAS_API_KEY:}

@@ -1,0 +1,140 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Load-balanced stack — extends docker-compose.yml
+#
+# Usage:
+#
+#   # Start with 3 backend replicas
+#   docker compose -f docker-compose.yml -f docker-compose.lb.yml up --scale api=3 -d
+#
+#   # Scale up to 5 instances at runtime (zero-downtime)
+#   docker compose -f docker-compose.yml -f docker-compose.lb.yml up --scale api=5 -d --no-recreate
+#
+#   # Scale down
+#   docker compose -f docker-compose.yml -f docker-compose.lb.yml up --scale api=2 -d --no-recreate
+#
+#   # Tear down
+#   docker compose -f docker-compose.yml -f docker-compose.lb.yml down
+#
+# Architecture:
+#
+#   [Client]
+#       │
+#       ▼  :80
+#   [nginx] ─── rate limiting, gzip, security headers
+#       │  least_conn
+#   ┌───┼───────────────┐
+#   ▼   ▼               ▼
+# [api] [api] ... [api]  ←  --scale api=N  (Spring Boot, stateless)
+#   │                │
+#   └────────────────┘
+#         │       │
+#      [mongo]  [redis]  ←  shared state (from docker-compose.yml)
+#
+# Why this works horizontally:
+#   - JWT is verified with a shared secret → any instance validates any token
+#   - Rate limiting keys live in Redis → per-user limits are global, not per-pod
+#   - Session/blacklist state lives in Redis → logout works across all instances
+#   - File uploads go to a bind-mount volume → all instances read the same files
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Spring Boot backend (scalable) ─────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: kaddy-api:latest
+    # No ports: — nginx is the only entry point.
+    # Exposing ports here would allow direct access bypassing the load balancer.
+    expose:
+      - "8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
+      MONGODB_URI:            ${MONGODB_URI:-mongodb://mongodb:27017/kaddy}
+      REDIS_HOST:             ${REDIS_HOST:-redis}
+      REDIS_PORT:             ${REDIS_PORT:-6379}
+      REDIS_PASSWORD:         ${REDIS_PASSWORD:-}
+      JWT_SECRET:             ${JWT_SECRET}
+      FRONTEND_URL:           ${FRONTEND_URL:-http://localhost:3000}
+      UPLOAD_DIR:             /app/uploads
+      # AI providers — set whichever keys you have
+      CEREBRAS_API_KEY:       ${CEREBRAS_API_KEY:-}
+      GROQ_API_KEY:           ${GROQ_API_KEY:-}
+      TOGETHER_API_KEY:       ${TOGETHER_API_KEY:-}
+      MISTRAL_API_KEY:        ${MISTRAL_API_KEY:-}
+      SAMBANOVA_API_KEY:      ${SAMBANOVA_API_KEY:-}
+      NOVITA_API_KEY:         ${NOVITA_API_KEY:-}
+      OPENAI_API_KEY:         ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY:      ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY:         ${GEMINI_API_KEY:-}
+      # Scrapers
+      JSEARCH_API_KEY:        ${JSEARCH_API_KEY:-}
+      # Payment
+      RAZORPAY_KEY_ID:        ${RAZORPAY_KEY_ID:-}
+      RAZORPAY_KEY_SECRET:    ${RAZORPAY_KEY_SECRET:-}
+    volumes:
+      # Shared upload directory — all api replicas read/write the same files
+      - uploads:/app/uploads
+    networks:
+      - kaddy_internal
+    depends_on:
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 45s    # Spring Boot needs ~30-40s to start
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512m
+        reservations:
+          memory: 256m
+
+  # ── Nginx load balancer ─────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: kaddy_nginx
+    ports:
+      - "${LB_HTTP_PORT:-80}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - kaddy_internal
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/health | grep -q UP || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128m
+
+networks:
+  # Internal bridge — MongoDB, Redis, api, and nginx communicate here.
+  # MongoDB and Redis are already on the default network in docker-compose.yml;
+  # this network is added as an extra so api containers can reach them.
+  kaddy_internal:
+    driver: bridge
+
+volumes:
+  uploads:
+    driver: local
+  nginx_logs:
+    driver: local

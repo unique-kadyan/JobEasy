@@ -140,6 +140,15 @@ public class UserService {
     }
 
     @CacheEvict(value = "users", key = "#userId")
+    public UserResponse completeOnboarding(String userId) {
+        User user = findUser(userId);
+        if (user.isOnboardingCompleted()) {
+            return AuthService.toUserResponse(user);
+        }
+        user.setOnboardingCompleted(true);
+        return AuthService.toUserResponse(userRepository.save(user));
+    }
+
     public void deleteAccount(String userId) {
         userRepository.delete(findUser(userId));
     }

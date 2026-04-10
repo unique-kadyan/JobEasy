@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useJobSearch } from "@/hooks/useJobs";
+import { useJobSearch, useSummarizeJob, useJobMatch } from "@/hooks/useJobs";
 import { useResumeSkills } from "@/hooks/useResumes";
 import { useApply } from "@/hooks/useApplications";
 import { useGenerateCoverLetter } from "@/hooks/useCoverLetters";
@@ -14,7 +14,7 @@ import Modal from "@/components/ui/Modal";
 import Badge from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import UpgradeModal from "@/components/subscription/UpgradeModal";
-import { Search, Loader2, Sparkles, X, ChevronLeft, ChevronRight, Lock, Zap, Briefcase, IndianRupee } from "lucide-react";
+import { Search, Loader2, Sparkles, X, ChevronLeft, ChevronRight, Lock, Zap, Briefcase, IndianRupee, FileText, Target, Clock } from "lucide-react";
 import type { Job } from "@/types";
 import { AI_PROVIDERS } from "@/lib/constants";
 import { useAuthStore } from "@/store/auth-store";
@@ -98,6 +98,13 @@ export default function JobsPage() {
   const [skillTags, setSkillTags] = useState<string[]>([]);
   const [minSalary, setMinSalary] = useState("");
   const [maxSalary, setMaxSalary] = useState("");
+  const [maxAgeDays, setMaxAgeDays] = useState(30);
+
+  const [aiSearchEnabled, setAiSearchEnabled] = useState(false);
+
+  const [summaryModal, setSummaryModal] = useState<Job | null>(null);
+  const [matchModal, setMatchModal] = useState<Job | null>(null);
+  const [matchResult, setMatchResult] = useState<Job | null>(null);
 
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; targetTier?: "GOLD" | "PLATINUM" }>({ open: false });
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
@@ -125,8 +132,21 @@ export default function JobsPage() {
     page,
     size,
     minSalary ? Math.round(Number(minSalary) * LPA_TO_USD) : undefined,
-    maxSalary ? Math.round(Number(maxSalary) * LPA_TO_USD) : undefined
+    maxSalary ? Math.round(Number(maxSalary) * LPA_TO_USD) : undefined,
+    maxAgeDays,
+    aiSearchEnabled
   );
+
+  const generatedQuery = pagedJobs?.generatedQuery ?? null;
+  useEffect(() => {
+    if (generatedQuery && !query) {
+      setQuery(generatedQuery);
+    }
+
+  }, [generatedQuery]);
+
+  const summarizeMutation = useSummarizeJob();
+  const { refetch: fetchMatch, isFetching: matchFetching } = useJobMatch(matchModal?.id ?? "");
 
   const jobs = pagedJobs?.content ?? [];
   const totalElements = pagedJobs?.totalElements ?? 0;
@@ -141,17 +161,24 @@ export default function JobsPage() {
   const [applying, setApplying] = useState(false);
 
   const buildSearchQuery = () => {
-    const parts: string[] = [];
-    if (query.trim()) parts.push(query.trim());
-    if (skillTags.length > 0) parts.push(skillTags.join(" "));
-    return parts.join(" ");
+    if (query.trim()) return query.trim();
+    return "";
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const q = buildSearchQuery();
+    const hasContext = skillTags.length > 0 || computedLocations.length > 0;
+
     if (q) {
+
+      setAiSearchEnabled(false);
       setSearchQuery(q);
+      setPage(0);
+    } else if (hasContext) {
+
+      setAiSearchEnabled(true);
+      setSearchQuery("");
       setPage(0);
     }
   };
@@ -317,6 +344,26 @@ export default function JobsPage() {
             </div>
 
             {}
+            <div className="flex items-end gap-4">
+              <div className="flex items-center gap-1 pb-[9px]">
+                <Clock className="h-4 w-4 text-gray-400" />
+                <span className="text-sm font-medium text-gray-700">Posted within</span>
+              </div>
+              <div className="flex items-center gap-1">
+                {[7, 14, 30, 60, 90].map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setMaxAgeDays(d)}
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${maxAgeDays === d ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                  >
+                    {d}d
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {}
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <label className="text-sm font-medium text-gray-700">Skills from Resume</label>
@@ -368,7 +415,26 @@ export default function JobsPage() {
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-          <span className="ml-3 text-gray-500">Searching jobs…</span>
+          <span className="ml-3 text-gray-500">
+            {aiSearchEnabled && !searchQuery ? "AI is crafting your search keywords…" : "Searching jobs…"}
+          </span>
+        </div>
+      )}
+
+      {generatedQuery && (
+        <div className="flex items-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-2.5 text-sm">
+          <Sparkles className="h-4 w-4 shrink-0 text-indigo-500" />
+          <span className="text-gray-600">
+            AI searched for:{" "}
+            <span className="font-semibold text-indigo-700">{generatedQuery}</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => { setQuery(generatedQuery); setAiSearchEnabled(false); }}
+            className="ml-auto text-xs text-indigo-500 underline underline-offset-2 hover:text-indigo-700"
+          >
+            Edit
+          </button>
         </div>
       )}
 
@@ -432,6 +498,25 @@ export default function JobsPage() {
               )}
               <div className={canAutoApply() ? "pl-8" : ""}>
                 <JobCard job={job} onApply={handleQuickApply} />
+                <div className="flex gap-2 mt-1 ml-1">
+                  <button
+                    type="button"
+                    onClick={() => setSummaryModal(job)}
+                    className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-indigo-600 transition-colors"
+                  >
+                    <FileText className="h-3 w-3" /> Summarize
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setMatchModal(job);
+                      setMatchResult(null);
+                    }}
+                    className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-indigo-600 transition-colors"
+                  >
+                    <Target className="h-3 w-3" /> Match Score
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -488,17 +573,104 @@ export default function JobsPage() {
         <div className="text-center py-12 text-gray-500">No jobs found. Try different skills or locations.</div>
       )}
 
-      {!searchQuery && (
+      {!searchQuery && !aiSearchEnabled && (
         <div className="text-center py-16">
           <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-1">Search for jobs</h3>
           <p className="text-gray-500 mb-2">
             {resumeSkills.length > 0
-              ? "Your resume skills are loaded. Set your location and hit Search!"
-              : "Upload a resume first to auto-detect your skills, or enter keywords manually."}
+              ? "Your resume skills are loaded. Hit Search and AI will craft the perfect keywords!"
+              : "Upload a resume to auto-detect your skills, or type keywords and hit Search."}
           </p>
+          {resumeSkills.length > 0 && (
+            <p className="text-xs text-indigo-500 flex items-center justify-center gap-1">
+              <Sparkles className="h-3 w-3" />
+              Leave the keyword box empty to let AI generate professional search terms from your profile
+            </p>
+          )}
         </div>
       )}
+
+      <Modal open={!!summaryModal} onClose={() => setSummaryModal(null)} title="Job Summary">
+        {summaryModal && (
+          <div className="space-y-4">
+            <div>
+              <p className="font-medium text-gray-900">{summaryModal.title}</p>
+              <p className="text-sm text-gray-500">{summaryModal.company}</p>
+            </div>
+            {summaryModal.aiSummary ? (
+              <p className="text-sm text-gray-700 whitespace-pre-line">{summaryModal.aiSummary}</p>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-500">Generate a concise AI summary of this job&apos;s key requirements and tech stack.</p>
+                <div className="flex gap-3 justify-end">
+                  <Button variant="outline" onClick={() => setSummaryModal(null)}>Cancel</Button>
+                  <Button
+                    loading={summarizeMutation.isPending}
+                    onClick={async () => {
+                      const updated = await summarizeMutation.mutateAsync(summaryModal.id);
+                      setSummaryModal(updated);
+                    }}
+                  >
+                    <Sparkles className="h-4 w-4" /> Summarize
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!matchModal} onClose={() => { setMatchModal(null); setMatchResult(null); }} title="Resume Match">
+        {matchModal && (
+          <div className="space-y-4">
+            <div>
+              <p className="font-medium text-gray-900">{matchModal.title}</p>
+              <p className="text-sm text-gray-500">{matchModal.company}</p>
+            </div>
+            {matchResult ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl font-bold text-indigo-600">
+                    {matchResult.matchScore != null ? Math.round(matchResult.matchScore) : "—"}%
+                  </span>
+                  {matchResult.matchStrength && (
+                    <Badge className={`text-xs ${matchResult.matchStrength === "STRONG" ? "bg-green-100 text-green-700" : matchResult.matchStrength === "MODERATE" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>
+                      {matchResult.matchStrength}
+                    </Badge>
+                  )}
+                </div>
+                {matchResult.missingSkills && matchResult.missingSkills.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 mb-1">Missing skills:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {matchResult.missingSkills.map((s) => (
+                        <Badge key={s} className="bg-red-50 text-red-600 text-xs">{s}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-500">Compare this job against your resume skills to see your match score and skill gaps.</p>
+                <div className="flex gap-3 justify-end">
+                  <Button variant="outline" onClick={() => { setMatchModal(null); setMatchResult(null); }}>Cancel</Button>
+                  <Button
+                    loading={matchFetching}
+                    onClick={async () => {
+                      const { data } = await fetchMatch();
+                      if (data) setMatchResult(data);
+                    }}
+                  >
+                    <Target className="h-4 w-4" /> Analyse Match
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
 
       <Modal open={!!applyModal} onClose={() => setApplyModal(null)} title="Quick Apply">
         {applyModal && (

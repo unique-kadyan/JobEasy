@@ -17,7 +17,11 @@ export default function ResumesPage() {
 
   const { data: resumes, isLoading } = useQuery<Resume[]>({
     queryKey: ["resumes"],
-    queryFn: async () => (await api.get("/resumes")).data,
+    queryFn: async () => {
+      const res = await api.get("/resumes", { params: { page: 0, size: 20 } });
+
+      return Array.isArray(res.data) ? res.data : (res.data.content ?? []);
+    },
   });
 
   const uploadMutation = useMutation({

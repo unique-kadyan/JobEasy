@@ -27,7 +27,7 @@ public non-sealed class JSearchApiClient implements JobScraper {
 
     public JSearchApiClient(
             WebClient.Builder webClientBuilder,
-            @Value("${app.scraper.jsearch-api-key}") String apiKey) {
+            @Value("${app.scraper.jsearch-api-key:}") String apiKey) {
         this.webClient = webClientBuilder
                 .baseUrl("https://jsearch.p.rapidapi.com")
                 .build();
@@ -40,7 +40,6 @@ public non-sealed class JSearchApiClient implements JobScraper {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<JobResponse> fetchJobs(String query, String location, int page) {
         if (apiKey == null || apiKey.isBlank()) {
             log.warn("JSearch API key not configured");
@@ -65,11 +64,12 @@ public non-sealed class JSearchApiClient implements JobScraper {
                     .bodyToMono(MAP_TYPE)
                     .block();
 
-            if (response == null || !response.containsKey("data")) {
+            if (response == null || !(response.get("data") instanceof List<?> rawList)) {
                 return List.of();
             }
 
-            List<Map<String, Object>> data = (List<Map<String, Object>>) response.get("data");
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> data = (List<Map<String, Object>>) rawList;
             List<JobResponse> jobs = new ArrayList<>();
 
             for (Map<String, Object> item : data) {

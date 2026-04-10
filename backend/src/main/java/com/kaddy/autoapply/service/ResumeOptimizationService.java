@@ -50,9 +50,7 @@ public class ResumeOptimizationService {
         Resume resume = resumeRepository.findById(resumeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Resume not found: " + resumeId));
 
-        if (!resume.getUserId().equals(userId) && !SecurityUtils.isAdmin()) {
-            throw new BadRequestException("Resume does not belong to the current user");
-        }
+        SecurityUtils.assertOwnerOrAdmin(resume.getUserId(), userId);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
@@ -116,9 +114,16 @@ public class ResumeOptimizationService {
     private String buildUserPrompt(User user, String resumeText,
                                     String jobTitle, String company,
                                     String jobDescription) {
+
         String skills = user.getSkills() != null
-                ? String.join(", ", user.getSkills().keySet())
+                ? user.getSkills().values().stream()
+                        .filter(v -> v instanceof java.util.List<?>)
+                        .flatMap(v -> ((java.util.List<?>) v).stream())
+                        .map(Object::toString)
+                        .filter(s -> !s.isBlank())
+                        .collect(java.util.stream.Collectors.joining(", "))
                 : "not listed";
+        if (skills.isBlank()) skills = "not listed";
 
         return String.format("""
                 CANDIDATE PROFILE:
@@ -142,11 +147,20 @@ public class ResumeOptimizationService {
                 user.getTitle() != null ? user.getTitle() : "Not specified",
                 user.getExperienceYears(),
                 skills,
-                jobTitle,
-                company != null ? company : "Not specified",
-                truncate(jobDescription, MAX_JD_CHARS),
+                sanitizeForPrompt(jobTitle),
+                sanitizeForPrompt(company != null ? company : "Not specified"),
+                truncate(sanitizeForPrompt(jobDescription), MAX_JD_CHARS),
                 truncate(resumeText, MAX_RESUME_CHARS)
         );
+    }
+
+    private String sanitizeForPrompt(String input) {
+        if (input == null) return "";
+        return input
+                .replaceAll("(?i)(SYSTEM|HUMAN|ASSISTANT|USER)\\s*:", "[$1]:")
+                .replaceAll("```", "'''")
+                .replaceAll("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]", "")
+                .strip();
     }
 
     private void validateInputs(String jobTitle, String jobDescription) {

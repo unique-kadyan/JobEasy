@@ -5,10 +5,6 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
 
-/**
- * Single source of truth for what each subscription tier can do.
- * Add new capabilities here — all services read from this one place.
- */
 @Configuration
 public class FeatureConfig {
 
@@ -18,18 +14,19 @@ public class FeatureConfig {
             boolean scheduledSearch,
             boolean smartResume,
             boolean priorityScoring,
-            boolean coverLetterAi
+            boolean coverLetterAi,
+            int rateLimitPerMinute
     ) {}
 
     private static final Map<SubscriptionTier, Capabilities> TIER_CAPS = Map.of(
             SubscriptionTier.FREE,
-            new Capabilities(2, false, false, false, false, true),
+            new Capabilities(2, false, false, false, false, true, 10),
 
             SubscriptionTier.GOLD,
-            new Capabilities(10, false, false, true, true, true),
+            new Capabilities(10, false, false, true, true, true, 30),
 
             SubscriptionTier.PLATINUM,
-            new Capabilities(Integer.MAX_VALUE, true, true, true, true, true)
+            new Capabilities(Integer.MAX_VALUE, true, true, true, true, true, 60)
     );
 
     public Capabilities of(SubscriptionTier tier) {
@@ -39,7 +36,10 @@ public class FeatureConfig {
         );
     }
 
-    public int maxJobResults(SubscriptionTier tier)  { return of(tier).maxJobResults(); }
-    public boolean canAutoApply(SubscriptionTier tier)      { return of(tier).autoApply(); }
-    public boolean canSchedule(SubscriptionTier tier)       { return of(tier).scheduledSearch(); }
+    public int maxJobResults(SubscriptionTier tier)       { return of(tier).maxJobResults(); }
+    public boolean canAutoApply(SubscriptionTier tier)    { return of(tier).autoApply(); }
+    public boolean canSchedule(SubscriptionTier tier)     { return of(tier).scheduledSearch(); }
+
+    public boolean canSummarize(SubscriptionTier tier)    { return of(tier).coverLetterAi(); }
+    public int rateLimitPerMinute(SubscriptionTier tier)  { return of(tier).rateLimitPerMinute(); }
 }

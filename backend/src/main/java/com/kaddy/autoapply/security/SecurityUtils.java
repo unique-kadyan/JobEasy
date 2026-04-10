@@ -1,5 +1,6 @@
 package com.kaddy.autoapply.security;
 
+import com.kaddy.autoapply.exception.BadRequestException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -18,5 +19,11 @@ public final class SecurityUtils {
         if (auth == null || !auth.isAuthenticated()) return null;
         Object principal = auth.getPrincipal();
         return principal instanceof String s ? s : null;
+    }
+
+    public static void assertOwnerOrAdmin(String ownerId, String actingUserId) {
+        if (!ownerId.equals(actingUserId) && !isAdmin()) {
+            throw new BadRequestException("Access denied: resource does not belong to the current user");
+        }
     }
 }

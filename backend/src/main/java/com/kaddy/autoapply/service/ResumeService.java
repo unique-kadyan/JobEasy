@@ -9,12 +9,15 @@ import com.kaddy.autoapply.repository.ResumeRepository;
 import com.kaddy.autoapply.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,6 +26,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 @Service
 @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -36,20 +41,25 @@ public class ResumeService {
     private final JobService jobService;
     private final ResumeProfileService resumeProfileService;
     private final String uploadDir;
+    private final Executor executor;
 
     public ResumeService(ResumeRepository resumeRepository,
                          ResumeParserService parserService,
                          UserRepository userRepository,
                          @Lazy JobService jobService,
                          @Lazy ResumeProfileService resumeProfileService,
-                         @Value("${app.upload.dir}") String uploadDir) {
+                         @Value("${app.upload.dir}") String uploadDir,
+                         @Qualifier("virtualThreadExecutor") Executor executor) {
         this.resumeRepository = resumeRepository;
         this.parserService = parserService;
         this.userRepository = userRepository;
         this.jobService = jobService;
         this.resumeProfileService = resumeProfileService;
         this.uploadDir = uploadDir;
+        this.executor = executor;
     }
+
+    private static final byte[] PDF_MAGIC = {'%', 'P', 'D', 'F'};
 
     public Resume upload(String userId, MultipartFile file) {
         if (file.isEmpty()) {
@@ -61,10 +71,23 @@ public class ResumeService {
         }
 
         try {
+            byte[] header = file.getInputStream().readNBytes(4);
+            if (header.length < 4 ||
+                    header[0] != PDF_MAGIC[0] || header[1] != PDF_MAGIC[1] ||
+                    header[2] != PDF_MAGIC[2] || header[3] != PDF_MAGIC[3]) {
+                throw new BadRequestException("File does not appear to be a valid PDF");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (IOException e) {
+            throw new BadRequestException("Failed to read file: " + e.getMessage());
+        }
+
+        try {
             Path uploadPath = Paths.get(uploadDir, userId);
             Files.createDirectories(uploadPath);
 
-            String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            String filename = UUID.randomUUID() + ".pdf";
             Path filePath = uploadPath.resolve(filename);
             Files.copy(file.getInputStream(), filePath);
 
@@ -88,13 +111,13 @@ public class ResumeService {
 
             final String savedId   = saved.getId();
             final String finalText = parsedText;
-            Thread.ofVirtual().start(() -> {
+            CompletableFuture.runAsync(() -> {
                 try {
                     resumeProfileService.parseAndSave(userId, savedId, finalText);
                 } catch (Exception e) {
                     log.debug("Resume profile parse failed for user {}: {}", userId, e.getMessage());
                 }
-            });
+            }, executor);
 
             triggerAutoSearch(userId, parsedData);
 
@@ -110,14 +133,14 @@ public class ResumeService {
             String query = buildQueryFromParsedData(parsedData, user);
             if (query.isBlank()) return;
 
-            Thread.ofVirtual().start(() -> {
+            CompletableFuture.runAsync(() -> {
                 try {
                     jobService.searchJobs(query, null, null, 0, 10, userId);
                     log.info("Auto job search triggered for user {} with query: {}", userId, query);
                 } catch (Exception e) {
                     log.debug("Auto job search after upload failed for user {}: {}", userId, e.getMessage());
                 }
-            });
+            }, executor);
         } catch (Exception e) {
             log.debug("Could not trigger auto search after upload: {}", e.getMessage());
         }
@@ -136,17 +159,14 @@ public class ResumeService {
         return "";
     }
 
-    public List<Resume> getUserResumes(String userId) {
-        return resumeRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public Page<Resume> getUserResumes(String userId, int page, int size) {
+        return resumeRepository.findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size));
     }
 
-    @PostAuthorize("returnObject.userId == authentication.principal or hasRole('ADMIN')")
     public Resume getResume(String userId, String id) {
         Resume resume = resumeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Resume not found"));
-        if (!resume.getUserId().equals(userId) && !SecurityUtils.isAdmin()) {
-            throw new BadRequestException("Resume does not belong to the current user");
-        }
+        SecurityUtils.assertOwnerOrAdmin(resume.getUserId(), userId);
         return resume;
     }
 

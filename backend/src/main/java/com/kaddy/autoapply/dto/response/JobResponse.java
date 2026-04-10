@@ -20,7 +20,8 @@ public record JobResponse(
         String matchStrength,
         List<String> missingSkills,
         List<String> aiReasoning,
-        Double normalizedSalaryUsd
+        Double normalizedSalaryUsd,
+        String aiSummary
 ) {
 
     public static JobResponse unscored(String id, String externalId, String source,
@@ -30,7 +31,7 @@ public record JobResponse(
                                        LocalDateTime datePosted) {
         return new JobResponse(id, externalId, source, title, company, location,
                 url, description, salary, tags, jobType, datePosted,
-                null, null, null, null, null);
+                null, null, null, null, null, null);
     }
 
     public JobResponse withScore(double score, String strength,
@@ -38,6 +39,12 @@ public record JobResponse(
                                   Double salaryUsd) {
         return new JobResponse(id, externalId, source, title, company, location,
                 url, description, salary, tags, jobType, datePosted,
-                score, strength, missing, reasoning, salaryUsd);
+                score, strength, missing, reasoning, salaryUsd, aiSummary);
+    }
+
+    public JobResponse withSummary(String summary) {
+        return new JobResponse(id, externalId, source, title, company, location,
+                url, description, salary, tags, jobType, datePosted,
+                matchScore, matchStrength, missingSkills, aiReasoning, normalizedSalaryUsd, summary);
     }
 }

@@ -15,9 +15,11 @@ import java.util.List;
 @Component
 public class JwtTokenProvider {
 
-    private static final String CLAIM_EMAIL = "email";
-    private static final String CLAIM_TYPE  = "type";
-    private static final String CLAIM_ROLES = "roles";
+    private static final String CLAIM_EMAIL    = "email";
+    private static final String CLAIM_TYPE     = "type";
+    private static final String CLAIM_ROLES    = "roles";
+    private static final String ISSUER         = "kaddy-autoapply";
+    private static final String AUDIENCE       = "kaddy-autoapply-api";
 
     private final SecretKey key;
     private final long accessTokenExpiry;
@@ -50,6 +52,8 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .subject(userId)
+                .issuer(ISSUER)
+                .audience().add(AUDIENCE).and()
                 .claim(CLAIM_EMAIL, email)
                 .claim(CLAIM_TYPE, type)
                 .claim(CLAIM_ROLES, roleNames)
@@ -86,6 +90,10 @@ public class JwtTokenProvider {
 
     public boolean isAccessToken(String token) {
         return "access".equals(parseClaims(token).get(CLAIM_TYPE, String.class));
+    }
+
+    public boolean isRefreshToken(String token) {
+        return "refresh".equals(parseClaims(token).get(CLAIM_TYPE, String.class));
     }
 
     public long getRemainingTtlSeconds(String token) {

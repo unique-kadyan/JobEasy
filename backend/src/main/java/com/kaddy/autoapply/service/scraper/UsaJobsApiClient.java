@@ -79,15 +79,14 @@ public non-sealed class UsaJobsApiClient implements JobScraper {
                         (Map<String, Object>) wrapper.get("MatchedObjectDescriptor");
                 if (item == null) continue;
 
-                String id = Optional.ofNullable(
-                        (String) ((Map<?, ?>) wrapper.getOrDefault("MatchedObjectId", Map.of()))
-                                .get("Value"))
+                String id = Optional.ofNullable(wrapper.get("MatchedObjectId"))
+                        .map(Object::toString)
                         .orElse("");
 
                 String loc = "United States";
                 Object locsObj = item.get("PositionLocation");
                 if (locsObj instanceof List<?> locs && !locs.isEmpty()) {
-                    Object first = locs.getFirst();
+                    Object first = locs.get(0);
                     if (first instanceof Map<?, ?> m) {
                         loc = Optional.ofNullable(m.get("LocationName"))
                                 .map(Object::toString).orElse("United States");
@@ -97,7 +96,7 @@ public non-sealed class UsaJobsApiClient implements JobScraper {
                 String salary = null;
                 Object remObj = item.get("PositionRemuneration");
                 if (remObj instanceof List<?> rems && !rems.isEmpty()) {
-                    Object first = rems.getFirst();
+                    Object first = rems.get(0);
                     if (first instanceof Map<?, ?> m) {
                         Object min = m.get("MinimumRange");
                         Object max = m.get("MaximumRange");
@@ -105,6 +104,18 @@ public non-sealed class UsaJobsApiClient implements JobScraper {
                             salary = "$" + min + " - $" + max + " / yr";
                         }
                     }
+                }
+
+                String jobType = "";
+                Object schedObj = item.get("PositionSchedule");
+                if (schedObj instanceof List<?> schedList && !schedList.isEmpty()) {
+                    Object first = schedList.get(0);
+                    if (first instanceof Map<?, ?> m) {
+                        jobType = Optional.ofNullable(m.get("Name"))
+                                .map(Object::toString).orElse("");
+                    }
+                } else if (schedObj instanceof String s) {
+                    jobType = s;
                 }
 
                 results.add(JobResponse.unscored(
@@ -116,7 +127,7 @@ public non-sealed class UsaJobsApiClient implements JobScraper {
                         (String) item.getOrDefault("QualificationSummary", ""),
                         salary,
                         List.of(),
-                        (String) item.getOrDefault("PositionSchedule", ""),
+                        jobType,
                         LocalDateTime.now()
                 ));
             }

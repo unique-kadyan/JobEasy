@@ -29,6 +29,17 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(RateLimitException.class)
+    public ResponseEntity<ApiError> handleRateLimit(RateLimitException ex, HttpServletRequest req) {
+        log.warn("Rate limit exceeded for {}: {}", req.getRequestURI(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", "60")
+                .header("X-RateLimit-Limit", "see your plan")
+                .header("X-RateLimit-Reset", "60")
+                .body(new ApiError(429, ex.getMessage(), req.getRequestURI(),
+                        java.time.LocalDateTime.now()));
+    }
+
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiError> handleApp(AppException ex, HttpServletRequest req) {
         HttpStatus status = HttpStatus.valueOf(ex.getStatusCode());

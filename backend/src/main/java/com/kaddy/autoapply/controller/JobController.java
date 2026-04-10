@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,22 +33,24 @@ public class JobController {
     @GetMapping("/search")
     public ResponseEntity<PagedResponse<JobResponse>> searchJobs(
             Authentication auth,
-            @RequestParam String query,
+            @RequestParam(required = false, defaultValue = "") String query,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String source,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "30") int size,
             @RequestParam(required = false) Long minSalary,
-            @RequestParam(required = false) Long maxSalary) {
+            @RequestParam(required = false) Long maxSalary,
+            @RequestParam(defaultValue = "30") int maxAgeDays) {
         int validSize = ALLOWED_PAGE_SIZES.contains(size) ? size : 30;
         String userId = (auth != null) ? (String) auth.getPrincipal() : null;
         return ResponseEntity.ok(
-                jobService.searchJobs(query, location, source, page, validSize, userId, minSalary, maxSalary));
+                jobService.searchJobs(query, location, source, page, validSize,
+                        userId, minSalary, maxSalary, maxAgeDays));
     }
 
     @GetMapping("/counts")
     public ResponseEntity<Map<String, Long>> getSourceCounts(
-            @RequestParam String query,
+            @RequestParam(required = false, defaultValue = "") String query,
             @RequestParam(required = false) String location) {
         return ResponseEntity.ok(jobService.getSourceCounts(query, location));
     }
@@ -55,5 +58,17 @@ public class JobController {
     @GetMapping("/{id}")
     public ResponseEntity<JobResponse> getJob(@PathVariable String id) {
         return ResponseEntity.ok(jobService.getJob(id));
+    }
+
+    @PostMapping("/{id}/summarize")
+    public ResponseEntity<JobResponse> summarize(Authentication auth, @PathVariable String id) {
+        String userId = (auth != null) ? (String) auth.getPrincipal() : null;
+        return ResponseEntity.ok(jobService.summarize(id, userId));
+    }
+
+    @GetMapping("/{id}/match")
+    public ResponseEntity<JobResponse> matchJob(Authentication auth, @PathVariable String id) {
+        String userId = (auth != null) ? (String) auth.getPrincipal() : null;
+        return ResponseEntity.ok(jobService.matchJob(userId, id));
     }
 }
