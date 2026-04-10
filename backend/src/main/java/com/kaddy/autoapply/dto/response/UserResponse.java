@@ -1,5 +1,7 @@
 package com.kaddy.autoapply.dto.response;
 
+import com.kaddy.autoapply.model.enums.SubscriptionTier;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -25,5 +27,6 @@ public record UserResponse(
         boolean autoSearchEnabled,
         int autoSearchIntervalHours,
         LocalDateTime createdAt,
-        List<String> roles
+        List<String> roles,
+        SubscriptionTier subscriptionTier
 ) {}

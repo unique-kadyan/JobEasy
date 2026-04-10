@@ -148,7 +148,6 @@ export default function TemplatesPage() {
         </div>
       )}
 
-      {/* Create/Edit Modal */}
       <Modal
         open={editModal}
         onClose={closeModal}

@@ -13,11 +13,10 @@ interface AuthState {
   setUser: (user: User) => void;
   logout: () => void;
 
-  /**
-   * Returns true if the current user has the given Spring Security role.
-   * Roles follow the ROLE_ prefix convention (e.g. "ROLE_ADMIN", "ROLE_USER").
-   */
   hasRole: (role: string) => boolean;
+
+  canSeeAllJobs: () => boolean;
+  canAutoApply: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -45,6 +44,20 @@ export const useAuthStore = create<AuthState>()(
         }),
 
       hasRole: (role: string) => get().user?.roles?.includes(role) ?? false,
+
+      canSeeAllJobs: () => {
+        const { user } = get();
+        if (!user) return false;
+        if (user.roles?.includes("ROLE_ADMIN")) return true;
+        return user.subscriptionTier === "JOBS" || user.subscriptionTier === "AUTO_APPLY";
+      },
+
+      canAutoApply: () => {
+        const { user } = get();
+        if (!user) return false;
+        if (user.roles?.includes("ROLE_ADMIN")) return true;
+        return user.subscriptionTier === "AUTO_APPLY";
+      },
     }),
     { name: "kaddy-auth" }
   )

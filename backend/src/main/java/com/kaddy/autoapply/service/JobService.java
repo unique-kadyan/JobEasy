@@ -6,6 +6,8 @@ import com.kaddy.autoapply.exception.ResourceNotFoundException;
 import com.kaddy.autoapply.model.Job;
 import com.kaddy.autoapply.model.User;
 import com.kaddy.autoapply.model.enums.JobSource;
+import com.kaddy.autoapply.model.enums.SubscriptionTier;
+import com.kaddy.autoapply.security.SecurityUtils;
 import com.kaddy.autoapply.repository.JobRepository;
 import com.kaddy.autoapply.repository.UserRepository;
 import com.kaddy.autoapply.service.scraper.ScraperOrchestrator;
@@ -145,10 +147,21 @@ public class JobService {
         }
 
         // ── Score and filter when a user context is available ─────────────────
+        User user = null;
         if (userId != null) {
-            User user = userRepository.findById(userId).orElse(null);
+            user = userRepository.findById(userId).orElse(null);
             if (user != null) {
                 candidates = jobScoringService.scoreAndFilterBatch(user, candidates);
+            }
+        }
+
+        // ── Subscription gate: FREE tier sees only 2 results ──────────────────
+        if (!SecurityUtils.isAdmin()) {
+            SubscriptionTier tier = (user != null) ? user.getSubscriptionTier() : SubscriptionTier.FREE;
+            if (tier == SubscriptionTier.FREE && candidates.size() > 2) {
+                candidates = candidates.subList(0, 2);
+                totalElements = 2;
+                totalPages = 1;
             }
         }
 

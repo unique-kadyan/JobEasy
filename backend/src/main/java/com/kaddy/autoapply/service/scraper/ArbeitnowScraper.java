@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Scrapes jobs from Arbeitnow's free public API (no key required).
@@ -28,6 +29,7 @@ public non-sealed class ArbeitnowScraper implements JobScraper {
     public ArbeitnowScraper(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder
                 .baseUrl("https://www.arbeitnow.com")
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
                 .build();
     }
 
@@ -58,19 +60,19 @@ public non-sealed class ArbeitnowScraper implements JobScraper {
                         ? t.stream().map(Object::toString).toList()
                         : List.of();
 
-                Boolean remote = (Boolean) item.getOrDefault("remote", false);
+                Boolean remote = Optional.ofNullable((Boolean) item.get("remote")).orElse(false);
                 String loc = Boolean.TRUE.equals(remote) ? "Remote"
-                        : (String) item.getOrDefault("location", "");
+                        : Optional.ofNullable((String) item.get("location")).orElse("");
 
                 results.add(JobResponse.unscored(
                         null,
-                        (String) item.getOrDefault("slug", ""),
+                        Optional.ofNullable((String) item.get("slug")).orElse(""),
                         "ARBEITNOW",
-                        (String) item.getOrDefault("title", ""),
-                        (String) item.getOrDefault("company_name", ""),
+                        Optional.ofNullable((String) item.get("title")).orElse(""),
+                        Optional.ofNullable((String) item.get("company_name")).orElse(""),
                         loc,
-                        (String) item.getOrDefault("url", ""),
-                        (String) item.getOrDefault("description", ""),
+                        Optional.ofNullable((String) item.get("url")).orElse(""),
+                        Optional.ofNullable((String) item.get("description")).orElse(""),
                         null,
                         tags,
                         item.get("job_types") instanceof List<?> jt && !jt.isEmpty()

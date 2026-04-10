@@ -93,7 +93,6 @@ export default function CoverLettersPage() {
         </div>
       )}
 
-      {/* View Modal */}
       <Modal
         open={!!viewing}
         onClose={() => setViewing(null)}

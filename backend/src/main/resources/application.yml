@@ -20,6 +20,12 @@ spring:
     virtual:
       enabled: true
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false # serialize LocalDateTime as ISO-8601 string
+    deserialization:
+      fail-on-unknown-properties: false # tolerate extra fields from older clients
+
   data:
     mongodb:
       uri: ${MONGODB_URI}
@@ -58,10 +64,10 @@ app:
   email:
     resend:
       api-key: ${RESEND_API_KEY:}
-      from: ${RESEND_FROM:Auto Apply <onboarding@resend.dev>}
+      from: ${RESEND_FROM:Auto Apply <jobbotnoreply@gmail.com>}
     brevo:
       api-key: ${BREVO_API_KEY:}
-      from: ${BREVO_FROM:noreply@kaddy.app}
+      from: ${BREVO_FROM:jobbotnoreply@gmail.com}
 
   # ─── AI Providers (free first → premium last) ────────────────────────────────
   ai:
@@ -96,8 +102,9 @@ app:
       model: claude-sonnet-4-20250514
 
   scraper:
-    jsearch-api-key: ${JSEARCH_API_KEY:}
     cache-ttl-minutes: 60
+    # ── Paid/key-required scrapers (optional — skip gracefully when blank) ──
+    jsearch-api-key: ${JSEARCH_API_KEY:}
     adzuna:
       app-id: ${ADZUNA_APP_ID:}
       app-key: ${ADZUNA_APP_KEY:}
@@ -107,6 +114,18 @@ app:
     careerjet:
       affiliate-id: ${CAREERJET_AFFILIATE_ID:}
       locale: ${CAREERJET_LOCALE:en_IN}
+    # ── Free API key scrapers (free registration, no payment needed) ────────
+    reed:
+      api-key: ${REED_API_KEY:}
+    jooble:
+      api-key: ${JOOBLE_API_KEY:}
+    usajobs:
+      api-key: ${USAJOBS_API_KEY:}
+      user-agent: ${USAJOBS_USER_AGENT:kaddy@example.com}
+    # ── Free scrapers (no key needed — always active) ───────────────────────
+    # RemoteOK, Remotive, Arbeitnow, Jobicy, FindWork, Himalayas,
+    # The Muse, Working Nomads, We Work Remotely, DevITJobs,
+    # Remote.co, Jobspresso — all active with zero configuration.
 
   payment:
     razorpay:

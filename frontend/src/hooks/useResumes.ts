@@ -14,7 +14,6 @@ export function useResumeSkills(): string[] {
 
   if (!resumes || resumes.length === 0) return [];
 
-  // Get the primary resume, or the first one
   const primary = resumes.find((r) => r.isPrimary) || resumes[0];
 
   if (!primary?.parsedData?.skills) return [];

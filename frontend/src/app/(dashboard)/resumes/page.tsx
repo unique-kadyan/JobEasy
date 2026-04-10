@@ -113,7 +113,6 @@ export default function ResumesPage() {
                     {resume.parsedData?.skills && (
                       <div className="flex flex-wrap gap-1 mt-2">
                         {(resume.parsedData.skills as string[])
-                          .slice(0, 8)
                           .map((skill) => (
                             <Badge
                               key={skill}

@@ -29,15 +29,36 @@ public class ResumeGeneratorService {
 
     private static final Logger log = LoggerFactory.getLogger(ResumeGeneratorService.class);
 
+    private static final String ATS_SCORING_SYSTEM = """
+            You are an ATS (Applicant Tracking System) evaluation engine used by enterprise recruiters.
+            Score the provided resume JSON strictly against real ATS criteria.
+            Be critical and accurate — do NOT give full marks unless the criterion is truly excellent.
+
+            Scoring criteria (total = 100):
+            1. contactInfo (0-10): Has email, phone, location, LinkedIn, GitHub. Deduct 2 per missing field.
+            2. summary (0-15): Present, 2-4 sentences, uses industry keywords, states years of experience and specialization.
+            3. experience (0-30): Each role has 4+ bullets, starts with action verbs, quantifies achievements (numbers/%, scale). Deduct for vague bullets.
+            4. skills (0-20): Comprehensive technical skills list covering languages, frameworks, databases, cloud, tools. Deduct for missing categories.
+            5. education (0-10): Has institution, degree, field, graduation date.
+            6. formatting (0-5): Standard section headings (EXPERIENCE, EDUCATION, SKILLS), no tables, no images, parseable structure.
+            7. keywords (0-10): Job-relevant industry keywords appear naturally in summary and experience bullets.
+
+            Return ONLY this JSON (no markdown, no explanation):
+            {"score":0,"breakdown":{"contactInfo":0,"summary":0,"experience":0,"skills":0,"education":0,"formatting":0,"keywords":0},"weaknesses":["..."]}
+            """;
+
     private static final String SYSTEM_PROMPT = """
             You are an expert professional resume writer and ATS optimization specialist.
             Generate a complete, professionally formatted resume as a JSON object.
             Rules:
-            - Use strong action verbs to start all bullet points
-            - Quantify achievements with numbers/percentages wherever possible
+            - Use strong action verbs to start ALL bullet points (Led, Built, Designed, Implemented, Reduced, Improved...)
+            - Quantify EVERY achievement with numbers, percentages, scale, or time wherever possible
             - Keep the resume concise: 1 page for <5 years experience, 2 pages max otherwise
-            - Make every section ATS-friendly with relevant keywords
-            - Do NOT invent facts — only use information provided
+            - Skills section MUST be comprehensive: extract every technology, framework, tool, language, platform, and methodology mentioned in the resume — do NOT truncate. Group into: technical, soft, languages, tools, platforms
+            - Include ALL relevant industry keywords naturally in the summary and experience bullets for maximum ATS keyword density
+            - Mirror exact job-relevant terminology from the provided resume content
+            - Do NOT invent facts — only use information provided, but rephrase powerfully
+            - Every experience bullet must demonstrate impact, not just responsibility
             - Return ONLY valid JSON, no markdown, no explanation
             """;
 
@@ -76,24 +97,25 @@ public class ResumeGeneratorService {
 
         Map<String, Object> resumeData = parseResumeJson(result.content());
 
-        // Estimate ATS score from generated content
-        int atsScore = estimateScore(resumeData);
+        // Calculate ATS score using AI evaluation
+        int atsScore = calculateAtsScore(resumeData);
 
         GeneratedResume entity = new GeneratedResume();
         entity.setUserId(userId);
         entity.setSourceResumeId(resume.getId());
         entity.setResumeData(resumeData);
         entity.setAtsScore(atsScore);
+        if (SecurityUtils.isAdmin()) entity.setPaid(true); // admins get full access for free
         GeneratedResume saved = generatedResumeRepository.save(entity);
 
-        return toResponse(saved, false);
+        return toResponse(saved, SecurityUtils.isAdmin());
     }
 
     public GeneratedResumeResponse getLatest(String userId) {
         GeneratedResume gr = generatedResumeRepository
                 .findTopByUserIdOrderByGeneratedAtDesc(userId)
                 .orElseThrow(() -> new BadRequestException("No generated resume found. Please generate one first."));
-        return toResponse(gr, gr.isPaid());
+        return toResponse(gr, gr.isPaid() || SecurityUtils.isAdmin());
     }
 
     public GeneratedResumeResponse getFull(String id, String userId) {
@@ -133,7 +155,7 @@ public class ResumeGeneratorService {
                   "summary": "2-3 sentence professional summary",
                   "experience": [{"company":"","title":"","location":"","startDate":"","endDate":"","current":false,"bullets":[]}],
                   "education": [{"institution":"","degree":"","field":"","graduationDate":"","gpa":""}],
-                  "skills": {"technical":[],"soft":[],"languages":[]},
+                  "skills": {"technical":[],"frameworks":[],"databases":[],"cloud":[],"tools":[],"soft":[],"languages":[]},
                   "projects": [{"name":"","description":"","technologies":[],"url":""}],
                   "certifications": [{"name":"","issuer":"","date":""}]
                 }
@@ -160,14 +182,33 @@ public class ResumeGeneratorService {
         }
     }
 
-    private int estimateScore(Map<String, Object> data) {
+    private int calculateAtsScore(Map<String, Object> resumeData) {
+        try {
+            String resumeJson = objectMapper.writeValueAsString(resumeData);
+            String userPrompt = "Evaluate this resume JSON for ATS compatibility:\n\n" + resumeJson;
+            AiProviderFactory.GenerationResult result =
+                    aiProviderFactory.generate(ATS_SCORING_SYSTEM, userPrompt, null);
+
+            String raw = result.content().trim();
+            if (raw.startsWith("```")) {
+                int start = raw.indexOf('{');
+                int end   = raw.lastIndexOf('}');
+                if (start >= 0 && end > start) raw = raw.substring(start, end + 1);
+            }
+            Map<String, Object> scored = objectMapper.readValue(raw, new TypeReference<>() {});
+            Object scoreVal = scored.get("score");
+            if (scoreVal instanceof Number n) return Math.min(100, Math.max(0, n.intValue()));
+        } catch (Exception e) {
+            log.warn("ATS scoring AI call failed, falling back to heuristic: {}", e.getMessage());
+        }
+        // Fallback heuristic if AI call fails
         int score = 60;
-        if (data.get("summary") instanceof String s && !s.isBlank()) score += 10;
-        if (data.get("experience") instanceof List<?> l && !l.isEmpty()) score += 15;
-        if (data.get("education") instanceof List<?> l && !l.isEmpty()) score += 8;
-        if (data.get("skills") instanceof Map<?, ?> m
+        if (resumeData.get("summary") instanceof String s && !s.isBlank()) score += 10;
+        if (resumeData.get("experience") instanceof List<?> l && !l.isEmpty()) score += 15;
+        if (resumeData.get("education") instanceof List<?> l && !l.isEmpty()) score += 8;
+        if (resumeData.get("skills") instanceof Map<?, ?> m
                 && m.get("technical") instanceof List<?> l && !l.isEmpty()) score += 7;
-        return Math.min(score, 98);
+        return score;
     }
 
     private GeneratedResumeResponse toResponse(GeneratedResume gr, boolean fullAccess) {

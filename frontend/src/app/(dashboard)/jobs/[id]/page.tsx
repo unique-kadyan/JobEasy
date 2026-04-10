@@ -109,7 +109,6 @@ export default function JobDetailPage() {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Job Description */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <h2 className="font-semibold text-gray-900">Job Description</h2>
@@ -121,7 +120,6 @@ export default function JobDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Apply Panel */}
         <div className="space-y-4">
           <Card>
             <CardHeader>
@@ -162,7 +160,6 @@ export default function JobDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Generated Cover Letter Preview */}
           {coverLetter && (
             <Card>
               <CardHeader>

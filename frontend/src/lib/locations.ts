@@ -29,7 +29,6 @@ export const COUNTRIES = [
 ];
 
 export const CITIES = [
-  // US
   { value: "New York, NY", label: "New York, NY", group: "US Cities" },
   { value: "San Francisco, CA", label: "San Francisco, CA", group: "US Cities" },
   { value: "Los Angeles, CA", label: "Los Angeles, CA", group: "US Cities" },
@@ -42,15 +41,12 @@ export const CITIES = [
   { value: "Dallas, TX", label: "Dallas, TX", group: "US Cities" },
   { value: "Miami, FL", label: "Miami, FL", group: "US Cities" },
   { value: "Washington, DC", label: "Washington, DC", group: "US Cities" },
-  // UK
   { value: "London, UK", label: "London, UK", group: "UK Cities" },
   { value: "Manchester, UK", label: "Manchester, UK", group: "UK Cities" },
   { value: "Edinburgh, UK", label: "Edinburgh, UK", group: "UK Cities" },
-  // Canada
   { value: "Toronto, Canada", label: "Toronto, Canada", group: "Canada Cities" },
   { value: "Vancouver, Canada", label: "Vancouver, Canada", group: "Canada Cities" },
   { value: "Montreal, Canada", label: "Montreal, Canada", group: "Canada Cities" },
-  // India
   { value: "Bangalore, India", label: "Bangalore, India", group: "India Cities" },
   { value: "Mumbai, India", label: "Mumbai, India", group: "India Cities" },
   { value: "Delhi NCR, India", label: "Delhi NCR, India", group: "India Cities" },
@@ -59,7 +55,6 @@ export const CITIES = [
   { value: "Chennai, India", label: "Chennai, India", group: "India Cities" },
   { value: "Gurugram, India", label: "Gurugram, India", group: "India Cities" },
   { value: "Noida, India", label: "Noida, India", group: "India Cities" },
-  // Europe
   { value: "Berlin, Germany", label: "Berlin, Germany", group: "Europe Cities" },
   { value: "Munich, Germany", label: "Munich, Germany", group: "Europe Cities" },
   { value: "Amsterdam, Netherlands", label: "Amsterdam, Netherlands", group: "Europe Cities" },
@@ -68,7 +63,6 @@ export const CITIES = [
   { value: "Stockholm, Sweden", label: "Stockholm, Sweden", group: "Europe Cities" },
   { value: "Zurich, Switzerland", label: "Zurich, Switzerland", group: "Europe Cities" },
   { value: "Barcelona, Spain", label: "Barcelona, Spain", group: "Europe Cities" },
-  // Asia Pacific
   { value: "Singapore", label: "Singapore", group: "APAC Cities" },
   { value: "Tokyo, Japan", label: "Tokyo, Japan", group: "APAC Cities" },
   { value: "Sydney, Australia", label: "Sydney, Australia", group: "APAC Cities" },

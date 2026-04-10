@@ -74,21 +74,21 @@ public non-sealed class JSearchApiClient implements JobScraper {
 
             for (Map<String, Object> item : data) {
                 String source = determineSource(
-                        (String) item.getOrDefault("job_publisher", ""),
-                        (String) item.getOrDefault("job_apply_link", ""));
+                        Optional.ofNullable((String) item.get("job_publisher")).orElse(""),
+                        Optional.ofNullable((String) item.get("job_apply_link")).orElse(""));
 
                 jobs.add(JobResponse.unscored(
                         null,
-                        (String) item.get("job_id"),
+                        Optional.ofNullable((String) item.get("job_id")).orElse(""),
                         source,
-                        (String) item.get("job_title"),
-                        (String) item.get("employer_name"),
+                        Optional.ofNullable((String) item.get("job_title")).orElse(""),
+                        Optional.ofNullable((String) item.get("employer_name")).orElse(""),
                         buildLocation(item),
-                        (String) item.get("job_apply_link"),
-                        (String) item.get("job_description"),
+                        Optional.ofNullable((String) item.get("job_apply_link")).orElse(""),
+                        Optional.ofNullable((String) item.get("job_description")).orElse(""),
                         buildSalary(item),
                         null,
-                        (String) item.getOrDefault("job_employment_type", ""),
+                        Optional.ofNullable((String) item.get("job_employment_type")).orElse(""),
                         LocalDateTime.now()
                 ));
             }
@@ -108,10 +108,10 @@ public non-sealed class JSearchApiClient implements JobScraper {
     }
 
     private String buildLocation(Map<String, Object> item) {
-        String city = (String) item.getOrDefault("job_city", "");
-        String state = (String) item.getOrDefault("job_state", "");
-        String country = (String) item.getOrDefault("job_country", "");
-        Boolean isRemote = (Boolean) item.getOrDefault("job_is_remote", false);
+        String city    = Optional.ofNullable((String) item.get("job_city")).orElse("");
+        String state   = Optional.ofNullable((String) item.get("job_state")).orElse("");
+        String country = Optional.ofNullable((String) item.get("job_country")).orElse("");
+        Boolean isRemote = Optional.ofNullable((Boolean) item.get("job_is_remote")).orElse(false);
 
         if (Boolean.TRUE.equals(isRemote)) return "Remote";
 

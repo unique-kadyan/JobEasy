@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
+import { useKeepAlive } from "@/hooks/useKeepAlive";
+import type { ServerStatus } from "@/hooks/useKeepAlive";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -13,21 +15,6 @@ const queryClient = new QueryClient({
   },
 });
 
-/**
- * Dashboard layout — client-side auth guard (secondary to middleware.ts).
- *
- * Two layers of protection:
- * 1. `middleware.ts` (Edge) — redirects unauthenticated requests server-side
- *    before the page is rendered.  Fastest path; no flash of content.
- * 2. This layout — handles the Zustand store hydration gap on first paint.
- *    Zustand's `persist` middleware rehydrates from localStorage after the
- *    initial render, so there's a brief window where `isAuthenticated` is
- *    false even for valid sessions.  We show a loading state instead of
- *    flashing the login redirect.
- *
- * Email verification banner — shown (non-blocking) when the user hasn't
- * verified their email address yet.  They can still use the app.
- */
 export default function DashboardLayout({
   children,
 }: {
@@ -35,32 +22,21 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
-
-  // Track whether Zustand has finished hydrating from localStorage.
   const [hydrated, setHydrated] = useState(false);
+  const serverStatus = useKeepAlive();
+
+  useEffect(() => { setHydrated(true); }, []);
 
   useEffect(() => {
-    // Zustand persist rehydrates synchronously when the store subscribes,
-    // but useEffect runs after paint.  One tick is enough.
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (hydrated && !isAuthenticated) {
-      router.push("/login");
-    }
+    if (hydrated && !isAuthenticated) router.push("/login");
   }, [hydrated, isAuthenticated, router]);
 
-  // While hydrating from localStorage, render nothing to avoid a flash.
   if (!hydrated) return null;
-
-  // After hydration, if not authenticated the redirect is in-flight.
   if (!isAuthenticated) return null;
 
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-gray-50">
-        {/* Email verification banner (OWASP A07 — confirm user identity) */}
         {user && !user.emailVerified && (
           <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-center text-sm text-amber-800">
             Please verify your email address to unlock all features.{" "}
@@ -82,10 +58,41 @@ export default function DashboardLayout({
           </div>
         )}
 
+        <WarmUpBanner status={serverStatus} />
         <Sidebar />
-        <Topbar />
+        <Topbar serverStatus={serverStatus} />
         <main className="ml-64 pt-16 p-6">{children}</main>
       </div>
     </QueryClientProvider>
+  );
+}
+
+// Shows only after 4 seconds of non-"up" status — invisible on fast connections,
+// informative during a cold start (~50 s). Dismisses automatically when the
+// backend comes online.
+function WarmUpBanner({ status }: { status: ServerStatus }) {
+  const [visible, setVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (status === "up") {
+      setVisible(false);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      return;
+    }
+    timerRef.current = setTimeout(() => setVisible(true), 4_000);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [status]);
+
+  if (!visible) return null;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 bg-indigo-600 px-4 py-2 text-sm text-white shadow-md">
+      <span className="flex h-2 w-2 relative">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+      </span>
+      Server is starting up — this takes about 30–50 seconds on first load. The page will refresh automatically.
+    </div>
   );
 }

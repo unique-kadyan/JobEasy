@@ -7,7 +7,6 @@ import Button from "@/components/ui/Button";
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Navbar */}
       <nav className="border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -25,7 +24,6 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 py-20 text-center">
         <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
           <Zap className="h-4 w-4" /> AI-Powered Job Applications
@@ -54,7 +52,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features */}
       <section className="bg-gray-50 py-20">
         <div className="max-w-6xl mx-auto px-6">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
@@ -97,7 +94,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA */}
       <section className="py-20">
         <div className="max-w-3xl mx-auto text-center px-6">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -114,7 +110,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-gray-100 py-6">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between text-sm text-gray-500">
           <div className="flex items-center gap-2">

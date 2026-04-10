@@ -16,12 +16,24 @@ public enum JobSource {
     SERPAPI     ("SerpAPI",     true),
     CAREERJET   ("CareerJet",   true),
 
-    // ── Free public API ───────────────────────────────────────────────────────
-    REMOTEOK    ("Remote OK",   false),
-    REMOTIVE    ("Remotive",    false),
-    ARBEITNOW   ("Arbeitnow",   false),
-    JOBICY      ("Jobicy",      false),
-    FINDWORK    ("FindWork",    false);
+    // ── Free API key required ─────────────────────────────────────────────────
+    REED            ("Reed",        true),
+    JOOBLE          ("Jooble",      true),
+    USAJOBS         ("USA Jobs",    true),
+
+    // ── Free public API (no key) ──────────────────────────────────────────────
+    REMOTEOK        ("Remote OK",        false),
+    REMOTIVE        ("Remotive",         false),
+    ARBEITNOW       ("Arbeitnow",        false),
+    JOBICY          ("Jobicy",           false),
+    FINDWORK        ("FindWork",         false),
+    HIMALAYAS       ("Himalayas",        false),
+    THE_MUSE        ("The Muse",         false),
+    WORKINGNOMADS   ("Working Nomads",   false),
+    WEWORKREMOTELY  ("We Work Remotely", false),
+    DEVITJOBS       ("DevITJobs",        false),
+    REMOTECO        ("Remote.co",        false),
+    JOBSPRESSO      ("Jobspresso",       false);
 
     private final String displayName;
     private final boolean requiresApiKey;

@@ -12,13 +12,14 @@ spring:
   data:
     redis:
       # REDIS_URL is read programmatically in RedisConfig.java — no url property needed here.
-      # RedisConfig checks REDIS_URL env var first (Render injects it automatically),
-      # then falls back to spring.data.redis.host/port for local Docker.
+      timeout: 200ms           # fail fast — don't block 2s waiting for slow Redis
+      connect-timeout: 200ms   # fail fast on TCP connect
       lettuce:
         pool:
-          max-active: 5    # base: 50 — each connection holds a socket buffer
-          max-idle: 2      # base: 20
+          max-active: 10   # base: 50 — slight increase, each holds a socket buffer
+          max-idle: 3      # base: 20
           min-idle: 1      # base: 5
+          max-wait: 200ms  # don't block long when pool is exhausted — fail fast
 
   # Disable Spring Boot's lazy-loading of JMX / MBean infrastructure (saves ~10 MB).
   jmx:

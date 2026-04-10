@@ -67,10 +67,16 @@ export default function PaymentModal({ open, resumeId, onClose, onSuccess }: Pro
 
   const handlePay = async () => {
     setError("");
+    const order = await createOrderMutation.mutateAsync();
+
+    if (order.orderId?.startsWith("admin_bypass_") || order.amount === 0) {
+      onSuccess();
+      onClose();
+      return;
+    }
+
     const loaded = await loadRazorpayScript();
     if (!loaded) { setError("Failed to load payment gateway. Please try again."); return; }
-
-    const order = await createOrderMutation.mutateAsync();
 
     const options = {
       key: order.keyId,
@@ -105,7 +111,6 @@ export default function PaymentModal({ open, resumeId, onClose, onSuccess }: Pro
   return (
     <Modal open={open} onClose={onClose} title="Unlock Full Resume">
       <div className="space-y-5">
-        {/* What you get */}
         <div className="rounded-lg bg-indigo-50 p-4 space-y-2">
           <p className="font-semibold text-indigo-900">What you get:</p>
           {[
@@ -121,7 +126,6 @@ export default function PaymentModal({ open, resumeId, onClose, onSuccess }: Pro
           ))}
         </div>
 
-        {/* Pricing */}
         <div className="rounded-lg border border-gray-200 p-4 flex items-center justify-between">
           <div>
             <p className="font-semibold text-gray-900">One-time payment</p>
@@ -139,7 +143,6 @@ export default function PaymentModal({ open, resumeId, onClose, onSuccess }: Pro
           </div>
         </div>
 
-        {/* Security note */}
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <Lock className="h-4 w-4 text-gray-400 shrink-0" />
           Secured by Razorpay · 256-bit SSL encryption

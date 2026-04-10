@@ -129,8 +129,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleIllegalArgument(
             IllegalArgumentException ex, HttpServletRequest req) {
-        log.debug("IllegalArgumentException: {}", ex.getMessage());
-        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req);
+        log.warn("IllegalArgumentException on {}: {}", req.getRequestURI(), ex.getMessage(), ex);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred. Please try again later.", req);
     }
 
     @ExceptionHandler(IllegalStateException.class)

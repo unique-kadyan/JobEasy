@@ -2,12 +2,15 @@ package com.kaddy.autoapply.service;
 
 import com.kaddy.autoapply.exception.BadRequestException;
 import com.kaddy.autoapply.exception.ResourceNotFoundException;
-import com.kaddy.autoapply.security.SecurityUtils;
 import com.kaddy.autoapply.model.Resume;
+import com.kaddy.autoapply.security.SecurityUtils;
+import com.kaddy.autoapply.model.User;
 import com.kaddy.autoapply.repository.ResumeRepository;
+import com.kaddy.autoapply.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -29,13 +32,19 @@ public class ResumeService {
 
     private final ResumeRepository resumeRepository;
     private final ResumeParserService parserService;
+    private final UserRepository userRepository;
+    private final JobService jobService;
     private final String uploadDir;
 
     public ResumeService(ResumeRepository resumeRepository,
                          ResumeParserService parserService,
+                         UserRepository userRepository,
+                         @Lazy JobService jobService,
                          @Value("${app.upload.dir}") String uploadDir) {
         this.resumeRepository = resumeRepository;
         this.parserService = parserService;
+        this.userRepository = userRepository;
+        this.jobService = jobService;
         this.uploadDir = uploadDir;
     }
 
@@ -72,10 +81,52 @@ public class ResumeService {
                     .isPrimary(isFirst)
                     .build();
 
-            return resumeRepository.save(resume);
+            Resume saved = resumeRepository.save(resume);
+
+            // Trigger auto job search using resume skills so the user immediately
+            // sees relevant jobs after upload (result stored in cache for the UI).
+            triggerAutoSearch(userId, parsedData);
+
+            return saved;
         } catch (IOException e) {
             throw new BadRequestException("Failed to upload file: " + e.getMessage());
         }
+    }
+
+    /**
+     * Fires a background job search seeded from skills extracted from the resume.
+     * Runs on a virtual thread so it never blocks the upload response.
+     */
+    private void triggerAutoSearch(String userId, Map<String, Object> parsedData) {
+        try {
+            User user = userRepository.findById(userId).orElse(null);
+            String query = buildQueryFromParsedData(parsedData, user);
+            if (query.isBlank()) return;
+
+            Thread.ofVirtual().start(() -> {
+                try {
+                    jobService.searchJobs(query, null, null, 0, 10, userId);
+                    log.info("Auto job search triggered for user {} with query: {}", userId, query);
+                } catch (Exception e) {
+                    log.debug("Auto job search after upload failed for user {}: {}", userId, e.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            log.debug("Could not trigger auto search after upload: {}", e.getMessage());
+        }
+    }
+
+    private String buildQueryFromParsedData(Map<String, Object> parsedData, User user) {
+        if (user != null && user.getTitle() != null && !user.getTitle().isBlank()) {
+            return user.getTitle();
+        }
+        if (parsedData != null && parsedData.get("skills") instanceof java.util.Collection<?> skills) {
+            return skills.stream().limit(5)
+                    .map(Object::toString)
+                    .reduce((a, b) -> a + " " + b)
+                    .orElse("");
+        }
+        return "";
     }
 
     public List<Resume> getUserResumes(String userId) {

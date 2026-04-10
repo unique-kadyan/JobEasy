@@ -199,7 +199,7 @@ public class AuthService {
                 user.getPortfolioUrl(), user.isEmailVerified(),
                 user.getExperienceYears(), user.getTargetRoles(), user.getSkipKeywords(),
                 user.isAutoSearchEnabled(), user.getAutoSearchIntervalHours(),
-                user.getCreatedAt(), roleNames
+                user.getCreatedAt(), roleNames, user.getSubscriptionTier()
         );
     }
 }

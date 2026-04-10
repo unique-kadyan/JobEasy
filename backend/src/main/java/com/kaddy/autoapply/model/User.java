@@ -2,6 +2,7 @@ package com.kaddy.autoapply.model;
 
 import com.kaddy.autoapply.model.enums.AuthProvider;
 import com.kaddy.autoapply.model.enums.Role;
+import com.kaddy.autoapply.model.enums.SubscriptionTier;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -56,6 +57,9 @@ public class User {
     private Map<String, Object> autoSearchParams; // query, location, etc.
     private LocalDateTime autoSearchLastRun;
 
+    /** Subscription tier — controls how many job results are shown and whether auto-apply is available. */
+    private SubscriptionTier subscriptionTier;
+
     /** Roles carried in JWT claims. Every account receives {@link Role#ROLE_USER} at signup. */
     private Set<Role> roles;
 
@@ -68,6 +72,7 @@ public class User {
         this.autoSearchEnabled = false;
         this.autoSearchIntervalHours = 24;
         this.roles = EnumSet.of(Role.ROLE_USER);
+        this.subscriptionTier = SubscriptionTier.FREE;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -99,6 +104,11 @@ public class User {
     public int getAutoSearchIntervalHours() { return autoSearchIntervalHours; }
     public Map<String, Object> getAutoSearchParams() { return autoSearchParams; }
     public LocalDateTime getAutoSearchLastRun() { return autoSearchLastRun; }
+    public SubscriptionTier getSubscriptionTier() {
+        return subscriptionTier != null ? subscriptionTier : SubscriptionTier.FREE;
+    }
+    public void setSubscriptionTier(SubscriptionTier subscriptionTier) { this.subscriptionTier = subscriptionTier; }
+
     public Set<Role> getRoles() {
         // Guard for users persisted before roles field was added
         return roles != null ? roles : EnumSet.of(Role.ROLE_USER);
@@ -149,6 +159,7 @@ public class User {
         private int experienceYears;
         private List<String> targetRoles, notInterestedReasons, skipKeywords;
         private Set<Role> roles;
+        private SubscriptionTier subscriptionTier = SubscriptionTier.FREE;
         private boolean autoSearchEnabled = false;
         private int autoSearchIntervalHours = 24;
         private Map<String, Object> autoSearchParams;
@@ -178,6 +189,7 @@ public class User {
         public Builder notInterestedReasons(List<String> reasons) { this.notInterestedReasons = reasons; return this; }
         public Builder skipKeywords(List<String> keywords) { this.skipKeywords = keywords; return this; }
         public Builder roles(Set<Role> roles) { this.roles = roles; return this; }
+        public Builder subscriptionTier(SubscriptionTier tier) { this.subscriptionTier = tier; return this; }
         public Builder autoSearchEnabled(boolean enabled) { this.autoSearchEnabled = enabled; return this; }
         public Builder autoSearchIntervalHours(int hours) { this.autoSearchIntervalHours = hours; return this; }
         public Builder autoSearchParams(Map<String, Object> params) { this.autoSearchParams = params; return this; }
@@ -209,6 +221,7 @@ public class User {
             user.notInterestedReasons = notInterestedReasons;
             user.skipKeywords = skipKeywords;
             user.roles = roles != null ? roles : EnumSet.of(Role.ROLE_USER);
+            user.subscriptionTier = subscriptionTier != null ? subscriptionTier : SubscriptionTier.FREE;
             user.autoSearchEnabled = autoSearchEnabled;
             user.autoSearchIntervalHours = autoSearchIntervalHours;
             user.autoSearchParams = autoSearchParams;

@@ -16,7 +16,11 @@ import java.util.List;
  */
 public sealed interface JobScraper
         permits JSearchApiClient, AdzunaApiClient, CareerJetApiClient, SerpApiClient,
-                RemoteOKScraper, RemotiveScraper, ArbeitnowScraper, JobicyScraper, FindWorkScraper {
+                RemoteOKScraper, RemotiveScraper, ArbeitnowScraper, JobicyScraper, FindWorkScraper,
+                HimalayasScraper, TheMuseScraper, WorkingNomadsScraper, WeWorkRemotelyScraper,
+                ReedApiClient, JoobleApiClient,
+                DevITJobsScraper, UsaJobsApiClient,
+                RemoteCoScraper, JobspressoScraper {
 
     /** The source identifier returned on every {@link JobResponse} this scraper produces. */
     String getSource();

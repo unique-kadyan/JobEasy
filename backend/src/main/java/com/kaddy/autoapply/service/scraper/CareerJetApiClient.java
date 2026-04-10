@@ -1,11 +1,11 @@
 package com.kaddy.autoapply.service.scraper;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kaddy.autoapply.dto.response.JobResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -23,20 +23,22 @@ import java.util.Optional;
 public non-sealed class CareerJetApiClient implements JobScraper {
 
     private static final Logger log = LoggerFactory.getLogger(CareerJetApiClient.class);
-    private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
-            new ParameterizedTypeReference<>() {};
+    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
 
     private final WebClient webClient;
+    private final ObjectMapper objectMapper;
     private final String affiliateId;
     private final String locale;
 
     public CareerJetApiClient(
             WebClient.Builder webClientBuilder,
+            ObjectMapper objectMapper,
             @Value("${app.scraper.careerjet.affiliate-id:}") String affiliateId,
             @Value("${app.scraper.careerjet.locale:en_IN}") String locale) {
         this.webClient = webClientBuilder
                 .baseUrl("http://public.api.careerjet.net")
                 .build();
+        this.objectMapper = objectMapper;
         this.affiliateId = affiliateId;
         this.locale = locale;
     }
@@ -58,7 +60,8 @@ public non-sealed class CareerJetApiClient implements JobScraper {
             final String where = Optional.ofNullable(location).filter(l -> !l.isBlank()).orElse("");
             final int cjPage = page + 1; // CareerJet pages start at 1
 
-            Map<String, Object> response = webClient.get()
+            // CareerJet returns JSON with Content-Type: text/plain — receive as String, parse manually
+            String raw = webClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/search/jobs")
                             .queryParam("affid", affiliateId)
@@ -69,12 +72,15 @@ public non-sealed class CareerJetApiClient implements JobScraper {
                             .queryParam("locale_code", locale)
                             .queryParam("sort", "date")
                             .build())
-                    .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
-                    .bodyToMono(MAP_TYPE)
+                    .bodyToMono(String.class)
                     .block();
 
-            if (response == null || !response.containsKey("jobs")) {
+            if (raw == null || raw.isBlank()) return List.of();
+
+            Map<String, Object> response = objectMapper.readValue(raw, MAP_TYPE);
+
+            if (!response.containsKey("jobs")) {
                 return List.of();
             }
 
@@ -86,11 +92,11 @@ public non-sealed class CareerJetApiClient implements JobScraper {
                         null,
                         buildExternalId(item),
                         "CAREERJET",
-                        (String) item.getOrDefault("title", ""),
-                        (String) item.getOrDefault("company", ""),
-                        (String) item.getOrDefault("locations", ""),
-                        (String) item.getOrDefault("url", ""),
-                        (String) item.getOrDefault("description", ""),
+                        Optional.ofNullable((String) item.get("title")).orElse(""),
+                        Optional.ofNullable((String) item.get("company")).orElse(""),
+                        Optional.ofNullable((String) item.get("locations")).orElse(""),
+                        Optional.ofNullable((String) item.get("url")).orElse(""),
+                        Optional.ofNullable((String) item.get("description")).orElse(""),
                         buildSalary(item),
                         null,
                         null,

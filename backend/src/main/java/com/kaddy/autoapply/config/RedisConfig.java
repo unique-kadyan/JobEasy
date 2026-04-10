@@ -1,10 +1,14 @@
 package com.kaddy.autoapply.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.lettuce.core.RedisURI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
+import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.cache.interceptor.SimpleCacheErrorHandler;
@@ -39,7 +43,7 @@ import java.util.Map;
  */
 @Configuration
 @EnableCaching
-public class RedisConfig {
+public class RedisConfig implements CachingConfigurer {
 
     private static final Logger log = LoggerFactory.getLogger(RedisConfig.class);
 
@@ -93,9 +97,18 @@ public class RedisConfig {
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
+        // ObjectMapper with JSR310 so LocalDateTime fields in cached objects
+        // serialize as ISO-8601 strings instead of throwing InvalidDefinitionException.
+        ObjectMapper cacheMapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .activateDefaultTyping(
+                        new ObjectMapper().getPolymorphicTypeValidator(),
+                        ObjectMapper.DefaultTyping.NON_FINAL);
+
         RedisCacheConfiguration jsonConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(new GenericJackson2JsonRedisSerializer()))
+                        .fromSerializer(new GenericJackson2JsonRedisSerializer(cacheMapper)))
                 .disableCachingNullValues();
 
         Map<String, RedisCacheConfiguration> perCacheTtl = Map.of(
@@ -112,10 +125,11 @@ public class RedisConfig {
 
     /**
      * Suppress cache errors so a Redis outage does not take down the application.
-     * Each error is logged as a warning and the operation continues as a cache miss.
+     * Overrides CachingConfigurer so Spring's cache AOP actually uses this handler —
+     * a bare @Bean is not sufficient; the method must be wired through CachingConfigurer.
      */
-    @Bean
-    public CacheErrorHandler cacheErrorHandler() {
+    @Override
+    public CacheErrorHandler errorHandler() {
         return new LoggingCacheErrorHandler();
     }
 
