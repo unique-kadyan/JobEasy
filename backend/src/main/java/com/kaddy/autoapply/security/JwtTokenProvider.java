@@ -12,26 +12,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Stateless JWT token provider.
- *
- * <h3>Token claims</h3>
- * <pre>
- * {
- *   "sub":   "&lt;userId&gt;",
- *   "email": "&lt;email&gt;",
- *   "type":  "access" | "refresh",
- *   "roles": ["ROLE_USER"],          // ← added for role-based access
- *   "iat":   &lt;epoch-seconds&gt;,
- *   "exp":   &lt;epoch-seconds&gt;
- * }
- * </pre>
- *
- * <h3>Role backward-compatibility</h3>
- * <p>Tokens issued before the {@code roles} claim was introduced will have no
- * {@code roles} entry.  {@link #getRolesFromToken} defaults to {@code ["ROLE_USER"]}
- * for such tokens so existing sessions remain valid without a forced re-login.
- */
 @Component
 public class JwtTokenProvider {
 
@@ -52,8 +32,6 @@ public class JwtTokenProvider {
         this.refreshTokenExpiry = refreshTokenExpiry;
     }
 
-    // ── Token generation ──────────────────────────────────────────────────────
-
     public String generateAccessToken(String userId, String email, Collection<Role> roles) {
         return buildToken(userId, email, accessTokenExpiry, "access", roles);
     }
@@ -66,7 +44,6 @@ public class JwtTokenProvider {
                               String type, Collection<Role> roles) {
         Date now = new Date();
 
-        // Convert enum set to string list for JSON serialization in the JWT
         List<String> roleNames = (roles != null && !roles.isEmpty())
                 ? roles.stream().map(Role::name).toList()
                 : List.of(Role.ROLE_USER.name());
@@ -82,8 +59,6 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // ── Token validation & extraction ─────────────────────────────────────────
-
     public String getUserIdFromToken(String token) {
         return parseClaims(token).getSubject();
     }
@@ -92,22 +67,12 @@ public class JwtTokenProvider {
         return parseClaims(token).get(CLAIM_EMAIL, String.class);
     }
 
-    /**
-     * Extracts role names from the JWT {@code roles} claim.
-     *
-     * <p>If the claim is absent (tokens issued before roles were introduced) or
-     * malformed, returns {@code ["ROLE_USER"]} so existing sessions degrade
-     * gracefully rather than losing access.
-     *
-     * @param token a signed JWT (access or refresh)
-     * @return non-null, non-empty list of role name strings
-     */
     public List<String> getRolesFromToken(String token) {
         Object raw = parseClaims(token).get(CLAIM_ROLES);
         if (raw instanceof List<?> list && !list.isEmpty()) {
             return list.stream().map(Object::toString).toList();
         }
-        return List.of(Role.ROLE_USER.name()); // backward-compat default
+        return List.of(Role.ROLE_USER.name());
     }
 
     public boolean validateToken(String token) {
@@ -123,10 +88,6 @@ public class JwtTokenProvider {
         return "access".equals(parseClaims(token).get(CLAIM_TYPE, String.class));
     }
 
-    /**
-     * Returns seconds until expiry, or 0 if already expired.
-     * Used to set the matching TTL when blacklisting on logout.
-     */
     public long getRemainingTtlSeconds(String token) {
         long expiryMs    = parseClaims(token).getExpiration().getTime();
         long remainingMs = expiryMs - System.currentTimeMillis();

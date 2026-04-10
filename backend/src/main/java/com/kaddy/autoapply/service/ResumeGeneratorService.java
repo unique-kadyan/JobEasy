@@ -97,7 +97,6 @@ public class ResumeGeneratorService {
 
         Map<String, Object> resumeData = parseResumeJson(result.content());
 
-        // Calculate ATS score using AI evaluation
         int atsScore = calculateAtsScore(resumeData);
 
         GeneratedResume entity = new GeneratedResume();
@@ -105,7 +104,7 @@ public class ResumeGeneratorService {
         entity.setSourceResumeId(resume.getId());
         entity.setResumeData(resumeData);
         entity.setAtsScore(atsScore);
-        if (SecurityUtils.isAdmin()) entity.setPaid(true); // admins get full access for free
+        if (SecurityUtils.isAdmin()) entity.setPaid(true);
         GeneratedResume saved = generatedResumeRepository.save(entity);
 
         return toResponse(saved, SecurityUtils.isAdmin());
@@ -129,8 +128,6 @@ public class ResumeGeneratorService {
         }
         return toResponse(gr, true);
     }
-
-    // ── helpers ──────────────────────────────────────────────────────────────────
 
     private String buildPrompt(User user, Resume resume) {
         StringBuilder sb = new StringBuilder();
@@ -166,7 +163,7 @@ public class ResumeGeneratorService {
     private Map<String, Object> parseResumeJson(String raw) {
         try {
             String json = raw.trim();
-            // Strip markdown code fences if present
+
             if (json.startsWith("```")) {
                 int start = json.indexOf('{');
                 int end = json.lastIndexOf('}');
@@ -201,7 +198,7 @@ public class ResumeGeneratorService {
         } catch (Exception e) {
             log.warn("ATS scoring AI call failed, falling back to heuristic: {}", e.getMessage());
         }
-        // Fallback heuristic if AI call fails
+
         int score = 60;
         if (resumeData.get("summary") instanceof String s && !s.isBlank()) score += 10;
         if (resumeData.get("experience") instanceof List<?> l && !l.isEmpty()) score += 15;

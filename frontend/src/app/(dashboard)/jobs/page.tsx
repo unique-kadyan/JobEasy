@@ -14,11 +14,66 @@ import Modal from "@/components/ui/Modal";
 import Badge from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import UpgradeModal from "@/components/subscription/UpgradeModal";
-import { Search, Loader2, Sparkles, X, ChevronLeft, ChevronRight, Lock, Zap, Briefcase } from "lucide-react";
+import { Search, Loader2, Sparkles, X, ChevronLeft, ChevronRight, Lock, Zap, Briefcase, IndianRupee } from "lucide-react";
 import type { Job } from "@/types";
 import { AI_PROVIDERS } from "@/lib/constants";
 import { useAuthStore } from "@/store/auth-store";
 import api from "@/lib/api";
+import CreatableSelect from "react-select/creatable";
+import type { SingleValue } from "react-select";
+
+const LOCATION_OPTIONS = [
+
+  { value: "Remote", label: "🌍 Remote" },
+
+  { value: "India", label: "🇮🇳 India" },
+  { value: "Bangalore", label: "🏙 Bangalore" },
+  { value: "Mumbai", label: "🏙 Mumbai" },
+  { value: "Delhi", label: "🏙 Delhi" },
+  { value: "Hyderabad", label: "🏙 Hyderabad" },
+  { value: "Pune", label: "🏙 Pune" },
+  { value: "Chennai", label: "🏙 Chennai" },
+  { value: "Kolkata", label: "🏙 Kolkata" },
+  { value: "Noida", label: "🏙 Noida" },
+  { value: "Gurgaon", label: "🏙 Gurgaon" },
+  { value: "Ahmedabad", label: "🏙 Ahmedabad" },
+
+  { value: "United States", label: "🇺🇸 United States" },
+  { value: "United Kingdom", label: "🇬🇧 United Kingdom" },
+  { value: "Canada", label: "🇨🇦 Canada" },
+  { value: "Australia", label: "🇦🇺 Australia" },
+  { value: "Germany", label: "🇩🇪 Germany" },
+  { value: "Netherlands", label: "🇳🇱 Netherlands" },
+  { value: "France", label: "🇫🇷 France" },
+  { value: "Singapore", label: "🇸🇬 Singapore" },
+  { value: "UAE", label: "🇦🇪 UAE" },
+  { value: "Japan", label: "🇯🇵 Japan" },
+  { value: "Sweden", label: "🇸🇪 Sweden" },
+  { value: "Norway", label: "🇳🇴 Norway" },
+  { value: "Denmark", label: "🇩🇰 Denmark" },
+  { value: "Switzerland", label: "🇨🇭 Switzerland" },
+  { value: "Ireland", label: "🇮🇪 Ireland" },
+  { value: "Spain", label: "🇪🇸 Spain" },
+  { value: "Italy", label: "🇮🇹 Italy" },
+  { value: "Portugal", label: "🇵🇹 Portugal" },
+  { value: "Poland", label: "🇵🇱 Poland" },
+  { value: "Israel", label: "🇮🇱 Israel" },
+  { value: "Brazil", label: "🇧🇷 Brazil" },
+  { value: "New Zealand", label: "🇳🇿 New Zealand" },
+  { value: "South Africa", label: "🇿🇦 South Africa" },
+  { value: "Philippines", label: "🇵🇭 Philippines" },
+  { value: "Malaysia", label: "🇲🇾 Malaysia" },
+  { value: "Indonesia", label: "🇮🇩 Indonesia" },
+
+  { value: "New York", label: "🗽 New York" },
+  { value: "London", label: "🎡 London" },
+  { value: "San Francisco", label: "🌉 San Francisco" },
+  { value: "Berlin", label: "🏛 Berlin" },
+  { value: "Toronto", label: "🍁 Toronto" },
+  { value: "Sydney", label: "🦘 Sydney" },
+  { value: "Amsterdam", label: "🚲 Amsterdam" },
+  { value: "Dubai", label: "🏙 Dubai" },
+];
 
 const PAGE_SIZE_OPTIONS = [
   { value: "30", label: "30 per page" },
@@ -28,28 +83,7 @@ const PAGE_SIZE_OPTIONS = [
   { value: "100", label: "100 per page" },
 ];
 
-const SOURCE_OPTIONS = [
-  { value: "", label: "All Sources" },
-  { value: "REMOTEOK",       label: "🆓 Remote OK" },
-  { value: "REMOTIVE",       label: "🆓 Remotive" },
-  { value: "ARBEITNOW",      label: "🆓 Arbeitnow" },
-  { value: "JOBICY",         label: "🆓 Jobicy" },
-  { value: "FINDWORK",       label: "🆓 FindWork" },
-  { value: "HIMALAYAS",      label: "🆓 Himalayas" },
-  { value: "THE_MUSE",       label: "🆓 The Muse" },
-  { value: "WORKINGNOMADS",  label: "🆓 Working Nomads" },
-  { value: "WEWORKREMOTELY", label: "🆓 We Work Remotely" },
-  { value: "DEVITJOBS",      label: "🆓 DevITJobs" },
-  { value: "REMOTECO",       label: "🆓 Remote.co" },
-  { value: "JOBSPRESSO",     label: "🆓 Jobspresso" },
-  { value: "ADZUNA",         label: "🔑 Adzuna" },
-  { value: "CAREERJET",      label: "🔑 CareerJet" },
-  { value: "REED",           label: "🔑 Reed UK" },
-  { value: "JOOBLE",         label: "🔑 Jooble" },
-  { value: "USAJOBS",        label: "🔑 USA Jobs" },
-  { value: "JSEARCH",        label: "💳 JSearch (Indeed+LinkedIn)" },
-  { value: "SERPAPI",        label: "💳 SerpAPI (Google Jobs)" },
-];
+type LocationOption = { value: string; label: string };
 
 export default function JobsPage() {
   const resumeSkills = useResumeSkills();
@@ -58,13 +92,14 @@ export default function JobsPage() {
   const [query, setQuery] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isRemote, setIsRemote] = useState(false);
-  const [locationText, setLocationText] = useState("");
-  const [source, setSource] = useState("");
+  const [locationOption, setLocationOption] = useState<LocationOption | null>(null);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(30);
   const [skillTags, setSkillTags] = useState<string[]>([]);
+  const [minSalary, setMinSalary] = useState("");
+  const [maxSalary, setMaxSalary] = useState("");
 
-  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; targetTier?: "JOBS" | "AUTO_APPLY" }>({ open: false });
+  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; targetTier?: "GOLD" | "PLATINUM" }>({ open: false });
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
   const [bulkApplying, setBulkApplying] = useState(false);
   const [bulkResult, setBulkResult] = useState<string | null>(null);
@@ -72,7 +107,8 @@ export default function JobsPage() {
   const computedLocations = (() => {
     const locs: string[] = [];
     if (isRemote) locs.push("Remote");
-    if (locationText.trim()) locs.push(locationText.trim());
+    const loc = locationOption?.value.trim();
+    if (loc && loc !== "Remote") locs.push(loc);
     return locs;
   })();
 
@@ -82,12 +118,14 @@ export default function JobsPage() {
     }
   }, [resumeSkills, skillTags.length, searchQuery]);
 
+  const LPA_TO_USD = 1200;
   const { data: pagedJobs, isLoading } = useJobSearch(
     searchQuery,
     computedLocations,
-    source || undefined,
     page,
-    size
+    size,
+    minSalary ? Math.round(Number(minSalary) * LPA_TO_USD) : undefined,
+    maxSalary ? Math.round(Number(maxSalary) * LPA_TO_USD) : undefined
   );
 
   const jobs = pagedJobs?.content ?? [];
@@ -123,43 +161,28 @@ export default function JobsPage() {
     setPage(0);
   };
 
-  const removeSkill = (skill: string) => {
-    setSkillTags(skillTags.filter((s) => s !== skill));
-  };
-
+  const removeSkill = (skill: string) => setSkillTags(skillTags.filter((s) => s !== skill));
   const addSkill = (skill: string) => {
-    if (skill && !skillTags.includes(skill)) {
-      setSkillTags([...skillTags, skill]);
-    }
+    if (skill && !skillTags.includes(skill)) setSkillTags([...skillTags, skill]);
   };
 
   const handleQuickApply = (job: Job) => {
-    if (!canSeeAllJobs()) {
-      setUpgradeModal({ open: true, targetTier: "JOBS" });
-      return;
-    }
+    if (!canSeeAllJobs()) { setUpgradeModal({ open: true, targetTier: "GOLD" }); return; }
     setApplyModal(job);
   };
 
   const toggleJobSelect = (jobId: string) => {
-    if (!canAutoApply()) {
-      setUpgradeModal({ open: true, targetTier: "AUTO_APPLY" });
-      return;
-    }
+    if (!canAutoApply()) { setUpgradeModal({ open: true, targetTier: "PLATINUM" }); return; }
     setSelectedJobs((prev) => {
       const next = new Set(prev);
-      if (next.has(jobId)) next.delete(jobId);
-      else next.add(jobId);
+      if (next.has(jobId)) next.delete(jobId); else next.add(jobId);
       return next;
     });
   };
 
   const handleBulkApply = async () => {
     if (selectedJobs.size === 0) return;
-    if (!canAutoApply()) {
-      setUpgradeModal({ open: true, targetTier: "AUTO_APPLY" });
-      return;
-    }
+    if (!canAutoApply()) { setUpgradeModal({ open: true, targetTier: "PLATINUM" }); return; }
     setBulkApplying(true);
     setBulkResult(null);
     try {
@@ -177,14 +200,8 @@ export default function JobsPage() {
     if (!applyModal) return;
     setApplying(true);
     try {
-      const coverLetter = await generateMutation.mutateAsync({
-        jobId: applyModal.id,
-        provider: aiProvider,
-      });
-      await applyMutation.mutateAsync({
-        jobId: applyModal.id,
-        coverLetterId: coverLetter.id,
-      });
+      const coverLetter = await generateMutation.mutateAsync({ jobId: applyModal.id, provider: aiProvider });
+      await applyMutation.mutateAsync({ jobId: applyModal.id, coverLetterId: coverLetter.id });
       setApplyModal(null);
     } catch (err) {
       console.error("Apply failed:", err);
@@ -197,16 +214,15 @@ export default function JobsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Find Jobs</h1>
-        <p className="text-gray-500">
-          Search across Indeed, LinkedIn, Arbeitnow, CareerJet and more
-        </p>
+        <p className="text-gray-500">Search across Indeed, LinkedIn, Arbeitnow, CareerJet and more</p>
       </div>
 
       <Card>
         <CardContent className="py-4 space-y-4">
           <form onSubmit={handleSearch} className="space-y-4">
-            <div className="flex flex-wrap gap-3">
-              <div className="flex-1 min-w-[250px]">
+            {}
+            <div className="flex flex-wrap gap-3 items-end">
+              <div className="flex-1 min-w-[260px]">
                 <Input
                   placeholder="Job title, keywords, or company"
                   value={query}
@@ -214,23 +230,16 @@ export default function JobsPage() {
                   label="Keywords"
                 />
               </div>
-              <div className="w-44">
-                <Select
-                  label="Source"
-                  value={source}
-                  onChange={(e) => setSource(e.target.value)}
-                  options={SOURCE_OPTIONS}
-                />
-              </div>
-              <div className="flex items-end">
+              <div className="flex items-end pb-0">
                 <Button type="submit" loading={isLoading}>
                   <Search className="h-4 w-4" /> Search Jobs
                 </Button>
               </div>
             </div>
 
+            {}
             <div className="flex flex-wrap items-end gap-4">
-              <label className="flex items-center gap-2 cursor-pointer pb-2">
+              <label className="flex items-center gap-2 cursor-pointer pb-[9px]">
                 <input
                   type="checkbox"
                   checked={isRemote}
@@ -239,21 +248,78 @@ export default function JobsPage() {
                 />
                 <span className="text-sm font-medium text-gray-700">Remote Only</span>
               </label>
-              <div className="flex-1 min-w-[220px]">
-                <Input
-                  label="Country / City"
-                  placeholder="e.g. India, United States, Bangalore..."
-                  value={locationText}
-                  onChange={(e) => setLocationText(e.target.value)}
+              <div className="flex-1 min-w-[240px]">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Country / City
+                </label>
+                <CreatableSelect<LocationOption>
+                  isClearable
+                  placeholder="Type or select a location…"
+                  options={LOCATION_OPTIONS}
+                  value={locationOption}
+                  onChange={(v: SingleValue<LocationOption>) => setLocationOption(v ?? null)}
+                  formatCreateLabel={(input) => `Search "${input}"`}
+                  styles={{
+                    control: (base, state) => ({
+                      ...base,
+                      minHeight: "38px",
+                      fontSize: "14px",
+                      borderColor: state.isFocused ? "#6366f1" : "#d1d5db",
+                      boxShadow: state.isFocused ? "0 0 0 1px #6366f1" : "none",
+                      "&:hover": { borderColor: "#6366f1" },
+                      borderRadius: "8px",
+                    }),
+                    menu: (base) => ({ ...base, zIndex: 50, borderRadius: "8px", fontSize: "14px" }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isSelected ? "#6366f1" : state.isFocused ? "#eef2ff" : "white",
+                      color: state.isSelected ? "white" : "#111827",
+                    }),
+                    singleValue: (base) => ({ ...base, color: "#111827" }),
+                    placeholder: (base) => ({ ...base, color: "#9ca3af" }),
+                    clearIndicator: (base) => ({ ...base, cursor: "pointer" }),
+                  }}
                 />
               </div>
             </div>
 
+            {}
+            <div className="flex flex-wrap items-end gap-4">
+              <div className="flex items-center gap-1 pb-[9px]">
+                <IndianRupee className="h-4 w-4 text-gray-400" />
+                <span className="text-sm font-medium text-gray-700">Salary / CTC (LPA)</span>
+              </div>
+              <div className="flex items-end gap-2">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Min</label>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="e.g. 5"
+                    value={minSalary}
+                    onChange={(e) => setMinSalary(e.target.value)}
+                    className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+                <span className="pb-2 text-gray-400">—</span>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Max</label>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="e.g. 30"
+                    value={maxSalary}
+                    onChange={(e) => setMaxSalary(e.target.value)}
+                    className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Skills from Resume
-                </label>
+                <label className="text-sm font-medium text-gray-700">Skills from Resume</label>
                 {resumeSkills.length > 0 && (
                   <span className="flex items-center gap-1 text-xs text-indigo-600">
                     <Sparkles className="h-3 w-3" /> Auto-detected
@@ -262,44 +328,32 @@ export default function JobsPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {skillTags.map((skill) => (
-                  <span
-                    key={skill}
-                    className="inline-flex items-center gap-1 rounded-full bg-indigo-50 text-indigo-700 px-3 py-1 text-sm font-medium"
-                  >
+                  <span key={skill} className="inline-flex items-center gap-1 rounded-full bg-indigo-50 text-indigo-700 px-3 py-1 text-sm font-medium">
                     {skill}
-                    <button
-                      type="button"
-                      onClick={() => removeSkill(skill)}
-                      className="hover:text-indigo-900"
-                    >
+                    <button type="button" onClick={() => removeSkill(skill)} className="hover:text-indigo-900">
                       <X className="h-3 w-3" />
                     </button>
                   </span>
                 ))}
                 <AddSkillInline onAdd={addSkill} />
               </div>
-              {resumeSkills.length > 0 &&
-                skillTags.length < resumeSkills.length && (
-                  <div className="mt-2">
-                    <p className="text-xs text-gray-400 mb-1">
-                      More skills from your resume:
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {resumeSkills
-                        .filter((s) => !skillTags.includes(s))
-                        .map((skill) => (
-                          <button
-                            key={skill}
-                            type="button"
-                            onClick={() => addSkill(skill)}
-                            className="rounded-full border border-dashed border-gray-300 text-gray-500 px-2.5 py-0.5 text-xs hover:border-indigo-400 hover:text-indigo-600 transition-colors"
-                          >
-                            + {skill}
-                          </button>
-                        ))}
-                    </div>
+              {resumeSkills.length > 0 && skillTags.length < resumeSkills.length && (
+                <div className="mt-2">
+                  <p className="text-xs text-gray-400 mb-1">More skills from your resume:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {resumeSkills.filter((s) => !skillTags.includes(s)).map((skill) => (
+                      <button
+                        key={skill}
+                        type="button"
+                        onClick={() => addSkill(skill)}
+                        className="rounded-full border border-dashed border-gray-300 text-gray-500 px-2.5 py-0.5 text-xs hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+                      >
+                        + {skill}
+                      </button>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
             </div>
           </form>
         </CardContent>
@@ -314,7 +368,7 @@ export default function JobsPage() {
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-          <span className="ml-3 text-gray-500">Searching jobs...</span>
+          <span className="ml-3 text-gray-500">Searching jobs…</span>
         </div>
       )}
 
@@ -329,39 +383,32 @@ export default function JobsPage() {
                   ? `${totalElements.toLocaleString()} jobs found`
                   : `${jobs.length} jobs found`}
                 {canSeeAllJobs() && totalPages > 1 && (
-                  <span className="text-gray-400">
-                    {" "}· page {page + 1} of {totalPages}
-                  </span>
+                  <span className="text-gray-400"> · page {page + 1} of {totalPages}</span>
                 )}
               </p>
               {computedLocations.length > 0 && (
                 <div className="flex items-center gap-1">
                   {computedLocations.map((loc) => (
-                    <Badge key={loc} className="bg-gray-100 text-gray-600 text-xs">
-                      {loc}
-                    </Badge>
+                    <Badge key={loc} className="bg-gray-100 text-gray-600 text-xs">{loc}</Badge>
                   ))}
                 </div>
+              )}
+              {(minSalary || maxSalary) && (
+                <Badge className="bg-green-50 text-green-700 text-xs">
+                  ₹{minSalary || "0"}–{maxSalary || "∞"} LPA
+                </Badge>
               )}
             </div>
 
             <div className="flex items-center gap-2">
               {canAutoApply() && selectedJobs.size > 0 && (
-                <Button
-                  size="sm"
-                  onClick={handleBulkApply}
-                  loading={bulkApplying}
-                >
+                <Button size="sm" onClick={handleBulkApply} loading={bulkApplying}>
                   <Zap className="h-4 w-4" />
                   Auto Apply {selectedJobs.size} Job{selectedJobs.size > 1 ? "s" : ""}
                 </Button>
               )}
               {canSeeAllJobs() && showPagination && (
-                <Select
-                  value={String(size)}
-                  onChange={handleSizeChange}
-                  options={PAGE_SIZE_OPTIONS}
-                />
+                <Select value={String(size)} onChange={handleSizeChange} options={PAGE_SIZE_OPTIONS} />
               )}
             </div>
           </div>
@@ -397,11 +444,11 @@ export default function JobsPage() {
                 You&apos;re seeing 2 of many matching jobs. Upgrade to see all results and apply faster.
               </p>
               <div className="flex items-center justify-center gap-3">
-                <Button onClick={() => setUpgradeModal({ open: true, targetTier: "JOBS" })}>
-                  <Briefcase className="h-4 w-4" /> All Jobs — ₹299/mo
+                <Button onClick={() => setUpgradeModal({ open: true, targetTier: "GOLD" })}>
+                  <Briefcase className="h-4 w-4" /> Gold — ₹325/mo
                 </Button>
-                <Button variant="outline" onClick={() => setUpgradeModal({ open: true, targetTier: "AUTO_APPLY" })}>
-                  <Zap className="h-4 w-4" /> Auto Apply — ₹599/mo
+                <Button variant="outline" onClick={() => setUpgradeModal({ open: true, targetTier: "PLATINUM" })}>
+                  <Zap className="h-4 w-4" /> Platinum — ₹500/mo
                 </Button>
               </div>
             </div>
@@ -409,82 +456,42 @@ export default function JobsPage() {
 
           {canSeeAllJobs() && showPagination && (
             <div className="flex items-center justify-center gap-1 pt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === 0}
-                onClick={() => setPage(0)}
-                title="First page"
-              >
-                «
+              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(0)} title="First page">«</Button>
+              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                <ChevronLeft className="h-4 w-4" /> Previous
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === 0}
-                onClick={() => setPage(page - 1)}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
-
               <div className="flex items-center gap-1 mx-2">
                 {buildPageRange(page, totalPages).map((p) =>
                   p === "…" ? (
-                    <span key={p} className="px-2 text-gray-400 select-none">
-                      …
-                    </span>
+                    <span key={p} className="px-2 text-gray-400 select-none">…</span>
                   ) : (
                     <button
                       key={p}
                       onClick={() => setPage(Number(p) - 1)}
-                      className={`min-w-[2rem] h-8 rounded px-2 text-sm font-medium transition-colors ${
-                        Number(p) - 1 === page
-                          ? "bg-indigo-600 text-white"
-                          : "text-gray-600 hover:bg-gray-100"
-                      }`}
+                      className={`min-w-[2rem] h-8 rounded px-2 text-sm font-medium transition-colors ${Number(p) - 1 === page ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
                     >
                       {p}
                     </button>
                   )
                 )}
               </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage(page + 1)}
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
+              <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
+                Next <ChevronRight className="h-4 w-4" />
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage(totalPages - 1)}
-                title="Last page"
-              >
-                »
-              </Button>
+              <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(totalPages - 1)} title="Last page">»</Button>
             </div>
           )}
         </div>
       )}
 
       {searchQuery && !isLoading && jobs.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          No jobs found. Try different skills or locations.
-        </div>
+        <div className="text-center py-12 text-gray-500">No jobs found. Try different skills or locations.</div>
       )}
 
       {!searchQuery && (
         <div className="text-center py-16">
           <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-1">
-            Search for jobs
-          </h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-1">Search for jobs</h3>
           <p className="text-gray-500 mb-2">
             {resumeSkills.length > 0
               ? "Your resume skills are loaded. Set your location and hit Search!"
@@ -493,11 +500,7 @@ export default function JobsPage() {
         </div>
       )}
 
-      <Modal
-        open={!!applyModal}
-        onClose={() => setApplyModal(null)}
-        title="Quick Apply"
-      >
+      <Modal open={!!applyModal} onClose={() => setApplyModal(null)} title="Quick Apply">
         {applyModal && (
           <div className="space-y-4">
             <div>
@@ -511,16 +514,11 @@ export default function JobsPage() {
               options={AI_PROVIDERS}
             />
             <p className="text-sm text-gray-500">
-              A customized cover letter will be generated using AI and attached
-              to your application.
+              A customized cover letter will be generated using AI and attached to your application.
             </p>
             <div className="flex gap-3 justify-end">
-              <Button variant="outline" onClick={() => setApplyModal(null)}>
-                Cancel
-              </Button>
-              <Button onClick={confirmApply} loading={applying}>
-                Generate & Apply
-              </Button>
+              <Button variant="outline" onClick={() => setApplyModal(null)}>Cancel</Button>
+              <Button onClick={confirmApply} loading={applying}>Generate & Apply</Button>
             </div>
           </div>
         )}
@@ -530,13 +528,9 @@ export default function JobsPage() {
 }
 
 function buildPageRange(current: number, total: number): (number | "…")[] {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
   const pages: (number | "…")[] = [];
-  const add = (n: number) => {
-    if (!pages.includes(n)) pages.push(n);
-  };
+  const add = (n: number) => { if (!pages.includes(n)) pages.push(n); };
   add(1);
   if (current > 3) pages.push("…");
   for (let i = Math.max(2, current); i <= Math.min(total - 1, current + 2); i++) add(i);
@@ -569,23 +563,10 @@ function AddSkillInline({ onAdd }: { onAdd: (skill: string) => void }) {
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          if (value.trim()) {
-            onAdd(value.trim().toLowerCase());
-            setValue("");
-          }
-        }
-        if (e.key === "Escape") {
-          setAdding(false);
-          setValue("");
-        }
+        if (e.key === "Enter") { e.preventDefault(); if (value.trim()) { onAdd(value.trim().toLowerCase()); setValue(""); } }
+        if (e.key === "Escape") { setAdding(false); setValue(""); }
       }}
-      onBlur={() => {
-        if (value.trim()) onAdd(value.trim().toLowerCase());
-        setAdding(false);
-        setValue("");
-      }}
+      onBlur={() => { if (value.trim()) onAdd(value.trim().toLowerCase()); setAdding(false); setValue(""); }}
     />
   );
 }

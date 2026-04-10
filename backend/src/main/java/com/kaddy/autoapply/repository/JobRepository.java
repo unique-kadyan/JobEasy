@@ -14,7 +14,6 @@ import java.util.Optional;
 public interface JobRepository extends MongoRepository<Job, String> {
     Optional<Job> findBySourceAndExternalId(JobSource source, String externalId);
 
-    /** Returns jobs scraped before {@code before} whose URL is non-null (candidates for pruning). */
     @Query("{'scrapedAt': {$lt: ?0}, 'url': {$exists: true, $ne: null}}")
     List<Job> findStaleJobs(LocalDateTime before, Pageable pageable);
 

@@ -27,10 +27,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Verifies that GlobalExceptionHandler (@RestControllerAdvice) maps each
- * exception type to the correct HTTP status and returns an ApiError body.
- */
 @WebMvcTest(AuthController.class)
 @Import({ SecurityConfig.class, JwtAuthenticationFilter.class })
 @ActiveProfiles("test")
@@ -42,25 +38,17 @@ class GlobalExceptionHandlerTest {
         ObjectMapper objectMapper;
         @MockBean
         AuthService authService;
-        // Mock JwtAuthenticationFilter's dependencies so the real filter loads and
-        // always forwards the request (filterChain.doFilter is unconditional in the
-        // impl).
+
         @MockBean
         JwtTokenProvider jwtTokenProvider;
         @MockBean
         TokenBlacklistService tokenBlacklistService;
 
-        /**
-         * Each test that hits /api/auth/* gets a unique IP so the rate-limit bucket
-         * (10 req/min per IP) is never exhausted across the test suite.
-         */
         private static final AtomicInteger ipSuffix = new AtomicInteger(0);
 
         private MockHttpServletRequestBuilder uniqueIp(MockHttpServletRequestBuilder req) {
                 return req.header("X-Forwarded-For", "10.99.0." + ipSuffix.incrementAndGet());
         }
-
-        // ── 400 via MethodArgumentNotValidException (bean validation) ─────────────
 
         @Test
         void invalidEmail_shouldReturn400WithApiError() throws Exception {
@@ -89,8 +77,6 @@ class GlobalExceptionHandlerTest {
                                 .andExpect(jsonPath("$.status").value(400));
         }
 
-        // ── 400 via AppException (BadRequestException) ────────────────────────────
-
         @Test
         void duplicateSignup_shouldReturn400WithAppExceptionMessage() throws Exception {
                 when(authService.signup(any())).thenThrow(new BadRequestException("Email already registered"));
@@ -107,8 +93,6 @@ class GlobalExceptionHandlerTest {
                                 .andExpect(jsonPath("$.path").value("/api/auth/signup"));
         }
 
-        // ── 400 via HttpMessageNotReadableException (malformed JSON) ─────────────
-
         @Test
         void malformedJson_shouldReturn400() throws Exception {
                 mockMvc.perform(uniqueIp(post("/api/auth/signup"))
@@ -118,8 +102,6 @@ class GlobalExceptionHandlerTest {
                                 .andExpect(jsonPath("$.status").value(400));
         }
 
-        // ── 400 via HttpMediaTypeNotSupportedException ────────────────────────────
-
         @Test
         void wrongContentType_shouldReturn400() throws Exception {
                 mockMvc.perform(uniqueIp(post("/api/auth/signup"))
@@ -128,15 +110,11 @@ class GlobalExceptionHandlerTest {
                                 .andExpect(status().isBadRequest());
         }
 
-        // ── 401/403 via no token on protected route ───────────────────────────────
-
         @Test
         void noToken_shouldReturn4xxOnProtectedEndpoint() throws Exception {
                 mockMvc.perform(get("/api/users/me"))
                                 .andExpect(status().is4xxClientError());
         }
-
-        // ── 404 via NoResourceFoundException (unknown route) ─────────────────────
 
         @Test
         @WithMockUser
@@ -145,8 +123,6 @@ class GlobalExceptionHandlerTest {
                                 .andExpect(status().isNotFound())
                                 .andExpect(jsonPath("$.status").value(404));
         }
-
-        // ── 404 via ResourceNotFoundException (AppException subtype) ─────────────
 
         @Test
         void resourceNotFound_shouldReturn404() throws Exception {
@@ -163,8 +139,6 @@ class GlobalExceptionHandlerTest {
                                 .andExpect(jsonPath("$.message").value("User not found"));
         }
 
-        // ── 405 via HttpRequestMethodNotSupportedException ────────────────────────
-
         @Test
         void wrongMethod_shouldReturn405() throws Exception {
                 mockMvc.perform(uniqueIp(delete("/api/auth/login"))
@@ -173,8 +147,6 @@ class GlobalExceptionHandlerTest {
                                 .andExpect(status().isMethodNotAllowed())
                                 .andExpect(jsonPath("$.status").value(405));
         }
-
-        // ── 503 via AiServiceException (AppException subtype) ────────────────────
 
         @Test
         void aiServiceUnavailable_shouldReturn503() throws Exception {
@@ -190,8 +162,6 @@ class GlobalExceptionHandlerTest {
                                 .andExpect(jsonPath("$.status").value(503));
         }
 
-        // ── 429 via RateLimitException (AppException subtype) ────────────────────
-
         @Test
         void rateLimitExceeded_shouldReturn429() throws Exception {
                 when(authService.signup(any())).thenThrow(new RateLimitException("Too many requests"));
@@ -205,8 +175,6 @@ class GlobalExceptionHandlerTest {
                                 .andExpect(status().isTooManyRequests())
                                 .andExpect(jsonPath("$.status").value(429));
         }
-
-        // ── 500 via generic RuntimeException (catch-all) ──────────────────────────
 
         @Test
         void unexpectedException_shouldReturn500() throws Exception {
@@ -222,8 +190,6 @@ class GlobalExceptionHandlerTest {
                                 .andExpect(jsonPath("$.status").value(500))
                                 .andExpect(jsonPath("$.path").value("/api/auth/signup"));
         }
-
-        // ── ApiError structure completeness ──────────────────────────────────────
 
         @Test
         void errorBody_shouldAlwaysHaveAllRequiredFields() throws Exception {

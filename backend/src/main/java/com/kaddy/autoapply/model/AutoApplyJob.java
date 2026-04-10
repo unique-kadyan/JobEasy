@@ -5,11 +5,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-/**
- * Represents a single job in the user's auto-apply queue.
- * The auto-apply service visits the job URL, fills in the application form
- * from the user's profile, and updates the status back here.
- */
 @Document(collection = "auto_apply_jobs")
 public class AutoApplyJob {
 
@@ -22,7 +17,6 @@ public class AutoApplyJob {
     private String company;
     private String jobUrl;
 
-    /** QUEUED → IN_PROGRESS → APPLIED | FAILED */
     private String status = "QUEUED";
     private String failureReason;
 

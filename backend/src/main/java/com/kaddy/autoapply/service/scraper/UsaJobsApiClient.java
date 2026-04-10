@@ -14,11 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Searches US federal government jobs via the USAJOBS API.
- * Free API key: https://developer.usajobs.gov/APIRequest/Index
- * Requires registration at developer.usajobs.gov.
- */
 @Component
 public non-sealed class UsaJobsApiClient implements JobScraper {
 
@@ -28,7 +23,7 @@ public non-sealed class UsaJobsApiClient implements JobScraper {
 
     private final WebClient webClient;
     private final String apiKey;
-    private final String userAgent; // USAJOBS requires a registered email as User-Agent
+    private final String userAgent;
 
     public UsaJobsApiClient(
             WebClient.Builder webClientBuilder,
@@ -89,7 +84,6 @@ public non-sealed class UsaJobsApiClient implements JobScraper {
                                 .get("Value"))
                         .orElse("");
 
-                // Location list
                 String loc = "United States";
                 Object locsObj = item.get("PositionLocation");
                 if (locsObj instanceof List<?> locs && !locs.isEmpty()) {
@@ -100,7 +94,6 @@ public non-sealed class UsaJobsApiClient implements JobScraper {
                     }
                 }
 
-                // Salary
                 String salary = null;
                 Object remObj = item.get("PositionRemuneration");
                 if (remObj instanceof List<?> rems && !rems.isEmpty()) {

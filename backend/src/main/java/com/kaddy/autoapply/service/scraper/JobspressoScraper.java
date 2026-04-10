@@ -12,11 +12,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Scrapes curated remote jobs from Jobspresso's public RSS feed (no key required).
- * Feed: https://jobspresso.co/feed/
- * Hand-curated remote positions in tech, marketing, support, and design.
- */
 @Component
 public non-sealed class JobspressoScraper implements JobScraper {
 
@@ -54,7 +49,7 @@ public non-sealed class JobspressoScraper implements JobScraper {
 
     @Override
     public List<JobResponse> fetchJobs(String query, String location, int page) {
-        if (page > 0) return List.of(); // RSS has no pagination
+        if (page > 0) return List.of();
 
         try {
             String rss = webClient.get()
@@ -81,7 +76,6 @@ public non-sealed class JobspressoScraper implements JobScraper {
                         ? String.valueOf(Math.abs(url.hashCode()))
                         : guid.replaceAll(".*/", "");
 
-                // Collect all category tags
                 List<String> tags = new ArrayList<>();
                 Matcher cats = CATEGORY_PATTERN.matcher(item);
                 while (cats.find()) tags.add(cats.group(1).strip());

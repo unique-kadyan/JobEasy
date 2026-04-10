@@ -104,7 +104,7 @@ public non-sealed class JSearchApiClient implements JobScraper {
         String lower = (publisher + " " + applyLink).toLowerCase();
         if (lower.contains("linkedin")) return "LINKEDIN";
         if (lower.contains("indeed")) return "INDEED";
-        return "INDEED"; // default
+        return "INDEED";
     }
 
     private String buildLocation(Map<String, Object> item) {

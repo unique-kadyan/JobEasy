@@ -12,10 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Scrapes developer-focused jobs from FindWork's public API (no key required).
- * Docs: https://findwork.dev/api/jobs/
- */
 @Component
 public non-sealed class FindWorkScraper implements JobScraper {
 
@@ -70,7 +66,7 @@ public non-sealed class FindWorkScraper implements JobScraper {
                         (String) item.getOrDefault("company_name", ""),
                         loc,
                         (String) item.getOrDefault("url", ""),
-                        "", // FindWork descriptions require a detail request
+                        "",
                         null,
                         keywords,
                         (String) item.getOrDefault("employment_type", ""),

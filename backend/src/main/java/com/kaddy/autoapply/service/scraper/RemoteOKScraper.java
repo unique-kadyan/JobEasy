@@ -12,10 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Scrapes remote jobs from RemoteOK's public JSON API (no key required).
- * Docs: https://remoteok.com/api
- */
 @Component
 public non-sealed class RemoteOKScraper implements JobScraper {
 
@@ -51,7 +47,7 @@ public non-sealed class RemoteOKScraper implements JobScraper {
 
             List<JobResponse> results = new ArrayList<>();
             for (Map<String, Object> item : raw) {
-                // First element is metadata — skip non-job entries
+
                 if (item.get("id") == null || item.get("position") == null) continue;
 
                 String id = String.valueOf(item.get("id"));

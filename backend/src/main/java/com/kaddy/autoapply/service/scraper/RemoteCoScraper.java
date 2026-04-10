@@ -12,11 +12,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Scrapes remote jobs from Remote.co's public RSS feed (no key required).
- * Feed: https://remote.co/remote-jobs/feed/
- * Curated remote-only positions across all categories.
- */
 @Component
 public non-sealed class RemoteCoScraper implements JobScraper {
 
@@ -51,7 +46,7 @@ public non-sealed class RemoteCoScraper implements JobScraper {
 
     @Override
     public List<JobResponse> fetchJobs(String query, String location, int page) {
-        if (page > 0) return List.of(); // RSS has no pagination
+        if (page > 0) return List.of();
 
         try {
             String rss = webClient.get()

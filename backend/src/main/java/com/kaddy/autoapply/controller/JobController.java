@@ -1,8 +1,8 @@
 package com.kaddy.autoapply.controller;
 
-import com.kaddy.autoapply.dto.response.JobResponse;
-import com.kaddy.autoapply.dto.response.PagedResponse;
-import com.kaddy.autoapply.service.JobService;
+import java.util.Map;
+import java.util.Set;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -12,8 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-import java.util.Set;
+import com.kaddy.autoapply.dto.response.JobResponse;
+import com.kaddy.autoapply.dto.response.PagedResponse;
+import com.kaddy.autoapply.service.JobService;
 
 @RestController
 @RequestMapping("/api/jobs")
@@ -28,11 +29,6 @@ public class JobController {
         this.jobService = jobService;
     }
 
-    /**
-     * GET /api/jobs/search
-     * When called by an authenticated user, results are scored and skip-filtered.
-     * Authentication is optional — unauthenticated callers receive unscored results.
-     */
     @GetMapping("/search")
     public ResponseEntity<PagedResponse<JobResponse>> searchJobs(
             Authentication auth,
@@ -40,16 +36,15 @@ public class JobController {
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String source,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "30") int size) {
+            @RequestParam(defaultValue = "30") int size,
+            @RequestParam(required = false) Long minSalary,
+            @RequestParam(required = false) Long maxSalary) {
         int validSize = ALLOWED_PAGE_SIZES.contains(size) ? size : 30;
         String userId = (auth != null) ? (String) auth.getPrincipal() : null;
-        return ResponseEntity.ok(jobService.searchJobs(query, location, source, page, validSize, userId));
+        return ResponseEntity.ok(
+                jobService.searchJobs(query, location, source, page, validSize, userId, minSalary, maxSalary));
     }
 
-    /**
-     * GET /api/jobs/counts?query=...&location=...
-     * Returns a map of source → job count for badge display on tab headers.
-     */
     @GetMapping("/counts")
     public ResponseEntity<Map<String, Long>> getSourceCounts(
             @RequestParam String query,

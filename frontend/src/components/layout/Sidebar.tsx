@@ -29,21 +29,39 @@ const navItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-const TIER_CONFIG: Record<string, { label: string; color: string; gradient: string }> = {
+const TIER_CONFIG: Record<string, {
+  label: string;
+  iconColor: string;
+  textColor: string;
+  gradient: string;
+  upgradeBtn?: string;
+  upgradeBtnHover?: string;
+  upgradeLabel?: string;
+  upgradeHint?: string;
+}> = {
   FREE: {
     label: "Free Plan",
-    color: "text-gray-500",
+    iconColor: "text-gray-400",
+    textColor: "text-gray-500",
     gradient: "from-gray-50 to-gray-100",
+    upgradeBtn: "bg-indigo-600 hover:bg-indigo-700",
+    upgradeLabel: "Upgrade Plan",
+    upgradeHint: "Upgrade to Gold to unlock up to 10 jobs per search.",
   },
-  JOBS: {
-    label: "All Jobs",
-    color: "text-indigo-700",
-    gradient: "from-indigo-50 to-indigo-100",
+  GOLD: {
+    label: "Gold Plan",
+    iconColor: "text-yellow-500",
+    textColor: "text-yellow-700",
+    gradient: "from-yellow-50 to-amber-100",
+    upgradeBtn: "bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800",
+    upgradeLabel: "Go Platinum",
+    upgradeHint: "Upgrade to Platinum for auto-apply and scheduled job search.",
   },
-  AUTO_APPLY: {
-    label: "Auto Apply",
-    color: "text-purple-700",
-    gradient: "from-purple-50 to-purple-100",
+  PLATINUM: {
+    label: "Platinum Plan",
+    iconColor: "text-slate-400",
+    textColor: "text-slate-600",
+    gradient: "from-slate-100 to-slate-200",
   },
 };
 
@@ -51,7 +69,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuthStore();
   const tier = user?.subscriptionTier ?? "FREE";
-  const tierConfig = TIER_CONFIG[tier] ?? TIER_CONFIG.FREE;
+  const cfg = TIER_CONFIG[tier] ?? TIER_CONFIG.FREE;
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-gray-200 bg-white flex flex-col">
@@ -92,35 +110,27 @@ export default function Sidebar() {
       </nav>
 
       <div className="px-3 pb-4 space-y-2 border-t border-gray-100 pt-3">
-        <div className={cn("rounded-xl p-3 bg-gradient-to-br", tierConfig.gradient)}>
+        <div className={cn("rounded-xl p-3 bg-gradient-to-br", cfg.gradient)}>
           <div className="flex items-center gap-2 mb-2">
-            <Crown className={cn("h-4 w-4", tierConfig.color)} />
-            <span className={cn("text-xs font-semibold", tierConfig.color)}>{tierConfig.label}</span>
+            <Crown className={cn("h-4 w-4", cfg.iconColor)} />
+            <span className={cn("text-xs font-semibold", cfg.textColor)}>{cfg.label}</span>
           </div>
-          {tier === "FREE" && (
+          {tier !== "PLATINUM" && cfg.upgradeHint && (
             <>
-              <p className="text-xs text-gray-500 mb-2">Upgrade to unlock unlimited jobs and auto-apply.</p>
+              <p className="text-xs text-gray-500 mb-2">{cfg.upgradeHint}</p>
               <Link
                 href="/pricing"
-                className="block w-full text-center text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded-lg transition-colors"
+                className={cn(
+                  "block w-full text-center text-xs font-semibold text-white py-1.5 rounded-lg transition-colors",
+                  cfg.upgradeBtn
+                )}
               >
-                Upgrade Plan
+                {cfg.upgradeLabel}
               </Link>
             </>
           )}
-          {tier === "JOBS" && (
-            <>
-              <p className="text-xs text-gray-500 mb-2">Upgrade to Auto Apply for one-click applications.</p>
-              <Link
-                href="/pricing"
-                className="block w-full text-center text-xs font-semibold bg-purple-600 hover:bg-purple-700 text-white py-1.5 rounded-lg transition-colors"
-              >
-                Go Auto Apply
-              </Link>
-            </>
-          )}
-          {tier === "AUTO_APPLY" && (
-            <p className="text-xs text-purple-600 font-medium">You have full access!</p>
+          {tier === "PLATINUM" && (
+            <p className={cn("text-xs font-medium", cfg.textColor)}>You have full access!</p>
           )}
         </div>
 

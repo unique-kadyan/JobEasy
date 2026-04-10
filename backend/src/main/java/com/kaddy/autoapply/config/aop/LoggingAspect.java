@@ -8,10 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-/**
- * Logs method execution time across all controllers and services.
- * Warns when a call exceeds 500 ms to surface latency bottlenecks.
- */
 @Aspect
 @Component
 public class LoggingAspect {

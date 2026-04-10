@@ -57,14 +57,10 @@ public class UserService {
         return AuthService.toUserResponse(userRepository.save(user));
     }
 
-    // ── GitHub import ─────────────────────────────────────────────────────────
-
     public UserResponse importFromGitHub(String userId, String githubUsername) {
         User updated = gitHubImportService.importSkills(userId, githubUsername);
         return AuthService.toUserResponse(updated);
     }
-
-    // ── Skip keywords ─────────────────────────────────────────────────────────
 
     @CacheEvict(value = "users", key = "#userId")
     public UserResponse addSkipKeyword(String userId, String keyword) {
@@ -95,8 +91,6 @@ public class UserService {
         return AuthService.toUserResponse(userRepository.save(user));
     }
 
-    // ── Not-interested reasons ────────────────────────────────────────────────
-
     @CacheEvict(value = "users", key = "#userId")
     public UserResponse addNotInterestedReason(String userId, String reason) {
         User user = findUser(userId);
@@ -126,8 +120,6 @@ public class UserService {
         return AuthService.toUserResponse(userRepository.save(user));
     }
 
-    // ── Auto-search schedule ──────────────────────────────────────────────────
-
     public AutoSearchScheduleResponse getAutoSearchSchedule(String userId) {
         User user = findUser(userId);
         return toScheduleResponse(user);
@@ -147,14 +139,10 @@ public class UserService {
         return toScheduleResponse(saved);
     }
 
-    // ── Account ───────────────────────────────────────────────────────────────
-
     @CacheEvict(value = "users", key = "#userId")
     public void deleteAccount(String userId) {
         userRepository.delete(findUser(userId));
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private User findUser(String userId) {
         return userRepository.findById(userId)

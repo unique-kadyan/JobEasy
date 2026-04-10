@@ -29,8 +29,6 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    // ── Application-level exceptions ─────────────────────────────────────────
-
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiError> handleApp(AppException ex, HttpServletRequest req) {
         HttpStatus status = HttpStatus.valueOf(ex.getStatusCode());
@@ -41,8 +39,6 @@ public class GlobalExceptionHandler {
         }
         return build(status, ex.getMessage(), req);
     }
-
-    // ── Validation exceptions ─────────────────────────────────────────────────
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleMethodArgNotValid(
@@ -71,8 +67,6 @@ public class GlobalExceptionHandler {
                 "Required parameter '" + ex.getParameterName() + "' is missing", req);
     }
 
-    // ── HTTP protocol exceptions (multi-handler = Spring multi-catch) ─────────
-
     @ExceptionHandler({HttpMessageNotReadableException.class, HttpMediaTypeNotSupportedException.class})
     public ResponseEntity<ApiError> handleBadBody(Exception ex, HttpServletRequest req) {
         log.debug("Bad request body: {}", ex.getMessage());
@@ -92,8 +86,6 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_FOUND, "No endpoint found for " + req.getRequestURI(), req);
     }
 
-    // ── Security exceptions ───────────────────────────────────────────────────
-
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiError> handleAccessDenied(
             AccessDeniedException ex, HttpServletRequest req) {
@@ -106,8 +98,6 @@ public class GlobalExceptionHandler {
             AuthenticationException ex, HttpServletRequest req) {
         return build(HttpStatus.UNAUTHORIZED, "Authentication required", req);
     }
-
-    // ── Infrastructure exceptions ─────────────────────────────────────────────
 
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ApiError> handleDataAccess(
@@ -123,8 +113,6 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_GATEWAY,
                 "Upstream service returned an error. Please try again later.", req);
     }
-
-    // ── JDK standard exceptions ───────────────────────────────────────────────
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleIllegalArgument(
@@ -148,16 +136,12 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_IMPLEMENTED, "This feature is not yet supported", req);
     }
 
-    // ── Catch-all ─────────────────────────────────────────────────────────────
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAll(Exception ex, HttpServletRequest req) {
         log.error("Unhandled exception on {}: {}", req.getRequestURI(), ex.getMessage(), ex);
         return build(HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred. Please try again later.", req);
     }
-
-    // ── Helper ────────────────────────────────────────────────────────────────
 
     private ResponseEntity<ApiError> build(HttpStatus status, String message, HttpServletRequest req) {
         return ResponseEntity.status(status)

@@ -11,8 +11,6 @@ import static org.mockito.Mockito.*;
 
 class AiProviderFactoryTest {
 
-    // ── Stub providers ────────────────────────────────────────────────────────
-
     private AiProvider cerebras;
     private AiProvider groq;
     private AiProvider openai;
@@ -28,8 +26,6 @@ class AiProviderFactoryTest {
         claude   = mockProvider("CLAUDE", true);
         factory  = new AiProviderFactory(List.of(cerebras, groq, openai, claude));
     }
-
-    // ── Preferred provider ────────────────────────────────────────────────────
 
     @Test
     void generate_shouldUsePreferredProviderFirst() {
@@ -54,7 +50,7 @@ class AiProviderFactoryTest {
 
     @Test
     void generate_shouldSkipPreferredWhenNotConfigured() {
-        // "UNKNOWN" provider not in factory
+
         when(cerebras.generateText(any(), any())).thenReturn("from cerebras");
 
         var result = factory.generate("sys", "user", "UNKNOWN");
@@ -73,8 +69,6 @@ class AiProviderFactoryTest {
         assertEquals("CEREBRAS", result.providerName());
         verify(unavailable, never()).generateText(any(), any());
     }
-
-    // ── Free provider fallback chain ──────────────────────────────────────────
 
     @Test
     void generate_shouldTryFreeProvidersInOrder() {
@@ -99,8 +93,6 @@ class AiProviderFactoryTest {
         assertEquals("GROQ", result.providerName());
         verify(unavailableCerebras, never()).generateText(any(), any());
     }
-
-    // ── Premium fallback ──────────────────────────────────────────────────────
 
     @Test
     void generate_shouldEscalateToPremiumOnlyWhenAllFreeFail() {
@@ -129,8 +121,6 @@ class AiProviderFactoryTest {
         assertEquals("CLAUDE", result.providerName());
     }
 
-    // ── All providers fail ────────────────────────────────────────────────────
-
     @Test
     void generate_shouldThrowAiServiceExceptionWhenAllProvidersFail() {
         when(cerebras.generateText(any(), any())).thenThrow(new AiServiceException("down"));
@@ -153,8 +143,6 @@ class AiProviderFactoryTest {
                 () -> factory.generate("sys", "user", null));
     }
 
-    // ── GenerationResult record ───────────────────────────────────────────────
-
     @Test
     void generationResult_shouldHoldContentAndProviderName() {
         when(cerebras.generateText("sys", "user")).thenReturn("hello world");
@@ -165,10 +153,8 @@ class AiProviderFactoryTest {
         assertEquals("CEREBRAS", result.providerName());
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
-
     private AiProvider mockProvider(String name, boolean available) {
-        // AiProvider is sealed — mock the concrete non-sealed ClaudeAiProvider instead
+
         ClaudeAiProvider p = mock(ClaudeAiProvider.class);
         when(p.getName()).thenReturn(name);
         when(p.isAvailable()).thenReturn(available);

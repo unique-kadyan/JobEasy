@@ -26,7 +26,7 @@ class AnalyticsServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Run submitted tasks immediately so CompletableFuture chains complete synchronously
+
         doAnswer(inv -> { ((Runnable) inv.getArgument(0)).run(); return null; }).when(executor).execute(any());
     }
 
@@ -45,7 +45,7 @@ class AnalyticsServiceTest {
         assertEquals(5, response.applied());
         assertEquals(2, response.interviewing());
         assertEquals(1, response.offered());
-        assertEquals(50.0, response.responseRate()); // (2+1+2)/10 * 100
+        assertEquals(50.0, response.responseRate());
     }
 
     @Test

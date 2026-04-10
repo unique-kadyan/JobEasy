@@ -13,11 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Scrapes developer/IT jobs from DevITJobs' free public API (no key required).
- * Docs: https://www.devitjobs.com/api
- * Focused on software development roles globally.
- */
 @Component
 public non-sealed class DevITJobsScraper implements JobScraper {
 
@@ -58,7 +53,6 @@ public non-sealed class DevITJobsScraper implements JobScraper {
                         ? ts.stream().map(Object::toString).reduce("", (a, b) -> a + " " + b).toLowerCase()
                         : "";
 
-                // Keyword filter
                 if (!q.isBlank() &&
                     !title.toLowerCase().contains(q) &&
                     !techStack.contains(q)) {

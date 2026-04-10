@@ -31,7 +31,6 @@ public class Application {
     private LocalDateTime appliedAt;
     private LocalDateTime statusUpdated;
 
-    // ── Pipeline tracking ─────────────────────────────────────────────────────
     private InterviewDetails interviewDetails;
     private OfferDetails offerDetails;
 

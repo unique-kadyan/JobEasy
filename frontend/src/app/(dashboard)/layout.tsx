@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
+import { useThemeStore } from "@/store/theme-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Sidebar from "@/components/layout/Sidebar";
-import Topbar from "@/components/layout/Topbar";
+import Navbar from "@/components/layout/Navbar";
 import { useKeepAlive } from "@/hooks/useKeepAlive";
 import type { ServerStatus } from "@/hooks/useKeepAlive";
 
@@ -22,10 +22,13 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
+  const { theme } = useThemeStore();
   const [hydrated, setHydrated] = useState(false);
   const serverStatus = useKeepAlive();
 
-  useEffect(() => { setHydrated(true); }, []);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
     if (hydrated && !isAuthenticated) router.push("/login");
@@ -36,10 +39,10 @@ export default function DashboardLayout({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-gray-50">
+      <div className={`${theme === "dark" ? "dark" : ""} min-h-screen bg-[#0d1117] dark:bg-[#0d1117] bg-gray-50`}>
         {user && !user.emailVerified && (
-          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-center text-sm text-amber-800">
-            Please verify your email address to unlock all features.{" "}
+          <div className="fixed top-12 left-0 right-0 z-30 bg-amber-900/80 border-b border-amber-700 px-4 py-2 text-center text-sm text-amber-200">
+            Please verify your email to unlock all features.{" "}
             <button
               onClick={() =>
                 fetch(
@@ -51,7 +54,7 @@ export default function DashboardLayout({
                   }
                 )
               }
-              className="underline font-medium hover:text-amber-900"
+              className="underline font-medium hover:text-amber-100"
             >
               Resend verification email
             </button>
@@ -59,17 +62,15 @@ export default function DashboardLayout({
         )}
 
         <WarmUpBanner status={serverStatus} />
-        <Sidebar />
-        <Topbar serverStatus={serverStatus} />
-        <main className="ml-64 pt-16 p-6">{children}</main>
+        <Navbar serverStatus={serverStatus} />
+        <main className="pt-12 min-h-screen">
+          <div className="max-w-[1400px] mx-auto px-6 py-6">{children}</div>
+        </main>
       </div>
     </QueryClientProvider>
   );
 }
 
-// Shows only after 4 seconds of non-"up" status — invisible on fast connections,
-// informative during a cold start (~50 s). Dismisses automatically when the
-// backend comes online.
 function WarmUpBanner({ status }: { status: ServerStatus }) {
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,18 +82,20 @@ function WarmUpBanner({ status }: { status: ServerStatus }) {
       return;
     }
     timerRef.current = setTimeout(() => setVisible(true), 4_000);
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [status]);
 
   if (!visible) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 bg-indigo-600 px-4 py-2 text-sm text-white shadow-md">
+    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 bg-indigo-700 px-4 py-2 text-sm text-white shadow-md">
       <span className="flex h-2 w-2 relative">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
         <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
       </span>
-      Server is starting up — this takes about 30–50 seconds on first load. The page will refresh automatically.
+      Server is starting up — this takes 30–50 seconds on first load. Page will refresh automatically.
     </div>
   );
 }

@@ -14,22 +14,13 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import java.time.LocalDateTime;
 import java.util.*;
 
-/**
- * Fetches a user's public GitHub profile, repositories, and languages/topics,
- * then merges them into the user's skill map in MongoDB.
- *
- * <p>Uses the GitHub REST API v3 (no token required for public data, but a token
- * in {@code GITHUB_TOKEN} env var is respected to raise rate limits from 60 → 5,000 req/hr).
- *
- * <p>Resilience4j circuit breaker {@code "github"} protects against GitHub outages.
- */
 @Service
 public class GitHubImportService {
 
     private static final Logger log = LoggerFactory.getLogger(GitHubImportService.class);
 
     private static final String CB_NAME = "github";
-    private static final int    MAX_REPOS = 100;   // GitHub API maximum per page
+    private static final int    MAX_REPOS = 100;
 
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
             new ParameterizedTypeReference<>() {};
@@ -45,7 +36,6 @@ public class GitHubImportService {
                 .baseUrl("https://api.github.com")
                 .defaultHeader("Accept", "application/vnd.github.v3+json");
 
-        // Honour optional GitHub token for higher rate limits
         String token = System.getenv("GITHUB_TOKEN");
         if (token != null && !token.isBlank()) {
             builder = builder.defaultHeader("Authorization", "Bearer " + token);
@@ -55,23 +45,6 @@ public class GitHubImportService {
         this.userRepository = userRepository;
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
-
-    /**
-     * Imports skills from a GitHub username and merges them into {@code user.skills}.
-     *
-     * <p>Imported data:
-     * <ul>
-     *   <li>Programming languages (byte count converted to proficiency weight)</li>
-     *   <li>Repository topics (treated as technology keywords)</li>
-     *   <li>GitHub profile bio (stored separately as {@code githubBio})</li>
-     * </ul>
-     *
-     * @param userId         the MongoDB user id
-     * @param githubUsername the GitHub username to import from
-     * @return updated {@link User} with merged skills
-     * @throws ExternalServiceException if the GitHub API returns a non-2xx status
-     */
     @CircuitBreaker(name = CB_NAME, fallbackMethod = "importFallback")
     public User importSkills(String userId, String githubUsername) {
         log.info("Starting GitHub import for user={} from github.com/{}", userId, githubUsername);
@@ -84,7 +57,6 @@ public class GitHubImportService {
 
         Map<String, Object> mergedSkills = mergeSkills(user, profile, repos);
 
-        // Store the GitHub URL if not already set
         String profileHtmlUrl = (String) profile.getOrDefault("html_url", null);
         if (profileHtmlUrl != null && (user.getGithubUrl() == null || user.getGithubUrl().isBlank())) {
             user.setGithubUrl(profileHtmlUrl);
@@ -97,8 +69,6 @@ public class GitHubImportService {
         log.info("GitHub import complete for user={}: {} skills in profile", userId, mergedSkills.size());
         return saved;
     }
-
-    // ── GitHub API fetchers ───────────────────────────────────────────────────
 
     private Map<String, Object> fetchProfile(String username) {
         try {
@@ -133,27 +103,16 @@ public class GitHubImportService {
         }
     }
 
-    // ── Skill merging ─────────────────────────────────────────────────────────
-
-    /**
-     * Merges GitHub-derived skills into the user's existing skill map.
-     *
-     * <p>Skill map structure: {@code { "Java": "ADVANCED", "React": "INTERMEDIATE", ... }}
-     * GitHub languages with high byte counts are tagged {@code "ADVANCED"};
-     * topics and minor languages are tagged {@code "FAMILIAR"}.
-     * Existing proficiency levels already set by the user are NOT downgraded.
-     */
     private Map<String, Object> mergeSkills(User user,
                                              Map<String, Object> profile,
                                              List<Map<String, Object>> repos) {
         Map<String, Object> skills = new LinkedHashMap<>(
                 user.getSkills() != null ? user.getSkills() : Map.of());
 
-        // 1. Aggregate language bytes across all repos
         Map<String, Long> langBytes = new LinkedHashMap<>();
         for (Map<String, Object> repo : repos) {
             Boolean fork = (Boolean) repo.getOrDefault("fork", false);
-            if (Boolean.TRUE.equals(fork)) continue; // ignore forks — not the user's own work
+            if (Boolean.TRUE.equals(fork)) continue;
 
             String repoName = (String) repo.get("name");
             if (repoName == null) continue;
@@ -164,7 +123,6 @@ public class GitHubImportService {
             }
         }
 
-        // 2. Classify languages by total byte count and assign proficiency
         long totalBytes = langBytes.values().stream().mapToLong(Long::longValue).sum();
         if (totalBytes > 0) {
             langBytes.forEach((lang, bytes) -> {
@@ -172,14 +130,13 @@ public class GitHubImportService {
                 String proficiency = share >= 0.30 ? "ADVANCED"
                                    : share >= 0.10 ? "INTERMEDIATE"
                                    : "FAMILIAR";
-                // Do not downgrade an existing explicit level
+
                 skills.merge(lang, proficiency, (existing, incoming) ->
                         levelRank(String.valueOf(incoming)) > levelRank(String.valueOf(existing))
                                 ? incoming : existing);
             });
         }
 
-        // 3. Extract topics from all non-fork repos
         for (Map<String, Object> repo : repos) {
             if (Boolean.TRUE.equals(repo.get("fork"))) continue;
             if (repo.get("topics") instanceof List<?> topics) {
@@ -193,8 +150,6 @@ public class GitHubImportService {
         return skills;
     }
 
-    // ── Circuit breaker fallback ──────────────────────────────────────────────
-
     @SuppressWarnings("unused")
     public User importFallback(String userId, String githubUsername, Throwable t) {
         log.error("GitHub import circuit breaker open for user={}: {}", userId, t.getMessage());
@@ -202,9 +157,6 @@ public class GitHubImportService {
                 "GitHub service is currently unavailable. Please try again later.");
     }
 
-    // ── Utility ───────────────────────────────────────────────────────────────
-
-    /** Numeric rank used to avoid downgrading an existing proficiency level. */
     private int levelRank(String level) {
         return switch (level == null ? "" : level.toUpperCase()) {
             case "ADVANCED"     -> 3;

@@ -12,10 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Scrapes remote jobs from Jobicy's free public API (no key required).
- * Docs: https://jobicy.com/api/v2/remote-jobs
- */
 @Component
 public non-sealed class JobicyScraper implements JobScraper {
 

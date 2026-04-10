@@ -6,21 +6,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Converts salary strings from any currency / period to an annual USD equivalent.
- * Used for filtering and comparison across job boards with different salary formats.
- *
- * Supported formats:
- *   "USD 50000 - 100000"   → 75 000 USD/yr
- *   "£60k - £90k"          → 150 000 USD/yr (approx)
- *   "₹25 LPA"              → ~30 000 USD/yr
- *   "$4 000/month"         → 48 000 USD/yr
- *   "20 - 30 USD/hour"     → ~52 000 USD/yr
- */
 @Service
 public class SalaryNormalizationService {
 
-    /** USD-relative exchange rates (1 unit of currency = X USD). Updated periodically. */
     private static final Map<String, Double> FX = Map.ofEntries(
             Map.entry("USD", 1.0),
             Map.entry("EUR", 1.10),
@@ -73,10 +61,6 @@ public class SalaryNormalizationService {
             Pattern.compile("([\\d,._]+)\\s*(?:k|K|lpa|LPA)?\\+?",
                     Pattern.CASE_INSENSITIVE);
 
-    /**
-     * Parses a salary string and returns the annual equivalent in USD.
-     * Returns {@code null} if parsing fails.
-     */
     public Double toAnnualUsd(String salary) {
         if (salary == null || salary.isBlank()) return null;
 
@@ -94,7 +78,7 @@ public class SalaryNormalizationService {
             if (rangeMatcher.find()) {
                 double lo = parseNumber(rangeMatcher.group(1));
                 double hi = parseNumber(rangeMatcher.group(2));
-                // detect k-suffix in the matched groups
+
                 if (rangeMatcher.group(1).toLowerCase().contains("k")) lo *= 1000;
                 if (rangeMatcher.group(2).toLowerCase().contains("k")) hi *= 1000;
                 raw = (lo + hi) / 2.0;
@@ -105,10 +89,8 @@ public class SalaryNormalizationService {
                 if (single.group(1).toLowerCase().contains("k")) raw *= 1000;
             }
 
-            // Handle Indian LPA (Lakhs Per Annum)
             if (isLpa) raw = raw * 100_000;
 
-            // Normalise to annual
             double annual = isHourly ? raw * 2080
                     : isMonthly ? raw * 12
                     : raw;

@@ -16,11 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Scrapes UK and global jobs from Reed.co.uk's free API.
- * Free API key: https://www.reed.co.uk/developers/jobseeker
- * Docs: https://www.reed.co.uk/developers/jobseeker
- */
 @Component
 public non-sealed class ReedApiClient implements JobScraper {
 
@@ -53,7 +48,7 @@ public non-sealed class ReedApiClient implements JobScraper {
         }
 
         try {
-            // Reed uses HTTP Basic Auth with the API key as username, empty password
+
             String credentials = Base64.getEncoder().encodeToString(
                     (apiKey + ":").getBytes(StandardCharsets.UTF_8));
 

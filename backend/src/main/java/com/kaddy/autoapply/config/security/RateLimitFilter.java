@@ -16,26 +16,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.time.Duration;
 
-/**
- * Per-IP rate limiting to prevent brute force and DoS (OWASP A04:2021).
- * 60 requests per minute per IP for general endpoints.
- * 10 requests per minute for auth endpoints.
- *
- * <p><b>Memory safety:</b> Bucket state is stored in a bounded Caffeine cache
- * (max 200 000 entries) with 2-minute idle eviction. This prevents unbounded
- * heap growth from a simple {@code ConcurrentHashMap} when millions of distinct
- * IPs hit the server — each silent IP eventually evicts itself automatically.
- */
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
 
-    /**
-     * Bounded, auto-evicting cache keyed by {@code "ip:type"}.
-     * <ul>
-     *   <li>maximumSize — caps memory at ~200 K buckets regardless of unique-IP volume.</li>
-     *   <li>expireAfterAccess(2 min) — silent IPs are evicted and their memory released.</li>
-     * </ul>
-     */
     private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
             .maximumSize(200_000)
             .expireAfterAccess(Duration.ofMinutes(2))
@@ -47,7 +30,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String ip = getClientIp(request);
         String path = request.getRequestURI();
 
-        // Cache.get(key, mappingFn) is atomic — exactly one Bucket is created per key
         Bucket bucket = buckets.get(
                 ip + ":" + (isAuthEndpoint(path) ? "auth" : "general"),
                 k -> createBucket(isAuthEndpoint(path))

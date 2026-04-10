@@ -30,8 +30,7 @@ class PaymentServiceTest {
     @Mock WebClient.Builder webClientBuilder;
     @Mock WebClient webClient;
 
-    // PaymentService is constructed manually so we can inject blank keys (dev mode)
-    private PaymentService devService;   // blank keys — uses mock orders
+    private PaymentService devService;
     private ObjectMapper objectMapper = new ObjectMapper();
 
     private GeneratedResume unpaidResume;
@@ -39,12 +38,11 @@ class PaymentServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Stub the fluent WebClient.Builder chain so the constructor can complete
+
         lenient().when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
         lenient().when(webClientBuilder.defaultHeader(anyString(), any(String[].class))).thenReturn(webClientBuilder);
         lenient().when(webClientBuilder.build()).thenReturn(webClient);
 
-        // Blank key-id/key-secret triggers dev-mode path (no real HTTP call)
         devService = new PaymentService(
                 paymentRepository, generatedResumeRepository,
                 webClientBuilder, "", "", objectMapper);
@@ -59,8 +57,6 @@ class PaymentServiceTest {
         paidResume.setUserId("user1");
         paidResume.setPaid(true);
     }
-
-    // ── createOrder ───────────────────────────────────────────────────────────
 
     @Test
     void createOrder_shouldReturnOrderWithIndiaPrice() {
@@ -139,11 +135,9 @@ class PaymentServiceTest {
                 () -> devService.createOrder("user1", "gr2", "IN"));
     }
 
-    // ── verifyAndUnlock ───────────────────────────────────────────────────────
-
     @Test
     void verifyAndUnlock_devMode_shouldSkipSignatureAndUnlockResume() {
-        // Blank keySecret → skip signature verification in dev mode
+
         Payment payment = new Payment();
         payment.setRazorpayOrderId("order123");
         payment.setUserId("user1");
@@ -184,18 +178,14 @@ class PaymentServiceTest {
                 () -> devService.verifyAndUnlock("user1", req));
     }
 
-    // ── Display price formatting ──────────────────────────────────────────────
-
     @Test
     void createOrder_knownCurrencies_shouldFormatWithSymbol() {
         when(generatedResumeRepository.findById("gr1")).thenReturn(Optional.of(unpaidResume));
         when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        // USD
         PaymentOrderResponse usd = devService.createOrder("user1", "gr1", "USD");
         assertTrue(usd.displayPrice().startsWith("$"), "USD should start with $");
 
-        // EUR
         unpaidResume.setPaid(false);
         PaymentOrderResponse eur = devService.createOrder("user1", "gr1", "EUR");
         assertTrue(eur.displayPrice().startsWith("€"), "EUR should start with €");

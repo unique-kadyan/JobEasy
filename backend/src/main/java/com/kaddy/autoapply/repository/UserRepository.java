@@ -11,10 +11,5 @@ public interface UserRepository extends MongoRepository<User, String> {
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
 
-    /**
-     * Paginated query for users with auto-search opted in.
-     * Used by {@code AutoSearchSchedulerService} to avoid loading the entire
-     * user collection into memory at once on every hourly tick.
-     */
     Page<User> findByAutoSearchEnabledTrue(Pageable pageable);
 }

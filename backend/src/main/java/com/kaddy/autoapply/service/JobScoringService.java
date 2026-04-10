@@ -12,37 +12,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/**
- * Scores a {@link JobResponse} against a {@link User}'s profile using two stages:
- *
- * <ol>
- *   <li><b>Local stage</b> — word-boundary keyword matching of user skills against the job
- *       title + description, plus bonuses for remote preference, city match, and target roles.
- *       Fast, no network I/O, runs synchronously.</li>
- *   <li><b>AI stage</b> — deep semantic evaluation via {@link AiProviderFactory}.
- *       Runs asynchronously and only for jobs that reach or exceed
- *       {@link #AI_EVALUATION_THRESHOLD}.  The future resolves to an updated
- *       {@link JobResponse}; callers may choose to join or discard it.</li>
- * </ol>
- *
- * Scoring weights:
- * <pre>
- *   skill match ratio     : up to 0.70
- *   target-role title hit : +0.10
- *   location match        : +0.05 (remote) … +0.10 (city match)
- *   seniority alignment   : +0.05
- *   ─────────────────────────────────────────────────────
- *   STRONG   ≥ 0.60
- *   MODERATE ≥ 0.35
- *   WEAK     < 0.35
- * </pre>
- */
 @Service
 public class JobScoringService {
 
     private static final Logger log = LoggerFactory.getLogger(JobScoringService.class);
 
-    /** Minimum local score before the AI evaluation stage is triggered. */
     static final double AI_EVALUATION_THRESHOLD = 0.35;
 
     private static final double MAX_SKILL_WEIGHT     = 0.70;
@@ -51,7 +25,6 @@ public class JobScoringService {
     private static final double CITY_BONUS           = 0.10;
     private static final double SENIORITY_BONUS      = 0.05;
 
-    /** Seniority keywords mapped to rough years-of-experience buckets. */
     private static final Map<String, int[]> SENIORITY_RANGES = Map.of(
             "intern",       new int[]{0, 1},
             "junior",       new int[]{0, 3},
@@ -72,16 +45,6 @@ public class JobScoringService {
         this.salaryNormalizationService = salaryNormalizationService;
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
-
-    /**
-     * Scores the job locally and returns an updated {@link JobResponse} with score fields
-     * populated.  The {@link JobResponse#normalizedSalaryUsd()} is also resolved here.
-     *
-     * @param user the authenticated user whose profile drives scoring
-     * @param job  the raw (unscored) job response from a scraper
-     * @return a new {@code JobResponse} with score, strength, missing skills, and salary set
-     */
     public JobResponse scoreLocally(User user, JobResponse job) {
         if (user == null) return job;
 
@@ -95,7 +58,6 @@ public class JobScoringService {
         score += locationBonus(user, job);
         score += seniorityBonus(user, searchText);
 
-        // Cap at 1.0
         score = Math.min(1.0, score);
 
         String strength = classify(score);
@@ -108,16 +70,6 @@ public class JobScoringService {
         return job.withScore(score, strength, skillMatch.missing(), List.of(), normalizedSalary);
     }
 
-    /**
-     * Triggers an async AI deep evaluation for jobs that pass the local threshold.
-     * The returned {@link CompletableFuture} resolves to the same {@code job} if AI
-     * evaluation is skipped (score below threshold or AI unavailable), or to an enriched
-     * {@link JobResponse} with AI reasoning lines populated.
-     *
-     * @param user          the authenticated user
-     * @param scoredJob     job already scored by {@link #scoreLocally}
-     * @return future resolving to a fully scored job
-     */
     public CompletableFuture<JobResponse> enrichWithAi(User user, JobResponse scoredJob) {
         if (scoredJob.matchScore() == null || scoredJob.matchScore() < AI_EVALUATION_THRESHOLD) {
             return CompletableFuture.completedFuture(scoredJob);
@@ -147,28 +99,11 @@ public class JobScoringService {
         });
     }
 
-    /**
-     * Convenience method: scores locally and triggers AI enrichment in one call.
-     * Returns the locally scored job immediately via the future; the AI lines are
-     * appended when the future completes.
-     *
-     * @param user the authenticated user
-     * @param job  the raw unscored job
-     * @return future resolving to a fully scored (local + AI) job
-     */
     public CompletableFuture<JobResponse> score(User user, JobResponse job) {
         JobResponse locallyScored = scoreLocally(user, job);
         return enrichWithAi(user, locallyScored);
     }
 
-    /**
-     * Batch-scores a list of jobs locally (no AI calls) and filters out jobs whose
-     * title, description, or company matches any of the user's {@code skipKeywords}.
-     *
-     * @param user the authenticated user
-     * @param jobs raw job list
-     * @return filtered and locally-scored list, sorted by match score descending
-     */
     public List<JobResponse> scoreAndFilterBatch(User user, List<JobResponse> jobs) {
         if (user == null) return jobs;
 
@@ -182,14 +117,14 @@ public class JobScoringService {
                 .collect(Collectors.toList());
     }
 
-    // ── Scoring helpers ───────────────────────────────────────────────────────
-
     private Set<String> extractSkills(User user) {
         if (user.getSkills() == null || user.getSkills().isEmpty()) return Set.of();
-        // Skills map: keys are skill names (e.g. "Java", "Spring Boot", "React")
-        return user.getSkills().keySet().stream()
-                .filter(k -> k != null && !k.isBlank())
-                .map(String::toLowerCase)
+
+        return user.getSkills().values().stream()
+                .filter(v -> v instanceof List<?>)
+                .flatMap(v -> ((List<?>) v).stream())
+                .filter(k -> k instanceof String s && !s.isBlank())
+                .map(k -> ((String) k).toLowerCase())
                 .collect(Collectors.toSet());
     }
 
@@ -200,10 +135,6 @@ public class JobScoringService {
         return (title + " " + desc + " " + tags).toLowerCase();
     }
 
-    /**
-     * Matches each user skill against {@code text} using word-boundary patterns to avoid
-     * false positives (e.g. "C" matching inside "Go", or "Go" matching inside "Django").
-     */
     private SkillMatchResult matchSkills(Set<String> userSkills, String text) {
         if (userSkills.isEmpty()) return new SkillMatchResult(0.0, List.of());
 
@@ -211,7 +142,7 @@ public class JobScoringService {
         List<String> missing = new ArrayList<>();
 
         for (String skill : userSkills) {
-            // Escape special regex chars in skill name, then wrap in word boundaries
+
             String escaped = Pattern.quote(skill);
             Pattern pattern = Pattern.compile("\\b" + escaped + "\\b", Pattern.CASE_INSENSITIVE);
             if (pattern.matcher(text).find()) {
@@ -268,8 +199,6 @@ public class JobScoringService {
         return "WEAK";
     }
 
-    // ── Skip-keyword filtering ────────────────────────────────────────────────
-
     private Set<String> normaliseKeywords(List<String> keywords) {
         if (keywords == null) return Set.of();
         return keywords.stream()
@@ -285,8 +214,6 @@ public class JobScoringService {
                            (job.description() != null ? job.description() : "")).toLowerCase();
         return skipKeywords.stream().anyMatch(combined::contains);
     }
-
-    // ── AI prompt builders ────────────────────────────────────────────────────
 
     private String buildAiSystemPrompt(User user) {
         return """
@@ -346,11 +273,10 @@ public class JobScoringService {
         );
     }
 
-    /** Parses the AI response JSON array into a list of strings. */
     private List<String> parseAiReasoning(String content) {
         if (content == null || content.isBlank()) return List.of();
         try {
-            // Strip optional markdown fences
+
             String cleaned = content.strip()
                     .replaceAll("^```json\\s*", "")
                     .replaceAll("^```\\s*", "")
@@ -359,7 +285,6 @@ public class JobScoringService {
 
             if (!cleaned.startsWith("[")) return List.of(cleaned);
 
-            // Simple extraction: find quoted strings inside the array
             List<String> lines = new ArrayList<>();
             int i = 0;
             while (i < cleaned.length()) {
@@ -381,14 +306,10 @@ public class JobScoringService {
         }
     }
 
-    // ── Utility ───────────────────────────────────────────────────────────────
-
     private String truncate(String s, int maxLen) {
         if (s == null) return "";
         return s.length() <= maxLen ? s : s.substring(0, maxLen) + "…";
     }
-
-    // ── Inner record ──────────────────────────────────────────────────────────
 
     private record SkillMatchResult(double ratio, List<String> missing) {}
 }

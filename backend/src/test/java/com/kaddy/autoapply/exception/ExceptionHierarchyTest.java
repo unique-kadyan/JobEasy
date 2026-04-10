@@ -33,7 +33,7 @@ class ExceptionHierarchyTest {
 
     @Test
     void sealedClass_onlyPermitsDefinedSubtypes() {
-        // Verify sealed permits list — this is a compile-time guarantee
+
         var permitted = AppException.class.getPermittedSubclasses();
         assertNotNull(permitted);
         assertEquals(5, permitted.length);

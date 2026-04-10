@@ -74,7 +74,7 @@ export default function SmartResumePage() {
 
   useEffect(() => {
     if (latestResume) setGenerated(latestResume);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [latestResume]);
 
   const analyzeMutation = useMutation({

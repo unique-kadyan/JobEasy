@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { User } from "@/types";
+import { getTierFeatures } from "@/lib/tier-features";
 
 interface AuthState {
   user: User | null;
@@ -49,14 +50,14 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (!user) return false;
         if (user.roles?.includes("ROLE_ADMIN")) return true;
-        return user.subscriptionTier === "JOBS" || user.subscriptionTier === "AUTO_APPLY";
+        return getTierFeatures(user.subscriptionTier).maxJobResults > 2;
       },
 
       canAutoApply: () => {
         const { user } = get();
         if (!user) return false;
         if (user.roles?.includes("ROLE_ADMIN")) return true;
-        return user.subscriptionTier === "AUTO_APPLY";
+        return getTierFeatures(user.subscriptionTier).autoApply;
       },
     }),
     { name: "kaddy-auth" }

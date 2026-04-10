@@ -100,10 +100,6 @@ public class ApplicationService {
         });
     }
 
-    /**
-     * Parses a status string into {@link ApplicationStatus}, throwing
-     * {@link BadRequestException} on unknown values.
-     */
     private ApplicationStatus parseStatus(String status) {
         try {
             return ApplicationStatus.valueOf(status.toUpperCase());
@@ -114,14 +110,6 @@ public class ApplicationService {
         }
     }
 
-    /**
-     * Updates the application status, enforcing:
-     * <ol>
-     * <li>Ownership — only the owning user may change their application.</li>
-     * <li>State-machine rules — illegal transitions are rejected (e.g. OFFERED →
-     * APPLIED).</li>
-     * </ol>
-     */
     public ApplicationResponse updateStatus(String id, String userId, String newStatus) {
         Application app = findOwned(id, userId);
 
@@ -165,7 +153,7 @@ public class ApplicationService {
     }
 
     public void delete(String id, String userId) {
-        findOwned(id, userId); // ownership check before delete
+        findOwned(id, userId);
         applicationRepository.deleteById(id);
     }
 

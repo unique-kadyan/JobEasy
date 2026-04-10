@@ -109,8 +109,6 @@ public class AuthService {
         return toUserResponse(user);
     }
 
-    // ── Email Verification ────────────────────────────────────────────────────
-
     public void verifyEmail(String token) {
         VerificationToken vt = verificationTokenRepository.findByToken(token)
                 .orElseThrow(() -> new BadRequestException("Invalid verification token"));
@@ -144,11 +142,9 @@ public class AuthService {
         emailService.sendVerificationEmail(user.getEmail(), user.getName(), token);
     }
 
-    // ── Forgot / Reset Password ───────────────────────────────────────────────
-
     public void forgotPassword(String email) {
         User user = userRepository.findByEmail(email).orElse(null);
-        // Return silently to prevent email enumeration (OWASP A01)
+
         if (user == null) return;
 
         passwordResetTokenRepository.deleteByUserId(user.getId());
@@ -176,8 +172,6 @@ public class AuthService {
 
         passwordResetTokenRepository.save(prt.markUsed());
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private AuthResponse buildAuthResponse(User user) {
         return new AuthResponse(

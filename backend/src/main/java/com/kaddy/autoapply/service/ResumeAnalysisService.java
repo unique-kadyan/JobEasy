@@ -46,7 +46,6 @@ public class ResumeAnalysisService {
         List<String> strengths = new ArrayList<>();
         int score = 100;
 
-        // ── Contact information ──────────────────────────────────────────────────
         if (parsed == null || parsed.get("email") == null) {
             missing.add("Email address");
             suggestions.add("Add your professional email address to the contact section.");
@@ -63,7 +62,6 @@ public class ResumeAnalysisService {
             strengths.add("Phone number present");
         }
 
-        // ── Professional summary ─────────────────────────────────────────────────
         boolean hasSummary = text.contains("summary") || text.contains("objective") || text.contains("profile");
         if (!hasSummary) {
             missing.add("Professional summary / objective");
@@ -73,7 +71,6 @@ public class ResumeAnalysisService {
             strengths.add("Professional summary found");
         }
 
-        // ── Work experience ──────────────────────────────────────────────────────
         boolean hasExperience = Optional.ofNullable(parsed)
                 .map(p -> Boolean.TRUE.equals(p.get("hasExperience"))).orElse(false)
                 || text.contains("experience") || text.contains("employment") || text.contains("work history");
@@ -93,7 +90,6 @@ public class ResumeAnalysisService {
             }
         }
 
-        // ── Education ────────────────────────────────────────────────────────────
         boolean hasEducation = Optional.ofNullable(parsed)
                 .map(p -> Boolean.TRUE.equals(p.get("hasEducation"))).orElse(false)
                 || text.contains("education") || text.contains("university") || text.contains("degree")
@@ -106,7 +102,6 @@ public class ResumeAnalysisService {
             strengths.add("Education section present");
         }
 
-        // ── Skills ───────────────────────────────────────────────────────────────
         boolean hasSkills = Optional.ofNullable(parsed)
                 .map(p -> p.get("skills") instanceof List<?> l && !l.isEmpty()).orElse(false);
         if (!hasSkills) {
@@ -117,7 +112,6 @@ public class ResumeAnalysisService {
             strengths.add("Skills section present");
         }
 
-        // ── Projects ─────────────────────────────────────────────────────────────
         boolean hasProjects = Optional.ofNullable(parsed)
                 .map(p -> Boolean.TRUE.equals(p.get("hasProjects"))).orElse(false)
                 || text.contains("project") || text.contains("portfolio");
@@ -128,7 +122,6 @@ public class ResumeAnalysisService {
             strengths.add("Projects section found");
         }
 
-        // ── Certifications ───────────────────────────────────────────────────────
         boolean hasCerts = Optional.ofNullable(parsed)
                 .map(p -> Boolean.TRUE.equals(p.get("hasCertifications"))).orElse(false)
                 || text.contains("certif") || text.contains("aws") || text.contains("google cloud");
@@ -138,7 +131,6 @@ public class ResumeAnalysisService {
             strengths.add("Certifications listed");
         }
 
-        // ── LinkedIn URL ─────────────────────────────────────────────────────────
         if (!text.contains("linkedin")) {
             suggestions.add("Include your LinkedIn profile URL for recruiter verification.");
             score -= 3;
@@ -146,7 +138,6 @@ public class ResumeAnalysisService {
             strengths.add("LinkedIn profile linked");
         }
 
-        // ── Resume length ────────────────────────────────────────────────────────
         int wordCount = Optional.ofNullable(parsed)
                 .flatMap(p -> Optional.ofNullable(p.get("wordCount")))
                 .filter(Integer.class::isInstance).map(Integer.class::cast)
@@ -165,7 +156,6 @@ public class ResumeAnalysisService {
 
         score = Math.max(0, score);
 
-        // Persist
         ResumeAnalysis entity = new ResumeAnalysis();
         entity.setUserId(userId);
         entity.setResumeId(resume.getId());
@@ -183,8 +173,6 @@ public class ResumeAnalysisService {
                 saved.getId(), score, scoreLabel(score),
                 missing, suggestions, strengths, lengthAssessment, wordCount);
     }
-
-    // ── helpers ──────────────────────────────────────────────────────────────────
 
     private boolean containsActionVerbs(String text) {
         String[] verbs = {"led", "built", "developed", "designed", "implemented", "improved",

@@ -51,8 +51,7 @@ class JobServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Run submitted tasks immediately on the calling thread so CompletableFuture chains complete synchronously.
-        // lenient() because getJob/getJobEntity tests don't use the executor.
+
         lenient().doAnswer(inv -> { ((Runnable) inv.getArgument(0)).run(); return null; }).when(executor).execute(any());
 
         dbJob = Job.builder()
@@ -67,8 +66,6 @@ class JobServiceTest {
                 "https://example.com/2", null, null, null, "FULL_TIME",
                 LocalDateTime.now(), null, null, null, null, null);
     }
-
-    // ── searchJobs — DB path ──────────────────────────────────────────────────
 
     @Test
     void searchJobs_shouldReturnDbResultsWhenAvailable() {
@@ -123,11 +120,9 @@ class JobServiceTest {
         verify(jobRepository, never()).searchJobs(any(), any());
     }
 
-    // ── searchJobs — pagination ───────────────────────────────────────────────
-
     @Test
     void searchJobs_fallbackPaginationShouldBeCorrect() {
-        // 5 scraped jobs, page size 2, requesting page 1
+
         List<JobResponse> fiveJobs = List.of(
                 makeScraped("j1"), makeScraped("j2"), makeScraped("j3"),
                 makeScraped("j4"), makeScraped("j5"));
@@ -139,11 +134,9 @@ class JobServiceTest {
 
         assertEquals(5, result.totalElements());
         assertEquals(3, result.totalPages());
-        assertEquals(2, result.content().size()); // page 1 = items [2,3]
+        assertEquals(2, result.content().size());
         assertEquals(1, result.number());
     }
-
-    // ── getJob / getJobEntity ─────────────────────────────────────────────────
 
     @Test
     void getJob_shouldReturnMappedResponse() {
@@ -164,12 +157,9 @@ class JobServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> jobService.getJobEntity("unknown"));
     }
 
-    // ── cacheJobs — resilience ────────────────────────────────────────────────
-
     @Test
     void cacheJobs_shouldSkipJobWhenRepositoryThrows() {
-        // First scraped job will cause a repo exception; second should still be
-        // attempted
+
         var badJob = makeScraped("extBad");
         var goodJob = makeScraped("extGood");
         var emptyPage = new PageImpl<>(List.<Job>of(), PageRequest.of(0, 30), 0);
@@ -181,9 +171,8 @@ class JobServiceTest {
         when(jobRepository.findBySourceAndExternalId(any(), eq("extGood")))
                 .thenReturn(Optional.empty());
 
-        // Should NOT throw — resilience catch in cacheJobs
         assertDoesNotThrow(() -> jobService.searchJobs("java", null, null, 0, 30));
-        // Good job should still be attempted after bad one fails
+
         verify(jobRepository).findBySourceAndExternalId(any(), eq("extGood"));
     }
 
@@ -193,14 +182,12 @@ class JobServiceTest {
         when(scraperOrchestrator.searchJobs(any(), any(), anyInt())).thenReturn(List.of(scrapedJob));
         when(jobRepository.searchJobs(any(), any())).thenReturn(emptyPage);
         when(jobRepository.findBySourceAndExternalId(any(), eq("ext2")))
-                .thenReturn(Optional.of(dbJob)); // already cached
+                .thenReturn(Optional.of(dbJob));
 
         jobService.searchJobs("java", null, null, 0, 30);
 
         verify(jobRepository, never()).save(any());
     }
-
-    // ── helpers ───────────────────────────────────────────────────────────────
 
     private JobResponse makeScraped(String externalId) {
         return new JobResponse(null, externalId, "INDEED",

@@ -12,10 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Scrapes remote jobs from Remotive's public API (no key required).
- * Docs: https://remotive.com/api/remote-jobs
- */
 @Component
 public non-sealed class RemotiveScraper implements JobScraper {
 

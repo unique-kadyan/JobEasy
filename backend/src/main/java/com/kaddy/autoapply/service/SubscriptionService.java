@@ -33,9 +33,8 @@ public class SubscriptionService {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionService.class);
 
-    // Pricing in paise (100 paise = 1 INR)
-    private static final long JOBS_PRICE_PAISE      = 29900L;  // ₹299/month
-    private static final long AUTO_APPLY_PRICE_PAISE = 59900L; // ₹599/month
+    private static final long GOLD_MONTHLY_PAISE     = 32500L;
+    private static final long PLATINUM_MONTHLY_PAISE = 50000L;
 
     private final UserRepository    userRepository;
     private final PaymentRepository paymentRepository;
@@ -63,7 +62,7 @@ public class SubscriptionService {
 
     public record SubscriptionOrderResponse(
             String orderId, long amount, String currency,
-            String keyId, String tier, String displayPrice) {}
+            String keyId, String tier, String billingCycle, String displayPrice) {}
 
     public record SubscriptionStatus(
             SubscriptionTier tier, boolean isActive) {}
@@ -74,24 +73,26 @@ public class SubscriptionService {
         return new SubscriptionStatus(tier, tier != SubscriptionTier.FREE || SecurityUtils.isAdmin());
     }
 
-    public SubscriptionOrderResponse createOrder(String userId, String tierName) {
+    public SubscriptionOrderResponse createOrder(String userId, String tierName, String billingCycle) {
         SubscriptionTier tier = parseTier(tierName);
+        String cycle = parseBillingCycle(billingCycle);
 
-        // Admin bypass
         if (SecurityUtils.isAdmin()) {
-            findUser(userId); // validate user exists
+            findUser(userId);
             return new SubscriptionOrderResponse(
-                    "admin_bypass_sub_" + userId, 0L, "INR", "", tier.name(), "Free (Admin)");
+                    "admin_bypass_sub_" + userId, 0L, "INR", "", tier.name(), cycle, "Free (Admin)");
         }
 
-        long amountPaise = (tier == SubscriptionTier.AUTO_APPLY)
-                ? AUTO_APPLY_PRICE_PAISE : JOBS_PRICE_PAISE;
+        long monthlyPaise = (tier == SubscriptionTier.PLATINUM)
+                ? PLATINUM_MONTHLY_PAISE : GOLD_MONTHLY_PAISE;
+        int months = cycle.equals("ANNUAL") ? 12 : 6;
+        long totalPaise = monthlyPaise * months;
 
         String receipt = "sub_" + userId.substring(0, Math.min(8, userId.length()))
                 + "_" + System.currentTimeMillis();
 
         Map<String, Object> razorpayOrder = callRazorpayCreateOrder(
-                Map.of("amount", amountPaise, "currency", "INR", "receipt", receipt));
+                Map.of("amount", totalPaise, "currency", "INR", "receipt", receipt));
 
         String orderId = Optional.ofNullable((String) razorpayOrder.get("id"))
                 .orElseThrow(() -> new BadRequestException("Payment gateway returned no order ID."));
@@ -99,18 +100,19 @@ public class SubscriptionService {
         Payment payment = new Payment();
         payment.setUserId(userId);
         payment.setRazorpayOrderId(orderId);
-        payment.setAmount(amountPaise);
+        payment.setAmount(totalPaise);
         payment.setCurrency("INR");
-        payment.setGeneratedResumeId("subscription:" + tier.name());
+        payment.setGeneratedResumeId("subscription:" + tier.name() + ":" + cycle);
         paymentRepository.save(payment);
 
-        String displayPrice = (tier == SubscriptionTier.AUTO_APPLY) ? "₹599/mo" : "₹299/mo";
-        return new SubscriptionOrderResponse(orderId, amountPaise, "INR", keyId, tier.name(), displayPrice);
+        String cycleLabel = cycle.equals("ANNUAL") ? "Annual" : "Semi-Annual";
+        String displayPrice = "₹" + (monthlyPaise / 100) + "/mo · " + cycleLabel;
+        return new SubscriptionOrderResponse(orderId, totalPaise, "INR", keyId, tier.name(), cycle, displayPrice);
     }
 
     public boolean verifyAndActivate(String userId, String orderId, String paymentId,
                                      String signature, String tierName) {
-        // Admin bypass
+
         if (orderId.startsWith("admin_bypass_sub_") || SecurityUtils.isAdmin()) {
             activateTier(userId, parseTier(tierName));
             return true;
@@ -136,8 +138,6 @@ public class SubscriptionService {
         return true;
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
-
     private void activateTier(String userId, SubscriptionTier tier) {
         User user = findUser(userId);
         user.setSubscriptionTier(tier);
@@ -154,6 +154,14 @@ public class SubscriptionService {
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("Invalid subscription tier: " + tierName);
         }
+    }
+
+    private String parseBillingCycle(String billingCycle) {
+        if (billingCycle == null) return "ANNUAL";
+        return switch (billingCycle.toUpperCase()) {
+            case "SEMI_ANNUAL", "SEMIANNUAL", "SEMI-ANNUAL" -> "SEMI_ANNUAL";
+            default -> "ANNUAL";
+        };
     }
 
     private User findUser(String userId) {

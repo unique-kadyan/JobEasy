@@ -32,8 +32,9 @@ public class SubscriptionController {
     @PostMapping("/create-order")
     public ResponseEntity<SubscriptionService.SubscriptionOrderResponse> createOrder(
             @RequestParam String tier,
+            @RequestParam(defaultValue = "ANNUAL") String billingCycle,
             Authentication auth) {
-        return ResponseEntity.ok(subscriptionService.createOrder((String) auth.getPrincipal(), tier));
+        return ResponseEntity.ok(subscriptionService.createOrder((String) auth.getPrincipal(), tier, billingCycle));
     }
 
     @PostMapping("/verify")

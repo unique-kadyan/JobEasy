@@ -34,17 +34,20 @@ public class ResumeService {
     private final ResumeParserService parserService;
     private final UserRepository userRepository;
     private final JobService jobService;
+    private final ResumeProfileService resumeProfileService;
     private final String uploadDir;
 
     public ResumeService(ResumeRepository resumeRepository,
                          ResumeParserService parserService,
                          UserRepository userRepository,
                          @Lazy JobService jobService,
+                         @Lazy ResumeProfileService resumeProfileService,
                          @Value("${app.upload.dir}") String uploadDir) {
         this.resumeRepository = resumeRepository;
         this.parserService = parserService;
         this.userRepository = userRepository;
         this.jobService = jobService;
+        this.resumeProfileService = resumeProfileService;
         this.uploadDir = uploadDir;
     }
 
@@ -83,8 +86,16 @@ public class ResumeService {
 
             Resume saved = resumeRepository.save(resume);
 
-            // Trigger auto job search using resume skills so the user immediately
-            // sees relevant jobs after upload (result stored in cache for the UI).
+            final String savedId   = saved.getId();
+            final String finalText = parsedText;
+            Thread.ofVirtual().start(() -> {
+                try {
+                    resumeProfileService.parseAndSave(userId, savedId, finalText);
+                } catch (Exception e) {
+                    log.debug("Resume profile parse failed for user {}: {}", userId, e.getMessage());
+                }
+            });
+
             triggerAutoSearch(userId, parsedData);
 
             return saved;
@@ -93,10 +104,6 @@ public class ResumeService {
         }
     }
 
-    /**
-     * Fires a background job search seeded from skills extracted from the resume.
-     * Runs on a virtual thread so it never blocks the upload response.
-     */
     private void triggerAutoSearch(String userId, Map<String, Object> parsedData) {
         try {
             User user = userRepository.findById(userId).orElse(null);

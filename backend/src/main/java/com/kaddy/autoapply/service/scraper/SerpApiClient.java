@@ -16,10 +16,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import com.kaddy.autoapply.dto.response.JobResponse;
 
-/**
- * Scrapes jobs from Google Jobs via the SerpApi /search endpoint.
- * Docs: https://serpapi.com/google-jobs-api
- */
 @Component
 public non-sealed class SerpApiClient implements JobScraper {
 
@@ -54,7 +50,7 @@ public non-sealed class SerpApiClient implements JobScraper {
 
         try {
             final String where = Optional.ofNullable(location).filter(l -> !l.isBlank()).orElse("");
-            // SerpApi uses 'start' offset (multiples of 10)
+
             final int start = page * 10;
 
             Map<String, Object> response = webClient.get()
@@ -79,7 +75,17 @@ public non-sealed class SerpApiClient implements JobScraper {
 
             for (Map<String, Object> item : results) {
                 String applyLink = extractApplyLink(item);
-                jobs.add(new JobResponse(
+                List<String> tags = new ArrayList<>();
+                if (item.get("job_highlights") instanceof List<?> highlights) {
+                    for (Object h : highlights) {
+                        if (h instanceof Map<?, ?> hm && hm.get("items") instanceof List<?> items) {
+                            for (Object it : items) {
+                                if (it instanceof String s) tags.add(s);
+                            }
+                        }
+                    }
+                }
+                jobs.add(JobResponse.unscored(
                         null,
                         (String) item.get("job_id"),
                         "SERPAPI",
@@ -88,15 +94,11 @@ public non-sealed class SerpApiClient implements JobScraper {
                         (String) item.getOrDefault("location", ""),
                         applyLink,
                         (String) item.get("description"),
-                        (String) item.get("description"),
-                        new ArrayList<>(),
+                        buildSalary(item),
+                        tags,
                         buildJobType(item),
-                        parsePostedAt(),
-                        null,
-                        (String) item.getOrDefault("job_link", ""),
-                        new ArrayList<>(),
-                        new ArrayList<>(),
-                        null));
+                        parsePostedAt()
+                ));
             }
 
             return jobs;
@@ -106,10 +108,8 @@ public non-sealed class SerpApiClient implements JobScraper {
         }
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
-
     private String extractApplyLink(Map<String, Object> item) {
-        // Prefer the first apply option link
+
         if (item.get("apply_options") instanceof List<?> options && !options.isEmpty()) {
             Object first = options.get(0);
             if (first instanceof Map<?, ?> opt) {
@@ -118,7 +118,7 @@ public non-sealed class SerpApiClient implements JobScraper {
                     return s;
             }
         }
-        // Fall back to job_link
+
         return (String) item.getOrDefault("job_link", "");
     }
 
@@ -141,7 +141,7 @@ public non-sealed class SerpApiClient implements JobScraper {
     }
 
     private LocalDateTime parsePostedAt() {
-        // SerpApi does not return a machine-readable date; use scrape time
+
         return LocalDateTime.now();
     }
 }

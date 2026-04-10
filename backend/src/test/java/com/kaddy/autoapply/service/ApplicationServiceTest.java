@@ -55,8 +55,6 @@ class ApplicationServiceTest {
                 .status(ApplicationStatus.APPLIED).build();
     }
 
-    // ── apply ─────────────────────────────────────────────────────────────────
-
     @Test
     void apply_shouldSaveAndReturnResponse() {
         var req = new ApplyRequest("job1", null, null, null);
@@ -100,12 +98,10 @@ class ApplicationServiceTest {
         verify(applicationRepository, never()).save(any());
     }
 
-    // ── bulkApply ─────────────────────────────────────────────────────────────
-
     @Test
     void bulkApply_shouldSkipDuplicatesAndReturnSuccessful() {
         var req1 = new ApplyRequest("job1", null, null, null);
-        var req2 = new ApplyRequest("job2", null, null, null); // duplicate
+        var req2 = new ApplyRequest("job2", null, null, null);
 
         when(applicationRepository.existsByUserIdAndJobId("user1", "job1")).thenReturn(false);
         when(applicationRepository.existsByUserIdAndJobId("user1", "job2")).thenReturn(true);
@@ -129,8 +125,6 @@ class ApplicationServiceTest {
         assertTrue(results.isEmpty());
     }
 
-    // ── getUserApplications ───────────────────────────────────────────────────
-
     @Test
     void getUserApplications_shouldReturnPageWithJobDetails() {
         var page = new PageImpl<>(List.of(testApp), PageRequest.of(0, 10), 1);
@@ -152,7 +146,6 @@ class ApplicationServiceTest {
                 .thenReturn(page);
         when(jobService.getJobEntity("job1")).thenThrow(new ResourceNotFoundException("Job not found"));
 
-        // should NOT throw — gracefully degrades to null job
         var result = applicationService.getUserApplications("user1", null, 0, 10);
 
         assertEquals(1, result.getTotalElements());
@@ -171,8 +164,6 @@ class ApplicationServiceTest {
 
         assertEquals(1, result.getTotalElements());
     }
-
-    // ── updateStatus ──────────────────────────────────────────────────────────
 
     @Test
     void updateStatus_shouldPersistNewStatus() {
@@ -199,11 +190,8 @@ class ApplicationServiceTest {
         when(applicationRepository.save(any())).thenReturn(testApp);
         when(jobService.getJobEntity("job1")).thenThrow(new ResourceNotFoundException("gone"));
 
-        // should NOT throw
         assertDoesNotThrow(() -> applicationService.updateStatus("app1", "user1", "INTERVIEWING"));
     }
-
-    // ── delete ────────────────────────────────────────────────────────────────
 
     @Test
     void delete_shouldDelegateToRepository() {

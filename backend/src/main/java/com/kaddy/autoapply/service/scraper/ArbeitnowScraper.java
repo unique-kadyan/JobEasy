@@ -13,10 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Scrapes jobs from Arbeitnow's free public API (no key required).
- * Docs: https://www.arbeitnow.com/api/job-board-api
- */
 @Component
 public non-sealed class ArbeitnowScraper implements JobScraper {
 

@@ -113,7 +113,6 @@ class AuthServiceTest {
     void forgotPassword_shouldNotRevealNonExistentEmail() {
         when(userRepository.findByEmail("ghost@example.com")).thenReturn(Optional.empty());
 
-        // Should not throw — prevents email enumeration (OWASP)
         assertDoesNotThrow(() -> authService.forgotPassword("ghost@example.com"));
         verify(emailService, never()).sendPasswordResetEmail(any(), any(), any());
     }

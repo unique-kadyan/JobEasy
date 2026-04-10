@@ -39,28 +39,21 @@ public class User {
     private String githubUrl;
     private String portfolioUrl;
 
-    // ── Profile enrichment ────────────────────────────────────────────────────
-    /** Years of professional experience (used for seniority scoring). */
     private int experienceYears;
-    /** Job titles the user is actively targeting (boosts match score for these). */
+
     private List<String> targetRoles;
 
-    // ── Smart filtering ───────────────────────────────────────────────────────
-    /** User-defined reasons for marking a job as Not Interested (regex-matched). */
     private List<String> notInterestedReasons;
-    /** Keywords derived from notInterestedReasons used to pre-filter search results. */
+
     private List<String> skipKeywords;
 
-    // ── Auto-search schedule ──────────────────────────────────────────────────
     private boolean autoSearchEnabled;
-    private int autoSearchIntervalHours;  // 1 | 2 | 4 | 6 | 12 | 24
-    private Map<String, Object> autoSearchParams; // query, location, etc.
+    private int autoSearchIntervalHours;
+    private Map<String, Object> autoSearchParams;
     private LocalDateTime autoSearchLastRun;
 
-    /** Subscription tier — controls how many job results are shown and whether auto-apply is available. */
     private SubscriptionTier subscriptionTier;
 
-    /** Roles carried in JWT claims. Every account receives {@link Role#ROLE_USER} at signup. */
     private Set<Role> roles;
 
     private LocalDateTime createdAt;
@@ -76,8 +69,6 @@ public class User {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
-
-    // ── Getters ───────────────────────────────────────────────────────────────
 
     public String getId() { return id; }
     public String getEmail() { return email; }
@@ -110,13 +101,11 @@ public class User {
     public void setSubscriptionTier(SubscriptionTier subscriptionTier) { this.subscriptionTier = subscriptionTier; }
 
     public Set<Role> getRoles() {
-        // Guard for users persisted before roles field was added
+
         return roles != null ? roles : EnumSet.of(Role.ROLE_USER);
     }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
-
-    // ── Setters ───────────────────────────────────────────────────────────────
 
     public void setId(String id) { this.id = id; }
     public void setEmail(String email) { this.email = email; }

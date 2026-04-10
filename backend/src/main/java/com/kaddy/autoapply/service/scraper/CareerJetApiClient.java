@@ -15,10 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Scrapes jobs from CareerJet via their public API.
- * Docs: https://www.careerjet.com/partners/api/
- */
 @Component
 public non-sealed class CareerJetApiClient implements JobScraper {
 
@@ -58,9 +54,8 @@ public non-sealed class CareerJetApiClient implements JobScraper {
 
         try {
             final String where = Optional.ofNullable(location).filter(l -> !l.isBlank()).orElse("");
-            final int cjPage = page + 1; // CareerJet pages start at 1
+            final int cjPage = page + 1;
 
-            // CareerJet returns JSON with Content-Type: text/plain — receive as String, parse manually
             String raw = webClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/search/jobs")
@@ -111,10 +106,8 @@ public non-sealed class CareerJetApiClient implements JobScraper {
         }
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
-
     private String buildExternalId(Map<String, Object> item) {
-        // CareerJet has no stable job ID; derive one from the URL
+
         return Optional.ofNullable((String) item.get("url"))
                 .map(url -> "cj-" + Math.abs(url.hashCode()))
                 .orElse(null);

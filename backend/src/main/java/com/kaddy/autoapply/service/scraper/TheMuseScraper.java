@@ -13,10 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Scrapes jobs from The Muse's free public API (no key required).
- * Docs: https://www.themuse.com/developers/api/v2
- */
 @Component
 public non-sealed class TheMuseScraper implements JobScraper {
 
@@ -58,14 +54,13 @@ public non-sealed class TheMuseScraper implements JobScraper {
             List<JobResponse> jobs = new ArrayList<>();
 
             for (Map<String, Object> item : results) {
-                // Extract company name
+
                 String company = Optional.ofNullable(item.get("company"))
                         .filter(Map.class::isInstance)
                         .map(c -> ((Map<?, ?>) c).get("name"))
                         .map(Object::toString)
                         .orElse("");
 
-                // Extract location
                 String loc = "Remote";
                 Object locsObj = item.get("locations");
                 if (locsObj instanceof List<?> locs && !locs.isEmpty()) {
@@ -75,7 +70,6 @@ public non-sealed class TheMuseScraper implements JobScraper {
                     }
                 }
 
-                // Extract job URL
                 Object refs = item.get("refs");
                 String url = "";
                 if (refs instanceof Map<?, ?> refMap) {

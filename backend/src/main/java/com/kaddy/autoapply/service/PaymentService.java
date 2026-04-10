@@ -33,13 +33,11 @@ public class PaymentService {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
-    // Pricing in paise (1 INR = 100 paise)
-    private static final long PRICE_INDIA_PAISE = 5400L;       // ₹50 + 8% = ₹54
-    private static final long PRICE_OTHERS_PAISE = 6300L;      // ₹50 × 1.25 = ₹62.5 → ₹63
+    private static final long PRICE_INDIA_PAISE = 5400L;
+    private static final long PRICE_OTHERS_PAISE = 6300L;
 
-    // Approximate display rates for major currencies (INR per unit)
     private static final Map<String, double[]> CURRENCY_RATES = Map.of(
-            "USD", new double[]{83.0, 0.76},    // 1 USD ≈ ₹83 → ₹63/83 ≈ $0.76
+            "USD", new double[]{83.0, 0.76},
             "EUR", new double[]{90.0, 0.70},
             "GBP", new double[]{105.0, 0.60},
             "AED", new double[]{22.6, 2.79},
@@ -78,7 +76,6 @@ public class PaymentService {
         if (!resume.getUserId().equals(userId) && !SecurityUtils.isAdmin())
             throw new BadRequestException("Access denied.");
 
-        // ── Admin bypass: unlock directly, no payment required ────────────────
         if (SecurityUtils.isAdmin()) {
             if (!resume.isPaid()) {
                 resume.setPaid(true);
@@ -147,11 +144,9 @@ public class PaymentService {
         return true;
     }
 
-    // ── helpers ──────────────────────────────────────────────────────────────────
-
     private Map<String, Object> callRazorpayCreateOrder(Map<String, Object> body) {
         if (keyId.isBlank() || keySecret.isBlank()) {
-            // Test mode: return a mock order for local development
+
             log.warn("Razorpay keys not configured — returning mock order for development");
             return Map.of("id", "order_dev_" + System.currentTimeMillis(),
                     "amount", body.get("amount"), "currency", "INR");
@@ -176,7 +171,7 @@ public class PaymentService {
     }
 
     private boolean verifySignature(String orderId, String paymentId, String signature) {
-        if (keySecret.isBlank()) return true; // Skip in dev mode
+        if (keySecret.isBlank()) return true;
         try {
             String payload = orderId + "|" + paymentId;
             Mac mac = Mac.getInstance("HmacSHA256");

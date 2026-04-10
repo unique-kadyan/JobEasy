@@ -5,14 +5,15 @@ import type { Job, PagedResponse } from "@/types";
 export function useJobSearch(
   query: string,
   locations: string[],
-  source?: string,
   page = 0,
-  size = 30
+  size = 30,
+  minSalary?: number,
+  maxSalary?: number
 ) {
   const locationStr = locations.join(", ");
 
   return useQuery<PagedResponse<Job>>({
-    queryKey: ["jobs", query, locationStr, source, page, size],
+    queryKey: ["jobs", query, locationStr, page, size, minSalary, maxSalary],
     queryFn: async () => {
       const params = new URLSearchParams({
         query,
@@ -20,7 +21,8 @@ export function useJobSearch(
         size: String(size),
       });
       if (locationStr) params.set("location", locationStr);
-      if (source) params.set("source", source);
+      if (minSalary != null) params.set("minSalary", String(minSalary));
+      if (maxSalary != null) params.set("maxSalary", String(maxSalary));
       const res = await api.get(`/jobs/search?${params}`);
       return res.data;
     },

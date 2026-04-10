@@ -7,10 +7,8 @@ const API_URL =
     ? (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api")
     : "";
 
-// When the backend is responding normally, ping every 25 s — minimal traffic.
 const INTERVAL_UP_MS   = 25_000;
-// When the backend is down or connecting, ping every 5 s so we detect
-// the moment it wakes up and flip the status dot to green immediately.
+
 const INTERVAL_DOWN_MS = 5_000;
 const TIMEOUT_MS       = 8_000;
 
@@ -26,7 +24,7 @@ export function useKeepAlive(): ServerStatus {
     if (timerRef.current) clearTimeout(timerRef.current);
     const delay = currentStatus === "up" ? INTERVAL_UP_MS : INTERVAL_DOWN_MS;
     timerRef.current = setTimeout(runPing, delay);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const runPing = useCallback(async () => {
     if (!mountedRef.current) return;
@@ -57,12 +55,8 @@ export function useKeepAlive(): ServerStatus {
   useEffect(() => {
     mountedRef.current = true;
 
-    // Fire immediately on mount.
     runPing();
 
-    // Re-ping the instant the tab becomes visible again — if the browser
-    // throttled timers while the tab was in the background, this ensures
-    // the status reflects reality as soon as the user returns.
     const onVisible = () => {
       if (document.visibilityState === "visible") {
         if (timerRef.current) clearTimeout(timerRef.current);

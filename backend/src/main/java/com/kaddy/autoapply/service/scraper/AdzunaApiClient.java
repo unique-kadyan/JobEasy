@@ -114,10 +114,20 @@ public non-sealed class AdzunaApiClient implements JobScraper {
                 .filter(Number.class::isInstance).map(Number.class::cast);
 
         if (optMin.isEmpty() && optMax.isEmpty()) return null;
+
+        String symbol = switch (country) {
+            case "gb" -> "£";
+            case "us" -> "$";
+            case "au", "ca" -> "$";
+            case "in" -> "₹";
+            case "de", "fr", "at" -> "€";
+            default -> "";
+        };
+
         return optMin.flatMap(mn -> optMax.map(mx ->
-                        "£" + Math.round(mn.doubleValue()) + " - £" + Math.round(mx.doubleValue())))
-                .or(() -> optMin.map(mn -> "£" + Math.round(mn.doubleValue()) + "+"))
-                .or(() -> optMax.map(mx -> "Up to £" + Math.round(mx.doubleValue())))
+                        symbol + Math.round(mn.doubleValue()) + " - " + symbol + Math.round(mx.doubleValue())))
+                .or(() -> optMin.map(mn -> symbol + Math.round(mn.doubleValue()) + "+"))
+                .or(() -> optMax.map(mx -> "Up to " + symbol + Math.round(mx.doubleValue())))
                 .orElse(null);
     }
 }

@@ -13,10 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Scrapes remote tech jobs from Himalayas' free public API (no key required).
- * Docs: https://himalayas.app/jobs/api
- */
 @Component
 public non-sealed class HimalayasScraper implements JobScraper {
 
@@ -61,7 +57,6 @@ public non-sealed class HimalayasScraper implements JobScraper {
                         ? t.stream().map(Object::toString).toList()
                         : List.of();
 
-                // Location: remote or specific country
                 Object locObj = item.get("location");
                 String loc = "Remote";
                 if (locObj instanceof List<?> locs && !locs.isEmpty()) {

@@ -43,19 +43,16 @@ public class ResumeParserService {
         Map<String, Object> data = new HashMap<>();
         String lower = text.toLowerCase();
 
-        // Extract email
         Matcher emailMatcher = Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}").matcher(text);
         if (emailMatcher.find()) {
             data.put("email", emailMatcher.group());
         }
 
-        // Extract phone
         Matcher phoneMatcher = Pattern.compile("\\+?\\d?[\\s.-]?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}").matcher(text);
         if (phoneMatcher.find()) {
             data.put("phone", phoneMatcher.group());
         }
 
-        // Extract skills
         List<String> foundSkills = new ArrayList<>();
         for (String skill : COMMON_SKILLS) {
             if (lower.contains(skill)) {
@@ -64,13 +61,11 @@ public class ResumeParserService {
         }
         data.put("skills", foundSkills);
 
-        // Extract sections
         data.put("hasExperience", lower.contains("experience") || lower.contains("employment"));
         data.put("hasEducation", lower.contains("education") || lower.contains("university") || lower.contains("degree"));
         data.put("hasProjects", lower.contains("project"));
         data.put("hasCertifications", lower.contains("certification") || lower.contains("certificate"));
 
-        // Word count as a rough quality metric
         data.put("wordCount", text.split("\\s+").length);
 
         return data;

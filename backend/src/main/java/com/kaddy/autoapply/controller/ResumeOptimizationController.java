@@ -20,18 +20,6 @@ public class ResumeOptimizationController {
         this.optimizationService = optimizationService;
     }
 
-    /**
-     * POST /api/resumes/{id}/optimize
-     * Body:
-     * {
-     *   "jobTitle": "Senior Software Engineer",
-     *   "company": "Acme Corp",
-     *   "jobDescription": "...",
-     *   "preferredAi": "GROQ"   // optional
-     * }
-     *
-     * Returns: { "content": "<json from AI>", "providerName": "GROQ" }
-     */
     @PostMapping("/{id}/optimize")
     public ResponseEntity<ResumeOptimizationService.OptimizationResult> optimize(
             Authentication auth,

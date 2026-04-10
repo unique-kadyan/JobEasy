@@ -14,17 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
-/**
- * Generates ATS-optimised resume bullet points and a tailored summary for a
- * specific job description by leveraging the AI provider chain.
- *
- * <p>The service does <em>not</em> modify the stored resume — it returns
- * generated text so the user can review and apply changes manually.
- *
- * <p>Resilience4j circuit breaker {@code "ai"} is applied; the fallback
- * throws {@link com.kaddy.autoapply.exception.AiServiceException} so the
- * caller receives a meaningful error without exposing internals.
- */
 @Service
 @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class ResumeOptimizationService {
@@ -33,10 +22,8 @@ public class ResumeOptimizationService {
 
     private static final String CB_NAME = "ai";
 
-    /** Maximum characters of resume text sent to the AI (avoids prompt size abuse). */
     private static final int MAX_RESUME_CHARS = 4_000;
 
-    /** Maximum characters of job description sent to the AI. */
     private static final int MAX_JD_CHARS = 2_000;
 
     private final ResumeRepository  resumeRepository;
@@ -51,19 +38,6 @@ public class ResumeOptimizationService {
         this.aiProviderFactory = aiProviderFactory;
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
-
-    /**
-     * Generates optimised resume content tailored to a specific job.
-     *
-     * @param userId      the authenticated user's MongoDB id
-     * @param resumeId    the resume to optimise (must belong to the user)
-     * @param jobTitle    target job title
-     * @param company     target company name (used for personalisation)
-     * @param jobDescription  full or partial job description (JD)
-     * @param preferredAi optional AI provider name (null = use best available)
-     * @return {@link OptimizationResult} containing the AI-generated text and provider used
-     */
     @CircuitBreaker(name = CB_NAME, fallbackMethod = "optimizeFallback")
     public OptimizationResult optimize(String userId,
                                        String resumeId,
@@ -103,8 +77,6 @@ public class ResumeOptimizationService {
         return new OptimizationResult(result.content(), result.providerName());
     }
 
-    // ── Fallback ──────────────────────────────────────────────────────────────
-
     @SuppressWarnings("unused")
     public OptimizationResult optimizeFallback(String userId, String resumeId,
                                                 String jobTitle, String company,
@@ -114,8 +86,6 @@ public class ResumeOptimizationService {
         throw new com.kaddy.autoapply.exception.AiServiceException(
                 "AI optimisation service is temporarily unavailable. Please try again later.");
     }
-
-    // ── Prompt builders ───────────────────────────────────────────────────────
 
     private String buildSystemPrompt() {
         return """
@@ -179,8 +149,6 @@ public class ResumeOptimizationService {
         );
     }
 
-    // ── Validation ────────────────────────────────────────────────────────────
-
     private void validateInputs(String jobTitle, String jobDescription) {
         if (jobTitle == null || jobTitle.isBlank()) {
             throw new BadRequestException("Job title is required for resume optimisation");
@@ -190,20 +158,10 @@ public class ResumeOptimizationService {
         }
     }
 
-    // ── Utility ───────────────────────────────────────────────────────────────
-
     private String truncate(String s, int maxLen) {
         if (s == null) return "";
         return s.length() <= maxLen ? s : s.substring(0, maxLen) + "…";
     }
 
-    // ── Result record ─────────────────────────────────────────────────────────
-
-    /**
-     * Carries the AI-generated optimisation output and the provider that produced it.
-     *
-     * @param content      raw AI response (JSON string per system prompt contract)
-     * @param providerName name of the AI provider that generated the content
-     */
     public record OptimizationResult(String content, String providerName) {}
 }

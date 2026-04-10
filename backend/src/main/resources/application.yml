@@ -57,7 +57,7 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET}
-    access-token-expiry: 900000
+    access-token-expiry: 3600000
     refresh-token-expiry: 604800000
 
   # ─── Email (HTTP APIs — no SMTP) ─────────────────────────────────────────────
@@ -152,9 +152,9 @@ app:
   # ─── Outbound HTTP (WebClientConfig.java) ───────────────────────────────
   webclient:
     connect-timeout-ms: 5000 # TCP connect to job boards / AI APIs
-    read-timeout-s: 10 # stall timeout after last byte received
+    read-timeout-s: 12 # stall timeout — must be < SCRAPER_TIMEOUT_SECONDS (15) so errors surface cleanly
     write-timeout-s: 5 # request body write deadline
-    response-timeout-s: 15 # end-to-end SLA per outbound call
+    response-timeout-s: 13 # end-to-end SLA — kept just under scraper hard-kill at 15s
     max-connections: 500 # Netty connection pool cap
 
 # ─── Actuator ─────────────────────────────────────────────────────────────────

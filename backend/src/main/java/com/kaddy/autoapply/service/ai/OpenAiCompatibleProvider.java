@@ -9,11 +9,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Abstract base for any provider that exposes the OpenAI-compatible
- * /v1/chat/completions endpoint (Cerebras, Groq, Together, Mistral,
- * SambaNova, Novita, Gemini OpenAI-compat, OpenAI itself).
- */
 public non-sealed abstract class OpenAiCompatibleProvider implements AiProvider {
 
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =

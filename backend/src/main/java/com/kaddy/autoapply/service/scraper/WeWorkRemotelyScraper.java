@@ -12,16 +12,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Scrapes remote jobs from We Work Remotely's public RSS feed (no key required).
- * Feed URL: https://weworkremotely.com/remote-jobs.rss
- */
 @Component
 public non-sealed class WeWorkRemotelyScraper implements JobScraper {
 
     private static final Logger log = LoggerFactory.getLogger(WeWorkRemotelyScraper.class);
 
-    // Patterns for lightweight RSS parsing without pulling in a full XML parser
     private static final Pattern ITEM_PATTERN =
             Pattern.compile("<item>(.*?)</item>", Pattern.DOTALL);
     private static final Pattern TITLE_PATTERN =
@@ -51,7 +46,7 @@ public non-sealed class WeWorkRemotelyScraper implements JobScraper {
 
     @Override
     public List<JobResponse> fetchJobs(String query, String location, int page) {
-        if (page > 0) return List.of(); // RSS has no pagination
+        if (page > 0) return List.of();
 
         try {
             String rss = webClient.get()
@@ -70,10 +65,10 @@ public non-sealed class WeWorkRemotelyScraper implements JobScraper {
                 String item = items.group(1);
 
                 String rawTitle = extract(TITLE_PATTERN, item);
-                // WWR title format: "Company: Job Title at Company"
+
                 String[] parts = rawTitle.split(": ", 2);
                 String title = parts.length > 1 ? parts[1] : rawTitle;
-                // Strip " at Company" suffix if present
+
                 if (title.contains(" at ")) {
                     title = title.substring(0, title.lastIndexOf(" at ")).strip();
                 }
@@ -90,7 +85,6 @@ public non-sealed class WeWorkRemotelyScraper implements JobScraper {
                         ? String.valueOf(Math.abs(url.hashCode()))
                         : guid.replaceAll(".*/", "");
 
-                // Filter by keyword
                 if (!q.isBlank() &&
                     !title.toLowerCase().contains(q) &&
                     !description.toLowerCase().contains(q) &&

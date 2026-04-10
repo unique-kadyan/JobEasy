@@ -1,10 +1,10 @@
 export const STATUS_COLORS: Record<string, string> = {
-  SAVED: "bg-gray-100 text-gray-700",
-  APPLIED: "bg-blue-100 text-blue-700",
-  INTERVIEWING: "bg-yellow-100 text-yellow-700",
-  OFFERED: "bg-green-100 text-green-700",
-  REJECTED: "bg-red-100 text-red-700",
-  WITHDRAWN: "bg-gray-100 text-gray-500",
+  SAVED: "bg-gray-100 text-gray-700 dark:bg-gray-500/15 dark:text-gray-400",
+  APPLIED: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400",
+  INTERVIEWING: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400",
+  OFFERED: "bg-green-100 text-green-700 dark:bg-emerald-500/15 dark:text-emerald-400",
+  REJECTED: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400",
+  WITHDRAWN: "bg-gray-100 text-gray-500 dark:bg-gray-500/10 dark:text-gray-500",
 };
 
 export const SOURCE_COLORS: Record<string, string> = {

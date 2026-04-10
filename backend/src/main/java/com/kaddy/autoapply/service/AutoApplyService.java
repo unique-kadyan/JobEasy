@@ -1,10 +1,10 @@
 package com.kaddy.autoapply.service;
 
+import com.kaddy.autoapply.config.FeatureConfig;
 import com.kaddy.autoapply.exception.BadRequestException;
 import com.kaddy.autoapply.model.AutoApplyJob;
 import com.kaddy.autoapply.model.Job;
 import com.kaddy.autoapply.model.User;
-import com.kaddy.autoapply.model.enums.SubscriptionTier;
 import com.kaddy.autoapply.repository.AutoApplyJobRepository;
 import com.kaddy.autoapply.repository.JobRepository;
 import com.kaddy.autoapply.repository.UserRepository;
@@ -25,27 +25,26 @@ public class AutoApplyService {
     private final AutoApplyJobRepository autoApplyJobRepository;
     private final UserRepository         userRepository;
     private final JobRepository          jobRepository;
+    private final FeatureConfig          featureConfig;
 
     public AutoApplyService(AutoApplyJobRepository autoApplyJobRepository,
                             UserRepository userRepository,
-                            JobRepository jobRepository) {
+                            JobRepository jobRepository,
+                            FeatureConfig featureConfig) {
         this.autoApplyJobRepository = autoApplyJobRepository;
         this.userRepository         = userRepository;
         this.jobRepository          = jobRepository;
+        this.featureConfig          = featureConfig;
     }
 
-    /**
-     * Queues multiple jobs for auto-apply. Requires AUTO_APPLY subscription.
-     * Returns the queued AutoApplyJob entries.
-     */
     public List<AutoApplyJob> queueJobs(String userId, List<String> jobIds) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("User not found."));
 
         if (!SecurityUtils.isAdmin()
-                && user.getSubscriptionTier() != SubscriptionTier.AUTO_APPLY) {
+                && !featureConfig.canAutoApply(user.getSubscriptionTier())) {
             throw new BadRequestException(
-                    "Auto-apply requires an AUTO_APPLY subscription. Please upgrade.");
+                    "Auto-apply requires a Platinum subscription. Please upgrade.");
         }
 
         List<AutoApplyJob> queued = jobIds.stream().map(jobId -> {

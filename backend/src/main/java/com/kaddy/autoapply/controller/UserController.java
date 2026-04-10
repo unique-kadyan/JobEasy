@@ -24,8 +24,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    // ── Profile ───────────────────────────────────────────────────────────────
-
     @GetMapping("/profile")
     public ResponseEntity<UserResponse> getProfile(Authentication auth) {
         return ResponseEntity.ok(userService.getProfile((String) auth.getPrincipal()));
@@ -37,12 +35,6 @@ public class UserController {
         return ResponseEntity.ok(userService.updateProfile((String) auth.getPrincipal(), request));
     }
 
-    // ── GitHub import ─────────────────────────────────────────────────────────
-
-    /**
-     * POST /api/users/github-import
-     * Body: { "username": "octocat" }
-     */
     @PostMapping("/github-import")
     public ResponseEntity<UserResponse> importFromGitHub(Authentication auth,
                                                           @RequestBody Map<String, String> body) {
@@ -53,8 +45,6 @@ public class UserController {
         return ResponseEntity.ok(
                 userService.importFromGitHub((String) auth.getPrincipal(), username.strip()));
     }
-
-    // ── Skip keywords ─────────────────────────────────────────────────────────
 
     @PostMapping("/skip-keywords")
     public ResponseEntity<UserResponse> addSkipKeyword(Authentication auth,
@@ -69,8 +59,6 @@ public class UserController {
         return ResponseEntity.ok(
                 userService.removeSkipKeyword((String) auth.getPrincipal(), keyword));
     }
-
-    // ── Not-interested reasons ────────────────────────────────────────────────
 
     @PostMapping("/not-interested-reasons")
     public ResponseEntity<UserResponse> addNotInterestedReason(Authentication auth,
@@ -87,8 +75,6 @@ public class UserController {
                 userService.removeNotInterestedReason((String) auth.getPrincipal(), reason));
     }
 
-    // ── Auto-search schedule ──────────────────────────────────────────────────
-
     @GetMapping("/auto-search-schedule")
     public ResponseEntity<AutoSearchScheduleResponse> getSchedule(Authentication auth) {
         return ResponseEntity.ok(userService.getAutoSearchSchedule((String) auth.getPrincipal()));
@@ -101,8 +87,6 @@ public class UserController {
         return ResponseEntity.ok(
                 userService.updateAutoSearchSchedule((String) auth.getPrincipal(), request));
     }
-
-    // ── Account ───────────────────────────────────────────────────────────────
 
     @DeleteMapping("/account")
     public ResponseEntity<Void> deleteAccount(Authentication auth) {

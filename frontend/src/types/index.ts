@@ -15,7 +15,7 @@ export interface User {
   emailVerified: boolean;
   createdAt: string;
   roles?: string[];
-  subscriptionTier?: "FREE" | "JOBS" | "AUTO_APPLY";
+  subscriptionTier?: "FREE" | "GOLD" | "PLATINUM";
 }
 
 export interface ResumeAnalysis {
@@ -175,6 +175,76 @@ export interface Resume {
   };
   isPrimary: boolean;
   createdAt: string;
+}
+
+export interface ResumeProfileContact {
+  name?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  linkedin?: string;
+  github?: string;
+  portfolio?: string;
+}
+
+export interface ResumeProfileExperience {
+  company: string;
+  title: string;
+  location?: string;
+  startDate: string;
+  endDate?: string;
+  current: boolean;
+  bullets: string[];
+}
+
+export interface ResumeProfileEducation {
+  institution: string;
+  degree: string;
+  field: string;
+  graduationDate: string;
+  gpa?: string;
+}
+
+export interface ResumeProfileProject {
+  name: string;
+  description: string;
+  technologies: string[];
+  url?: string;
+}
+
+export interface ResumeProfileCertification {
+  name: string;
+  issuer: string;
+  date: string;
+}
+
+export interface ResumeProfilePreferences {
+  noticePeriod?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  currency?: string;
+  workType?: string;
+}
+
+export interface ResumeProfile {
+  id?: string;
+  userId: string;
+  sourceResumeId?: string;
+  contact?: ResumeProfileContact;
+  headline?: string;
+  summary?: string;
+  yearsOfExperience?: number;
+  experienceLevel?: "JUNIOR" | "MID" | "SENIOR" | "LEAD" | "STAFF" | "PRINCIPAL";
+  experience?: ResumeProfileExperience[];
+  education?: ResumeProfileEducation[];
+  skills?: Record<string, string[]>;
+  projects?: ResumeProfileProject[];
+  certifications?: ResumeProfileCertification[];
+  targetRoles?: string[];
+  preferences?: ResumeProfilePreferences;
+  customTags?: Record<string, unknown>;
+  version: number;
+  updatedAt?: string;
 }
 
 export interface Analytics {

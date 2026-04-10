@@ -27,9 +27,6 @@ import com.kaddy.autoapply.service.AuthService;
 import com.kaddy.autoapply.service.TokenBlacklistService;
 import org.springframework.context.annotation.Import;
 
-// @WebMvcTest does not include @Configuration @EnableWebSecurity classes via component scan;
-// we must import SecurityConfig and JwtAuthenticationFilter explicitly so that our custom
-// security rules (permitAll on /api/auth/**, CSRF disabled) are applied instead of Spring's default.
 @WebMvcTest(AuthController.class)
 @Import({ SecurityConfig.class, JwtAuthenticationFilter.class })
 @ActiveProfiles("test")
@@ -41,9 +38,7 @@ class AuthControllerTest {
     private ObjectMapper objectMapper;
     @MockBean
     private AuthService authService;
-    // Mock JwtAuthenticationFilter's dependencies so the real filter loads and
-    // always forwards the request (filterChain.doFilter is unconditional in the
-    // impl).
+
     @MockBean
     private JwtTokenProvider jwtTokenProvider;
     @MockBean

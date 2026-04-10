@@ -17,8 +17,6 @@ class RateLimitFilterTest {
         filter = new RateLimitFilter();
     }
 
-    // ── General endpoint (60 req/min) ─────────────────────────────────────────
-
     @Test
     void generalEndpoint_shouldAllowFirst60RequestsFromSameIp() throws Exception {
         for (int i = 0; i < 60; i++) {
@@ -35,7 +33,7 @@ class RateLimitFilterTest {
 
     @Test
     void generalEndpoint_shouldBlock61stRequestFromSameIp() throws Exception {
-        // Exhaust the bucket
+
         for (int i = 0; i < 60; i++) {
             filter.doFilterInternal(
                     request("10.0.0.5", "/api/jobs/search"),
@@ -52,8 +50,6 @@ class RateLimitFilterTest {
         assertTrue(res.getContentAsString().contains("429"));
         assertNull(chain.getRequest(), "Filter chain should NOT have been called");
     }
-
-    // ── Auth endpoint (10 req/min) ────────────────────────────────────────────
 
     @Test
     void authEndpoint_shouldAllowFirst10Requests() throws Exception {
@@ -86,7 +82,7 @@ class RateLimitFilterTest {
 
     @Test
     void authEndpoint_shouldHaveSeparateBucketFromGeneralEndpoint() throws Exception {
-        // Exhaust auth bucket
+
         for (int i = 0; i < 10; i++) {
             filter.doFilterInternal(
                     request("10.0.0.3", "/api/auth/signup"),
@@ -94,7 +90,6 @@ class RateLimitFilterTest {
                     new MockFilterChain());
         }
 
-        // General endpoint from same IP should still work
         var res   = new MockHttpServletResponse();
         var chain = new MockFilterChain();
         filter.doFilterInternal(request("10.0.0.3", "/api/jobs/search"), res, chain);
@@ -103,11 +98,9 @@ class RateLimitFilterTest {
         assertNotNull(chain.getRequest());
     }
 
-    // ── IP isolation ──────────────────────────────────────────────────────────
-
     @Test
     void differentIps_shouldHaveIndependentBuckets() throws Exception {
-        // Exhaust IP A's auth bucket
+
         for (int i = 0; i < 10; i++) {
             filter.doFilterInternal(
                     request("1.2.3.4", "/api/auth/login"),
@@ -115,15 +108,12 @@ class RateLimitFilterTest {
                     new MockFilterChain());
         }
 
-        // IP B should still have a fresh bucket
         var res   = new MockHttpServletResponse();
         var chain = new MockFilterChain();
         filter.doFilterInternal(request("5.6.7.8", "/api/auth/login"), res, chain);
 
         assertEquals(200, res.getStatus());
     }
-
-    // ── X-Forwarded-For header ────────────────────────────────────────────────
 
     @Test
     void xForwardedFor_shouldBeUsedAsClientIp() throws Exception {
@@ -136,14 +126,12 @@ class RateLimitFilterTest {
 
         assertEquals(200, res.getStatus());
 
-        // Now exhaust the bucket for the forwarded IP
         for (int i = 1; i < 10; i++) {
             var r = request("another-proxy", "/api/auth/login");
             r.addHeader("X-Forwarded-For", "203.0.113.1");
             filter.doFilterInternal(r, new MockHttpServletResponse(), new MockFilterChain());
         }
 
-        // 11th request from same forwarded IP should be blocked
         var req11 = request("another-proxy", "/api/auth/login");
         req11.addHeader("X-Forwarded-For", "203.0.113.1");
         var res11 = new MockHttpServletResponse();
@@ -168,7 +156,6 @@ class RateLimitFilterTest {
     void remoteAddrUsedWhenNoXForwardedFor() throws Exception {
         var req = new MockHttpServletRequest("GET", "/api/jobs/search");
         req.setRemoteAddr("172.16.0.100");
-        // No X-Forwarded-For header
 
         var res   = new MockHttpServletResponse();
         var chain = new MockFilterChain();
@@ -176,8 +163,6 @@ class RateLimitFilterTest {
 
         assertEquals(200, res.getStatus());
     }
-
-    // ── Response body ─────────────────────────────────────────────────────────
 
     @Test
     void rateLimitedResponse_shouldContainJsonWithStatusAndMessage() throws Exception {
@@ -195,8 +180,6 @@ class RateLimitFilterTest {
         assertTrue(body.contains("\"status\":429"));
         assertTrue(body.contains("message"));
     }
-
-    // ── helper ────────────────────────────────────────────────────────────────
 
     private MockHttpServletRequest request(String remoteAddr, String path) {
         var req = new MockHttpServletRequest("GET", path);

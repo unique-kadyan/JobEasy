@@ -6,13 +6,6 @@ import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilde
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Ensures JavaTimeModule is registered on the primary Spring MVC ObjectMapper
- * so LocalDateTime fields serialize as ISO-8601 strings in HTTP responses.
- *
- * Spring Boot auto-config normally handles this, but the explicit jackson-databind
- * version declaration in pom.xml can prevent the module from being auto-detected.
- */
 @Configuration
 public class JacksonConfig {
 

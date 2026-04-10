@@ -13,10 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Scrapes remote jobs from Working Nomads' free public API (no key required).
- * Docs: https://www.workingnomads.com/api/exposed_jobs/
- */
 @Component
 public non-sealed class WorkingNomadsScraper implements JobScraper {
 
@@ -47,7 +43,6 @@ public non-sealed class WorkingNomadsScraper implements JobScraper {
 
             if (raw == null || raw.isEmpty()) return List.of();
 
-            // Filter client-side by query keyword
             String q = (query != null) ? query.toLowerCase() : "";
             List<JobResponse> results = new ArrayList<>();
 
@@ -56,7 +51,6 @@ public non-sealed class WorkingNomadsScraper implements JobScraper {
                 String description = Optional.ofNullable((String) item.get("description")).orElse("");
                 String category = Optional.ofNullable((String) item.get("category")).orElse("");
 
-                // Simple keyword relevance check
                 if (!q.isBlank() &&
                     !title.toLowerCase().contains(q) &&
                     !description.toLowerCase().contains(q) &&
@@ -79,7 +73,7 @@ public non-sealed class WorkingNomadsScraper implements JobScraper {
                         LocalDateTime.now()
                 ));
 
-                if (results.size() >= 50) break; // cap per-source to 50
+                if (results.size() >= 50) break;
             }
             return results;
         } catch (Exception e) {

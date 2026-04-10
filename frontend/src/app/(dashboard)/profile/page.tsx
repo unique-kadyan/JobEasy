@@ -146,12 +146,15 @@ export default function ProfilePage() {
     return match ? match[1] : null;
   })();
 
+  const [showAllRepos, setShowAllRepos] = useState(false);
+
   const { data: githubRepos, isLoading: loadingRepos } = useQuery({
     queryKey: ["github-repos", githubUsername],
     enabled: !!githubUsername,
     queryFn: async () => {
       const res = await fetch(
-        `https://api.github.com/users/${githubUsername}/repos?sort=stars&direction=desc&per_page=100`
+        `https://api.github.com/users/${githubUsername}/repos?sort=stars&direction=desc&per_page=100`,
+        { headers: { Accept: "application/vnd.github.mercy-preview+json" } }
       );
       if (!res.ok) throw new Error("Failed to fetch repos");
       return res.json() as Promise<GitHubRepo[]>;
@@ -321,49 +324,77 @@ export default function ProfilePage() {
               <div className="flex items-center gap-2">
                 <GitBranch className="h-5 w-5 text-gray-800" />
                 <h2 className="font-semibold text-gray-900">GitHub Projects</h2>
+                {githubRepos && (
+                  <span className="text-xs text-gray-400 font-normal">
+                    {githubRepos.filter((r) => !r.fork).length} repositories
+                  </span>
+                )}
               </div>
-              <a
-                href={user?.githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
-              >
-                View all <ExternalLink className="h-3 w-3" />
-              </a>
             </div>
           </CardHeader>
           <CardContent>
             {loadingRepos ? (
               <p className="text-sm text-gray-400">Loading repositories…</p>
-            ) : githubRepos && githubRepos.length > 0 ? (
-              <div className="space-y-3">
-                {githubRepos.filter((r) => !r.fork).slice(0, 3).map((repo) => (
-                  <div key={repo.id} className="flex items-start justify-between gap-4 py-2 border-b border-gray-50 last:border-0">
-                    <div className="min-w-0">
-                      <a
-                        href={repo.html_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-medium text-indigo-600 hover:underline"
+            ) : githubRepos && githubRepos.length > 0 ? (() => {
+              const ownRepos = githubRepos.filter((r) => !r.fork);
+              const visible = showAllRepos ? ownRepos : ownRepos.slice(0, 6);
+              return (
+                <div className="space-y-0">
+                  {visible.map((repo) => {
+                    const techs = [
+                      ...(repo.topics ?? []),
+                      ...(repo.language && !repo.topics?.includes(repo.language.toLowerCase())
+                        ? [repo.language]
+                        : []),
+                    ].slice(0, 6);
+                    return (
+                      <div
+                        key={repo.id}
+                        className="py-3 border-b border-gray-50 last:border-0"
                       >
-                        {repo.name}
-                      </a>
-                      {repo.description && (
-                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{repo.description}</p>
-                      )}
-                      <div className="flex items-center gap-3 mt-1">
-                        {repo.language && (
-                          <span className="text-xs text-gray-400">{repo.language}</span>
+                        {}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <a
+                            href={repo.html_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-semibold text-indigo-600 hover:underline shrink-0"
+                          >
+                            {repo.name}
+                          </a>
+                          {techs.map((t) => (
+                            <span
+                              key={t}
+                              className="rounded-full bg-indigo-50 text-indigo-700 px-2 py-0.5 text-xs font-medium"
+                            >
+                              {t}
+                            </span>
+                          ))}
+                          <span className="ml-auto flex items-center gap-0.5 text-xs text-gray-400 shrink-0">
+                            <Star className="h-3 w-3" /> {repo.stargazers_count}
+                          </span>
+                        </div>
+                        {repo.description && (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            {repo.description}
+                          </p>
                         )}
-                        <span className="flex items-center gap-0.5 text-xs text-gray-400">
-                          <Star className="h-3 w-3" /> {repo.stargazers_count}
-                        </span>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
+                    );
+                  })}
+                  {ownRepos.length > 6 && (
+                    <button
+                      onClick={() => setShowAllRepos((v) => !v)}
+                      className="mt-3 text-xs text-indigo-600 hover:underline"
+                    >
+                      {showAllRepos
+                        ? "Show less"
+                        : `Show ${ownRepos.length - 6} more repositories`}
+                    </button>
+                  )}
+                </div>
+              );
+            })() : (
               <p className="text-sm text-gray-400">No public repositories found.</p>
             )}
           </CardContent>
@@ -475,6 +506,7 @@ interface GitHubRepo {
   language: string | null;
   stargazers_count: number;
   fork: boolean;
+  topics?: string[];
 }
 
 function InfoRow({ label, value }: { label: string; value?: string }) {

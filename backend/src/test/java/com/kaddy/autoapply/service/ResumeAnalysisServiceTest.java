@@ -30,15 +30,13 @@ class ResumeAnalysisServiceTest {
 
     @BeforeEach
     public void setUp() {
-        // lenient: analyze_shouldThrowWhenNoResumeFound exits before save() is called
+
         lenient().when(analysisRepository.save(any(ResumeAnalysis.class))).thenAnswer(inv -> {
             ResumeAnalysis a = inv.getArgument(0);
             a.setId("analysis1");
             return a;
         });
     }
-
-    // ── No resume ─────────────────────────────────────────────────────────────
 
     @Test
     void analyze_shouldThrowWhenNoResumeFound() {
@@ -47,8 +45,6 @@ class ResumeAnalysisServiceTest {
         BadRequestException ex = assertThrows(BadRequestException.class, () -> analysisService.analyze("user1"));
         assertNotNull(ex.getMessage());
     }
-
-    // ── Primary resume selection ──────────────────────────────────────────────
 
     @Test
     void analyze_shouldPreferPrimaryResume() {
@@ -75,8 +71,6 @@ class ResumeAnalysisServiceTest {
         assertNotNull(result.id());
     }
 
-    // ── Scoring: perfect resume ───────────────────────────────────────────────
-
     @Test
     void analyze_fullResume_shouldScoreHighAndHaveNoMissingFields() {
         Resume resume = resume("r1", true, fullText(), fullParsedData());
@@ -89,8 +83,6 @@ class ResumeAnalysisServiceTest {
         assertTrue(result.strengths().size() > result.missingFields().size(),
                 "Full resume should have more strengths than missing fields");
     }
-
-    // ── Scoring: empty resume ─────────────────────────────────────────────────
 
     @Test
     void analyze_emptyResume_shouldScoreLowAndListMissingFields() {
@@ -106,8 +98,6 @@ class ResumeAnalysisServiceTest {
         assertTrue(result.missingFields().contains("Professional summary / objective"));
         assertTrue(result.missingFields().contains("Work experience section"));
     }
-
-    // ── Missing fields detection ──────────────────────────────────────────────
 
     @Test
     void analyze_shouldFlagMissingEmail() {
@@ -146,7 +136,7 @@ class ResumeAnalysisServiceTest {
         Resume r = resume("r1", true, fullText(), Map.of(
                 "email", "a@b.com",
                 "phone", "123",
-                "skills", List.of(),  // empty skills list
+                "skills", List.of(),
                 "hasExperience", true,
                 "hasEducation", true,
                 "wordCount", 450
@@ -157,8 +147,6 @@ class ResumeAnalysisServiceTest {
 
         assertTrue(result.missingFields().contains("Skills section"));
     }
-
-    // ── Score labels ──────────────────────────────────────────────────────────
 
     @Test
     void analyze_shouldReturnCorrectLabels() {
@@ -172,11 +160,9 @@ class ResumeAnalysisServiceTest {
 
         assertNotNull(low.scoreLabel());
         assertNotNull(high.scoreLabel());
-        // High score should not be "Needs Work"
+
         assertNotEquals("Needs Work", high.scoreLabel());
     }
-
-    // ── Length assessment ─────────────────────────────────────────────────────
 
     @Test
     void analyze_shortResume_shouldFlagTooShort() {
@@ -201,8 +187,6 @@ class ResumeAnalysisServiceTest {
         verify(analysisRepository).save(any(ResumeAnalysis.class));
     }
 
-    // ── Suggestions ───────────────────────────────────────────────────────────
-
     @Test
     void analyze_shouldProvideSuggestionsForImprovements() {
         Resume r = resume("r1", true, minimalText(), Map.of(
@@ -217,8 +201,6 @@ class ResumeAnalysisServiceTest {
 
         assertFalse(result.suggestions().isEmpty());
     }
-
-    // ── helpers ───────────────────────────────────────────────────────────────
 
     private Resume resume(String id, boolean primary, String text, Map<String, Object> parsed) {
         Resume r = new Resume();

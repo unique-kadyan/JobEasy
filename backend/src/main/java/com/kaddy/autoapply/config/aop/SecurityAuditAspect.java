@@ -12,9 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-/**
- * Audits security-sensitive operations (auth events and job applications).
- */
 @Aspect
 @Component
 public class SecurityAuditAspect {

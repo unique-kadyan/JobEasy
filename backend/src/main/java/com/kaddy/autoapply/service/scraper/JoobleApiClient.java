@@ -15,11 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Searches jobs via Jooble's free API.
- * Free key: https://jooble.org/api/about
- * Aggregates global jobs including Indeed, Glassdoor, and regional boards.
- */
 @Component
 public non-sealed class JoobleApiClient implements JobScraper {
 
