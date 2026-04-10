@@ -539,7 +539,7 @@ function ProfileLink({
             rel="noopener noreferrer"
             className="text-sm text-indigo-600 hover:underline flex items-center gap-1"
           >
-            {url.replace(/^https?:\/\
+            {url.replace(/^https?:\/\//, '')}
             <ExternalLink className="h-3 w-3" />
           </a>
         ) : (

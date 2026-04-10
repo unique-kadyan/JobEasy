@@ -143,7 +143,7 @@ export default function JobsPage() {
       setQuery(generatedQuery);
     }
 
-  }, [generatedQuery]);
+  }, [generatedQuery, query]);
 
   const summarizeMutation = useSummarizeJob();
   const { refetch: fetchMatch, isFetching: matchFetching } = useJobMatch(matchModal?.id ?? "");

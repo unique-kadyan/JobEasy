@@ -24,7 +24,9 @@ class AiProviderFactoryTest {
         groq     = mockProvider("GROQ", true);
         openai   = mockProvider("OPENAI", true);
         claude   = mockProvider("CLAUDE", true);
-        factory  = new AiProviderFactory(List.of(cerebras, groq, openai, claude));
+        factory  = new AiProviderFactory(List.of(cerebras, groq, openai, claude),
+                "CEREBRAS,GROQ,TOGETHER,MISTRAL,SAMBANOVA,NOVITA",
+                "GEMINI,OPENAI,CLAUDE");
     }
 
     @Test
@@ -61,7 +63,9 @@ class AiProviderFactoryTest {
     @Test
     void generate_shouldSkipPreferredWhenNotAvailable() {
         AiProvider unavailable = mockProvider("GROQ", false);
-        factory = new AiProviderFactory(List.of(cerebras, unavailable, openai, claude));
+        factory = new AiProviderFactory(List.of(cerebras, unavailable, openai, claude),
+                "CEREBRAS,GROQ,TOGETHER,MISTRAL,SAMBANOVA,NOVITA",
+                "GEMINI,OPENAI,CLAUDE");
         when(cerebras.generateText(any(), any())).thenReturn("from cerebras");
 
         var result = factory.generate("sys", "user", "GROQ");
@@ -85,7 +89,9 @@ class AiProviderFactoryTest {
     @Test
     void generate_shouldSkipUnavailableFreeProviders() {
         AiProvider unavailableCerebras = mockProvider("CEREBRAS", false);
-        factory = new AiProviderFactory(List.of(unavailableCerebras, groq, openai, claude));
+        factory = new AiProviderFactory(List.of(unavailableCerebras, groq, openai, claude),
+                "CEREBRAS,GROQ,TOGETHER,MISTRAL,SAMBANOVA,NOVITA",
+                "GEMINI,OPENAI,CLAUDE");
         when(groq.generateText(any(), any())).thenReturn("from groq");
 
         var result = factory.generate("sys", "user", null);
@@ -137,7 +143,9 @@ class AiProviderFactoryTest {
 
     @Test
     void generate_shouldThrowWhenNoProvidersConfigured() {
-        factory = new AiProviderFactory(List.of());
+        factory = new AiProviderFactory(List.of(),
+                "CEREBRAS,GROQ,TOGETHER,MISTRAL,SAMBANOVA,NOVITA",
+                "GEMINI,OPENAI,CLAUDE");
 
         assertThrows(AiServiceException.class,
                 () -> factory.generate("sys", "user", null));

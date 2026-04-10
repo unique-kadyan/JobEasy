@@ -47,7 +47,7 @@ class AuthControllerTest {
     UserResponse userResponse = new UserResponse(
             "u1", "test@test.com", "Test", null, null, null,
             null, null, null, null, null, null, null, false, 0, null, null, false, 0,
-            LocalDateTime.now(), java.util.List.of("ROLE_USER"), null);
+            LocalDateTime.now(), java.util.List.of("ROLE_USER"), null, false);
 
     @Test
     void signup_shouldReturn201() throws Exception {

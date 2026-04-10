@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.6</version>
+        <version>3.4.1</version>
         <relativePath/>
     </parent>
 
@@ -20,13 +20,6 @@
     <properties>
         <!-- JDK runtime version — keep in sync with .java-version at the project root -->
         <java.version>25</java.version>
-        <!--
-            Bytecode target is pinned to Java 21 because Spring Framework 6.1.x
-            (transitively required by Spring Boot 3.3.x) cannot scan class files
-            compiled above format version 65 (Java 21).  Remove this override
-            once Spring Boot is upgraded to a version that ships Framework 6.2+.
-        -->
-        <maven.compiler.release>21</maven.compiler.release>
         <jjwt.version>0.12.6</jjwt.version>
         <springdoc.version>2.6.0</springdoc.version>
         <resilience4j.version>2.2.0</resilience4j.version>
