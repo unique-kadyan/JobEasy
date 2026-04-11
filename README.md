@@ -119,7 +119,7 @@ All platform capabilities are gated by subscription tier. Every limit is enforce
               ┌────────────────────┴────────────────────┐
               │                                         │
    ┌──────────▼──────────┐               ┌─────────────▼───────────┐
-   │      MongoDB 7       │               │         Redis 7          │
+   │    MongoDB Atlas     │               │         Redis 7          │
    │  (primary datastore) │               │  Token blacklist · Cache │
    │  Documents · TTL idx │               │  AOF + RDB persistence   │
    └─────────────────────┘               └─────────────────────────┘
@@ -149,7 +149,7 @@ All platform capabilities are gated by subscription tier. Every limit is enforce
 | --------------------- | ---------------------------------------------------------------------------------- | ---------- |
 | Language & Runtime    | Java 25 LTS (Eclipse Temurin)                                                      | 25 LTS     |
 | Framework             | Spring Boot                                                                        | 4.0.3      |
-| Primary Database      | MongoDB (Spring Data MongoDB)                                                      | 7          |
+| Primary Database      | MongoDB Atlas (Spring Data MongoDB)                                                | 7          |
 | Cache & Session Store | Redis 7 (Lettuce client)                                                           | 7          |
 | Security              | Spring Security, JJWT, OAuth2 Client                                               | —          |
 | HTTP Client           | Spring WebFlux (WebClient)                                                         | —          |
@@ -325,11 +325,13 @@ auto_apply_with_kaddy/
 
 ### Infrastructure Setup
 
+MongoDB is provided by **MongoDB Atlas** — no local container is needed. Only Redis runs locally via Docker Compose.
+
 ```bash
-# Start MongoDB 7 and Redis 7
+# Start Redis 7 only
 docker compose up -d
 
-# Verify both services are healthy
+# Verify Redis is healthy
 docker compose ps
 ```
 
@@ -346,8 +348,8 @@ The backend reads all secrets from environment variables. For local development,
 **Minimum required variables:**
 
 ```bash
-# Database
-export MONGODB_URI=mongodb://localhost:27017/kaddy_dev
+# Database — MongoDB Atlas connection string
+export MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/kaddy?retryWrites=true&w=majority
 export JWT_SECRET=$(openssl rand -base64 64)
 
 # At least one AI provider (free tier — no payment needed)
@@ -393,7 +395,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8080/api
 ### Running Locally
 
 ```bash
-# 1. Start infrastructure
+# 1. Start Redis (MongoDB is on Atlas — no local container needed)
 docker compose up -d
 
 # 2. Start backend (local profile enables host/port Redis config)
@@ -419,7 +421,7 @@ npm run dev
 ### Running with Load Balancer
 
 ```bash
-# Start MongoDB + Redis
+# Start Redis (MongoDB is on Atlas)
 docker compose up -d
 
 # Start Nginx + 3 Spring Boot instances
@@ -669,6 +671,8 @@ The project ships with a `render.yaml` Blueprint that provisions the entire stac
 | `kaddy-redis`    | Key-Value (Redis) | Render managed                            |
 | `kaddy-backend`  | Web service       | Docker (Eclipse Temurin 25, Ubuntu Jammy) |
 | `kaddy-frontend` | Web service       | Node.js 20                                |
+
+> **MongoDB** is not a Render service — it is provided by **MongoDB Atlas**. Set `MONGODB_URI` to your Atlas connection string in the Render dashboard. No local or Render-hosted MongoDB instance is required.
 
 ### Deploy to Render
 

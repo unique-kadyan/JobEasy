@@ -1,20 +1,5 @@
 services:
 
-  mongodb:
-    image: mongo:7
-    container_name: kaddy_mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodata:/data/db
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-}
-    networks:
-      - kaddy_internal
-      - default
-
   redis:
     image: redis:7-alpine
     container_name: kaddy_redis
@@ -51,7 +36,5 @@ networks:
     driver: bridge
 
 volumes:
-  mongodata:
-    driver: local
   redisdata:
     driver: local
