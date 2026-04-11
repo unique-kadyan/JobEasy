@@ -175,21 +175,16 @@ export default function ResumesPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center py-16 gap-4 text-center">
+        <div className="flex flex-col items-center py-16 gap-3 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-black dark:border-white bg-indigo-50 dark:bg-indigo-600/10" style={{ boxShadow: "4px 4px 0 #000" }}>
             <FileText className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
           </div>
-          <div>
-            <h3 className="text-lg font-black text-black dark:text-white uppercase tracking-tight">
-              No resumes yet
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-1 max-w-xs">
-              Upload your PDF resume to get started with AI-powered job matching
-            </p>
-          </div>
-          <Button onClick={() => fileRef.current?.click()} loading={uploading}>
-            <Upload className="h-4 w-4" /> Upload PDF Resume
-          </Button>
+          <h3 className="text-lg font-black text-black dark:text-white uppercase tracking-tight">
+            No resumes yet
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium max-w-xs">
+            Upload your PDF resume to get started with AI-powered job matching
+          </p>
         </div>
       )}
     </div>

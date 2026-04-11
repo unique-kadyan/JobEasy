@@ -74,6 +74,20 @@ public class ResumeService {
             throw new BadRequestException("Only PDF files are supported");
         }
 
+        // Read bytes once — avoids stream-position bugs when getInputStream() is called multiple times
+        final byte[] fileBytes;
+        try {
+            fileBytes = file.getBytes();
+        } catch (IOException e) {
+            throw new BadRequestException("Failed to read file: " + e.getMessage());
+        }
+
+        if (fileBytes.length < 4 ||
+                fileBytes[0] != PDF_MAGIC[0] || fileBytes[1] != PDF_MAGIC[1] ||
+                fileBytes[2] != PDF_MAGIC[2] || fileBytes[3] != PDF_MAGIC[3]) {
+            throw new BadRequestException("File does not appear to be a valid PDF");
+        }
+
         if (!SecurityUtils.isAdmin()) {
             User owner = userRepository.findById(userId)
                     .orElseThrow(() -> new BadRequestException("User not found"));
@@ -90,25 +104,12 @@ public class ResumeService {
         }
 
         try {
-            byte[] header = file.getInputStream().readNBytes(4);
-            if (header.length < 4 ||
-                    header[0] != PDF_MAGIC[0] || header[1] != PDF_MAGIC[1] ||
-                    header[2] != PDF_MAGIC[2] || header[3] != PDF_MAGIC[3]) {
-                throw new BadRequestException("File does not appear to be a valid PDF");
-            }
-        } catch (BadRequestException e) {
-            throw e;
-        } catch (IOException e) {
-            throw new BadRequestException("Failed to read file: " + e.getMessage());
-        }
-
-        try {
             Path uploadPath = Paths.get(uploadDir, userId);
             Files.createDirectories(uploadPath);
 
             String filename = UUID.randomUUID() + ".pdf";
             Path filePath = uploadPath.resolve(filename);
-            Files.copy(file.getInputStream(), filePath);
+            Files.write(filePath, fileBytes);
 
             String parsedText = parserService.extractText(filePath);
             Map<String, Object> parsedData = parserService.parseStructuredData(parsedText);
@@ -119,7 +120,7 @@ public class ResumeService {
                     .userId(userId)
                     .filename(file.getOriginalFilename())
                     .filePath(filePath.toString())
-                    .fileSize((int) file.getSize())
+                    .fileSize(fileBytes.length)
                     .contentType(contentType)
                     .parsedText(parsedText)
                     .parsedData(parsedData)
@@ -142,7 +143,7 @@ public class ResumeService {
 
             return saved;
         } catch (IOException e) {
-            throw new BadRequestException("Failed to upload file: " + e.getMessage());
+            throw new BadRequestException("Failed to save uploaded file: " + e.getMessage());
         }
     }
 

@@ -36,6 +36,11 @@ app:
   webclient:
     max-connections: 50
 
+management:
+  health:
+    mongodb:
+      enabled: false   # Atlas blocks hello:1 on the `local` system DB → always reports DOWN
+
 springdoc:
   api-docs:
     enabled: false
