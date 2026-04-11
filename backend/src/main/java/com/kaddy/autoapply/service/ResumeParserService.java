@@ -1,18 +1,24 @@
 package com.kaddy.autoapply.service;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.time.Year;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.time.Year;
-import java.util.*;
-import java.util.regex.*;
-import java.util.stream.Collectors;
 
 @Service
 public class ResumeParserService {
@@ -22,45 +28,38 @@ public class ResumeParserService {
     private static final Set<String> TECHNICAL_SKILLS = Set.of(
             "java", "python", "javascript", "typescript", "c++", "c#", "go", "golang", "rust",
             "swift", "kotlin", "scala", "ruby", "php", "r", "matlab", "bash", "shell",
-            "powershell", "dart", "elixir", "haskell", "clojure", "groovy", "lua"
-    );
+            "powershell", "dart", "elixir", "haskell", "clojure", "groovy", "lua");
 
     private static final Set<String> FRAMEWORK_SKILLS = Set.of(
             "react", "angular", "vue", "next.js", "nuxt", "svelte", "spring", "spring boot",
             "django", "flask", "fastapi", "express", "nestjs", "laravel", "rails", "asp.net",
             "tensorflow", "pytorch", "scikit-learn", "pandas", "numpy", "hibernate", "quarkus",
-            "micronaut", "actix", "gin", "echo", "fiber", "htmx", "remix", "astro", "solid"
-    );
+            "micronaut", "actix", "gin", "echo", "fiber", "htmx", "remix", "astro", "solid");
 
     private static final Set<String> DATABASE_SKILLS = Set.of(
             "postgresql", "mysql", "mongodb", "redis", "elasticsearch", "cassandra", "dynamodb",
             "sqlite", "oracle", "sql server", "neo4j", "influxdb", "clickhouse", "cockroachdb",
-            "supabase", "firestore", "couchdb", "mariadb", "aurora", "bigquery", "snowflake"
-    );
+            "supabase", "firestore", "couchdb", "mariadb", "aurora", "bigquery", "snowflake");
 
     private static final Set<String> CLOUD_SKILLS = Set.of(
             "aws", "azure", "gcp", "google cloud", "heroku", "vercel", "netlify", "cloudflare",
             "s3", "ec2", "lambda", "cloudfront", "rds", "ecs", "eks", "sqs", "sns", "route53",
-            "terraform", "pulumi", "cdk", "cloudformation", "serverless"
-    );
+            "terraform", "pulumi", "cdk", "cloudformation", "serverless");
 
     private static final Set<String> TOOL_SKILLS = Set.of(
             "docker", "kubernetes", "helm", "ansible", "jenkins", "github actions", "gitlab ci",
             "circle ci", "travis ci", "git", "jira", "confluence", "webpack", "vite", "gradle",
             "maven", "npm", "yarn", "pnpm", "makefile", "nginx", "apache", "kafka", "rabbitmq",
-            "graphql", "grpc", "rest", "openapi", "swagger", "postman", "figma"
-    );
+            "graphql", "grpc", "rest", "openapi", "swagger", "postman", "figma");
 
     private static final Set<String> SOFT_SKILLS = Set.of(
             "leadership", "communication", "teamwork", "problem solving", "critical thinking",
             "agile", "scrum", "kanban", "mentoring", "collaboration", "adaptability",
-            "project management", "cross-functional", "stakeholder management"
-    );
+            "project management", "cross-functional", "stakeholder management");
 
     private static final Set<String> LANGUAGE_SKILLS = Set.of(
             "english", "spanish", "french", "german", "mandarin", "hindi", "japanese",
-            "portuguese", "arabic", "korean", "italian", "dutch", "russian", "turkish"
-    );
+            "portuguese", "arabic", "korean", "italian", "dutch", "russian", "turkish");
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
             "[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}", Pattern.CASE_INSENSITIVE);
@@ -95,6 +94,19 @@ public class ResumeParserService {
         }
     }
 
+    public String extractTextFromBytes(byte[] pdfBytes) {
+        try (PDDocument document = Loader.loadPDF(pdfBytes)) {
+            PDFTextStripper stripper = new PDFTextStripper();
+            return stripper.getText(document);
+        } catch (IOException e) {
+            log.warn("Failed to extract text from PDF bytes: {}", e.getMessage());
+            return "";
+        } catch (RuntimeException e) {
+            log.warn("Unexpected error extracting PDF text ({}): {}", e.getClass().getSimpleName(), e.getMessage());
+            return "";
+        }
+    }
+
     public Map<String, Object> parseStructuredData(String text) {
         Map<String, Object> data = new LinkedHashMap<>();
         String lower = text.toLowerCase();
@@ -122,11 +134,16 @@ public class ResumeParserService {
 
         for (String line : lines) {
             String trimmed = line.trim();
-            if (trimmed.length() < 3 || trimmed.length() > 60) continue;
-            if (sectionKeywords.matcher(trimmed).find()) continue;
-            if (emailOrUrl.matcher(trimmed).find()) continue;
-            if (trimmed.matches(".*[|/:\\\\]{2,}.*")) continue;
-            if (trimmed.matches("[A-Za-z\\s.''\\-]+") && trimmed.split("\\s+").length >= 2 && trimmed.split("\\s+").length <= 5) {
+            if (trimmed.length() < 3 || trimmed.length() > 60)
+                continue;
+            if (sectionKeywords.matcher(trimmed).find())
+                continue;
+            if (emailOrUrl.matcher(trimmed).find())
+                continue;
+            if (trimmed.matches(".*[|/:\\\\]{2,}.*"))
+                continue;
+            if (trimmed.matches("[A-Za-z\\s.''\\-]+") && trimmed.split("\\s+").length >= 2
+                    && trimmed.split("\\s+").length <= 5) {
                 return trimmed;
             }
         }
@@ -137,19 +154,24 @@ public class ResumeParserService {
         Map<String, Object> contact = new LinkedHashMap<>();
 
         Matcher email = EMAIL_PATTERN.matcher(text);
-        if (email.find()) contact.put("email", email.group());
+        if (email.find())
+            contact.put("email", email.group());
 
         Matcher phone = PHONE_PATTERN.matcher(text);
-        if (phone.find()) contact.put("phone", phone.group().trim());
+        if (phone.find())
+            contact.put("phone", phone.group().trim());
 
         Matcher linkedin = LINKEDIN_PATTERN.matcher(text);
-        if (linkedin.find()) contact.put("linkedin", "https://linkedin.com/in/" + linkedin.group(1));
+        if (linkedin.find())
+            contact.put("linkedin", "https://linkedin.com/in/" + linkedin.group(1));
 
         Matcher github = GITHUB_PATTERN.matcher(text);
-        if (github.find()) contact.put("github", "https://github.com/" + github.group(1));
+        if (github.find())
+            contact.put("github", "https://github.com/" + github.group(1));
 
         Matcher portfolio = PORTFOLIO_PATTERN.matcher(text);
-        if (portfolio.find()) contact.put("portfolio", portfolio.group());
+        if (portfolio.find())
+            contact.put("portfolio", portfolio.group());
 
         extractLocation(text).ifPresent(loc -> contact.put("location", loc));
 
@@ -169,7 +191,8 @@ public class ResumeParserService {
 
     private String extractSectionText(String text, String sectionRegex) {
         Pattern pattern = Pattern.compile(
-                "(?im)^\\s*(?:" + sectionRegex + ")\\s*\\r?\\n([\\s\\S]*?)(?=\\r?\\n\\s*[A-Z][A-Z\\s]{3,}\\s*\\r?\\n|$)");
+                "(?im)^\\s*(?:" + sectionRegex
+                        + ")\\s*\\r?\\n([\\s\\S]*?)(?=\\r?\\n\\s*[A-Z][A-Z\\s]{3,}\\s*\\r?\\n|$)");
         Matcher m = pattern.matcher(text);
         if (m.find()) {
             String content = m.group(1).trim();
@@ -207,11 +230,12 @@ public class ResumeParserService {
             String endStr = m.group(2).toLowerCase();
             int end = endStr.matches("present|current|now") ? currentYear : Integer.parseInt(endStr);
             if (start >= 1970 && start <= currentYear && end >= start && end <= currentYear + 1) {
-                ranges.add(new int[]{start, end});
+                ranges.add(new int[] { start, end });
             }
         }
 
-        if (ranges.isEmpty()) return 0;
+        if (ranges.isEmpty())
+            return 0;
 
         int totalMonths = 0;
         for (int[] range : ranges) {

@@ -42,7 +42,11 @@ export default function SmartResumePage() {
       });
 
       const imgData = canvas.toDataURL("image/jpeg", 0.98);
-      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pdf = new jsPDF({
+        unit: "mm",
+        format: "a4",
+        orientation: "portrait",
+      });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = pageWidth;
@@ -74,7 +78,6 @@ export default function SmartResumePage() {
 
   useEffect(() => {
     if (latestResume) setGenerated(latestResume);
-
   }, [latestResume]);
 
   const analyzeMutation = useMutation({
@@ -86,7 +89,8 @@ export default function SmartResumePage() {
       setAnalysis(data);
       toast.success(`ATS Score: ${data.atsScore}/100 — ${data.scoreLabel}`);
     },
-    onError: () => toast.error("Analysis failed. Make sure you have a resume uploaded."),
+    onError: () =>
+      toast.error("Analysis failed. Make sure you have a resume uploaded."),
   });
 
   const generateMutation = useMutation({
@@ -110,11 +114,11 @@ export default function SmartResumePage() {
   return (
     <div className="max-w-4xl space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight flex items-center gap-2">
+        <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white flex items-center gap-2">
           <Sparkles className="h-6 w-6 text-indigo-600" />
           Smart Resume
         </h1>
-        <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-0.5">
+        <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-0.5">
           AI-powered ATS analysis and professionally optimized resume generation
         </p>
       </div>
@@ -122,7 +126,9 @@ export default function SmartResumePage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Step 1 — ATS Analysis</h2>
+            <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
+              Step 1 — ATS Analysis
+            </h2>
             <Button
               size="sm"
               variant="outline"
@@ -143,7 +149,7 @@ export default function SmartResumePage() {
         </CardHeader>
         <CardContent>
           {analyzeMutation.isPending && (
-            <div className="flex items-center gap-3 py-4 text-gray-500 dark:text-[#8b949e] font-medium">
+            <div className="flex items-center gap-3 py-4 text-[#86868b] dark:text-[#8e8e93]">
               <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
               Scanning your resume for ATS compatibility…
             </div>
@@ -154,19 +160,28 @@ export default function SmartResumePage() {
               <div className="flex items-center gap-5">
                 <AnimatedGauge score={analysis.atsScore} />
                 <div>
-                  <p className="text-lg font-black text-black dark:text-white">{analysis.scoreLabel}</p>
-                  <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e]">{analysis.wordCount} words · {analysis.lengthAssessment}</p>
+                  <p className="text-lg font-semibold text-[#1d1d1f] dark:text-white">
+                    {analysis.scoreLabel}
+                  </p>
+                  <p className="text-xs text-[#86868b] dark:text-[#8e8e93]">
+                    {analysis.wordCount} words · {analysis.lengthAssessment}
+                  </p>
                 </div>
               </div>
 
               {analysis.strengths.length > 0 && (
                 <div>
-                  <p className="text-xs font-black text-black dark:text-white mb-2 flex items-center gap-1 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-[#1d1d1f] dark:text-white mb-2 flex items-center gap-1">
                     <CheckCircle className="h-4 w-4 text-green-500" /> Strengths
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {analysis.strengths.map((s) => (
-                      <Badge key={s} className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-400">{s}</Badge>
+                      <Badge
+                        key={s}
+                        className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
+                      >
+                        {s}
+                      </Badge>
                     ))}
                   </div>
                 </div>
@@ -174,12 +189,16 @@ export default function SmartResumePage() {
 
               {analysis.missingFields.length > 0 && (
                 <div>
-                  <p className="text-xs font-black text-black dark:text-white mb-2 flex items-center gap-1 uppercase tracking-wide">
-                    <AlertCircle className="h-4 w-4 text-red-500" /> Missing Sections
+                  <p className="text-xs font-semibold text-[#1d1d1f] dark:text-white mb-2 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4 text-red-500" /> Missing
+                    Sections
                   </p>
                   <ul className="space-y-1">
                     {analysis.missingFields.map((f) => (
-                      <li key={f} className="flex items-center gap-2 text-sm font-bold text-red-700 dark:text-red-400">
+                      <li
+                        key={f}
+                        className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400"
+                      >
                         <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
                         {f}
                       </li>
@@ -190,12 +209,15 @@ export default function SmartResumePage() {
 
               {analysis.suggestions.length > 0 && (
                 <div>
-                  <p className="text-xs font-black text-black dark:text-white mb-2 flex items-center gap-1 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-[#1d1d1f] dark:text-white mb-2 flex items-center gap-1">
                     <Info className="h-4 w-4 text-amber-500" /> Suggestions
                   </p>
                   <ul className="space-y-2">
                     {analysis.suggestions.map((s) => (
-                      <li key={s} className="flex items-start gap-2 text-sm font-medium text-gray-600 dark:text-[#8b949e]">
+                      <li
+                        key={s}
+                        className="flex items-start gap-2 text-sm text-[#3c3c43] dark:text-[#c9d1d9]"
+                      >
                         <ChevronRight className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
                         {s}
                       </li>
@@ -207,8 +229,9 @@ export default function SmartResumePage() {
           )}
 
           {!analysis && !analyzeMutation.isPending && (
-            <p className="text-sm font-medium text-gray-400 dark:text-[#8b949e] py-2">
-              Click &ldquo;Analyze Resume&rdquo; to scan your primary resume for ATS compatibility issues.
+            <p className="text-sm text-[#86868b] dark:text-[#8e8e93] py-2">
+              Click &ldquo;Analyze Resume&rdquo; to scan your primary resume for
+              ATS compatibility issues.
             </p>
           )}
         </CardContent>
@@ -217,7 +240,9 @@ export default function SmartResumePage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Step 2 — Generate Optimized Resume</h2>
+            <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
+              Step 2 — Generate Optimized Resume
+            </h2>
             <Button
               size="sm"
               onClick={() => generateMutation.mutate()}
@@ -230,11 +255,13 @@ export default function SmartResumePage() {
         </CardHeader>
         <CardContent>
           {generateMutation.isPending && (
-            <div className="flex items-center gap-3 py-4 text-gray-500 dark:text-[#8b949e] font-medium">
+            <div className="flex items-center gap-3 py-4 text-[#86868b] dark:text-[#8e8e93]">
               <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
               <span>
                 Generating your optimized resume using AI…
-                <span className="text-xs block text-gray-400 dark:text-[#8b949e] font-medium">This may take 15–30 seconds</span>
+                <span className="text-xs block text-[#86868b] dark:text-[#8e8e93] mt-0.5">
+                  This may take 15–30 seconds
+                </span>
               </span>
             </div>
           )}
@@ -243,30 +270,42 @@ export default function SmartResumePage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Badge className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-400">
+                  <Badge className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400">
                     ATS Score: {generated.atsScore}
                   </Badge>
                   {generated.paid ? (
-                    <Badge className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-400">
+                    <Badge className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400">
                       <CheckCircle className="h-3 w-3 mr-1" /> Unlocked
                     </Badge>
                   ) : (
-                    <Badge className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-400">
+                    <Badge className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400">
                       <Lock className="h-3 w-3 mr-1" /> Preview Only
                     </Badge>
                   )}
                 </div>
                 {generated.paid && (
-                  <Button size="sm" onClick={handleDownloadPDF} loading={downloading}>
+                  <Button
+                    size="sm"
+                    onClick={handleDownloadPDF}
+                    loading={downloading}
+                  >
                     <Download className="h-4 w-4" /> Download PDF
                   </Button>
                 )}
               </div>
 
-              <div className="relative border-2 border-black dark:border-[#30363d] rounded-[4px] overflow-hidden">
-                <div className="p-8 bg-white" ref={resumeRef} id="resume-preview">
+              <div className="relative rounded-2xl border border-black/[0.06] dark:border-white/[0.08] overflow-hidden">
+                <div
+                  className="p-8 bg-white"
+                  ref={resumeRef}
+                  id="resume-preview"
+                >
                   <ResumePreview
-                    data={generated.paid ? generated.resumeData : generated.previewData}
+                    data={
+                      generated.paid
+                        ? generated.resumeData
+                        : generated.previewData
+                    }
                     full={generated.paid}
                   />
                 </div>
@@ -286,9 +325,12 @@ export default function SmartResumePage() {
                     </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[2px]">
                       <Lock className="h-8 w-8 text-indigo-500 mb-3" />
-                      <p className="font-black text-black dark:text-white mb-1 uppercase tracking-wide text-sm">Full resume locked</p>
-                      <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e] mb-4 text-center max-w-xs">
-                        Pay a one-time fee to unlock, download, and keep your optimized resume.
+                      <p className="font-semibold text-[#1d1d1f] mb-1 text-sm">
+                        Full resume locked
+                      </p>
+                      <p className="text-sm text-[#86868b] mb-4 text-center max-w-xs">
+                        Pay a one-time fee to unlock, download, and keep your
+                        optimized resume.
                       </p>
                       <Button onClick={() => setPayModal(true)}>
                         <CreditCardIcon />
@@ -302,8 +344,9 @@ export default function SmartResumePage() {
           )}
 
           {!generated && !generateMutation.isPending && (
-            <p className="text-sm text-gray-400 py-2">
-              Click &ldquo;Fix &amp; Generate&rdquo; to create an AI-optimized version of your resume with all ATS issues fixed.
+            <p className="text-sm text-[#86868b] dark:text-[#8e8e93] py-2">
+              Click &ldquo;Fix &amp; Generate&rdquo; to create an AI-optimized
+              version of your resume with all ATS issues fixed.
             </p>
           )}
         </CardContent>
@@ -337,7 +380,9 @@ function AnimatedGauge({ score }: { score: number }) {
       if (progress < 1) rafRef.current = requestAnimationFrame(step);
     };
     rafRef.current = requestAnimationFrame(step);
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [score]);
 
   const strokeColor =
@@ -346,7 +391,14 @@ function AnimatedGauge({ score }: { score: number }) {
   return (
     <div className="relative w-24 h-24 shrink-0">
       <svg viewBox="0 0 36 36" className="w-24 h-24 -rotate-90">
-        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" strokeWidth="3" />
+        <circle
+          cx="18"
+          cy="18"
+          r="15.9"
+          fill="none"
+          stroke="#E5E7EB"
+          strokeWidth="3"
+        />
         <circle
           cx="18"
           cy="18"
@@ -369,7 +421,12 @@ function AnimatedGauge({ score }: { score: number }) {
 
 function CreditCardIcon() {
   return (
-    <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg
+      className="h-4 w-4 mr-1"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
       <rect x="1" y="4" width="22" height="16" rx="2" ry="2" strokeWidth="2" />
       <line x1="1" y1="10" x2="23" y2="10" strokeWidth="2" />
     </svg>
@@ -393,10 +450,17 @@ function ResumePreview({
         <h1 className="text-2xl font-bold text-gray-900">{d.name}</h1>
         {d.contact && (
           <p className="text-xs text-gray-500 mt-1 space-x-2">
-            {[d.contact.email, d.contact.phone, d.contact.location,
-              d.contact.linkedin && `linkedin.com/in/${d.contact.linkedin.split("/").pop()}`,
-              d.contact.github && `github.com/${d.contact.github.split("/").pop()}`
-            ].filter(Boolean).join("  ·  ")}
+            {[
+              d.contact.email,
+              d.contact.phone,
+              d.contact.location,
+              d.contact.linkedin &&
+                `linkedin.com/in/${d.contact.linkedin.split("/").pop()}`,
+              d.contact.github &&
+                `github.com/${d.contact.github.split("/").pop()}`,
+            ]
+              .filter(Boolean)
+              .join("  ·  ")}
           </p>
         )}
       </div>
@@ -418,11 +482,14 @@ function ResumePreview({
                 </p>
               </div>
               <p className="text-xs text-gray-600 mb-1">
-                {exp.company}{exp.location ? ` · ${exp.location}` : ""}
+                {exp.company}
+                {exp.location ? ` · ${exp.location}` : ""}
               </p>
               <ul className="list-disc list-inside space-y-0.5">
                 {exp.bullets?.map((b, j) => (
-                  <li key={j} className="text-gray-700">{b}</li>
+                  <li key={j} className="text-gray-700">
+                    {b}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -434,10 +501,16 @@ function ResumePreview({
         <Section title="Skills">
           <div className="space-y-1">
             {d.skills.technical && d.skills.technical.length > 0 && (
-              <p><span className="font-medium">Technical:</span> {d.skills.technical.join(", ")}</p>
+              <p>
+                <span className="font-medium">Technical:</span>{" "}
+                {d.skills.technical.join(", ")}
+              </p>
             )}
             {d.skills.soft && d.skills.soft.length > 0 && (
-              <p><span className="font-medium">Soft Skills:</span> {d.skills.soft.join(", ")}</p>
+              <p>
+                <span className="font-medium">Soft Skills:</span>{" "}
+                {d.skills.soft.join(", ")}
+              </p>
             )}
           </div>
         </Section>
@@ -450,11 +523,16 @@ function ResumePreview({
               {d.education.map((edu, i) => (
                 <div key={i} className="mb-2">
                   <div className="flex justify-between items-baseline">
-                    <p className="font-semibold">{edu.degree} in {edu.field}</p>
-                    <p className="text-xs text-gray-500">{edu.graduationDate}</p>
+                    <p className="font-semibold">
+                      {edu.degree} in {edu.field}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {edu.graduationDate}
+                    </p>
                   </div>
                   <p className="text-xs text-gray-600">
-                    {edu.institution}{edu.gpa ? ` · GPA: ${edu.gpa}` : ""}
+                    {edu.institution}
+                    {edu.gpa ? ` · GPA: ${edu.gpa}` : ""}
                   </p>
                 </div>
               ))}
@@ -468,7 +546,9 @@ function ResumePreview({
                   <p className="font-semibold">{p.name}</p>
                   <p className="text-gray-700">{p.description}</p>
                   {p.technologies?.length > 0 && (
-                    <p className="text-xs text-gray-500">{p.technologies.join(", ")}</p>
+                    <p className="text-xs text-gray-500">
+                      {p.technologies.join(", ")}
+                    </p>
                   )}
                 </div>
               ))}
@@ -500,7 +580,7 @@ function Section({
 }) {
   return (
     <div>
-      <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-1 mb-2">
+      <h2 className="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-1 mb-2">
         {title}
       </h2>
       {children}

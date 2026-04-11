@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -84,10 +84,10 @@ export default function TemplatesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">
             Cover Letter Templates
           </h1>
-          <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-0.5">
+          <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-0.5">
             Manage templates for cover letter generation
           </p>
         </div>
@@ -108,23 +108,25 @@ export default function TemplatesPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <FileText className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                      <h3 className="font-black text-black dark:text-white text-sm uppercase tracking-wide">{t.name}</h3>
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-600/10 shrink-0">
+                        <FileText className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                      </div>
+                      <h3 className="font-semibold text-[#1d1d1f] dark:text-white text-sm">{t.name}</h3>
                       {t.isSystem && (
-                        <Badge className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-400 text-[10px]">
+                        <Badge className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-[10px]">
                           System
                         </Badge>
                       )}
                     </div>
                     {t.description && (
-                      <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e]">{t.description}</p>
+                      <p className="text-xs text-[#86868b] dark:text-[#8e8e93] ml-9">{t.description}</p>
                     )}
-                    <p className="text-xs font-medium text-gray-400 dark:text-[#8b949e] mt-2 line-clamp-2">
+                    <p className="text-xs text-[#86868b] dark:text-[#8e8e93] mt-2 ml-9 line-clamp-2">
                       {t.content.substring(0, 150)}...
                     </p>
                   </div>
                   {!t.isSystem && (
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 shrink-0">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -167,11 +169,11 @@ export default function TemplatesPage() {
             placeholder="Brief description of this template"
           />
           <div>
-            <label className="block text-xs font-black text-black dark:text-white uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-1.5">
               Content
             </label>
             <textarea
-              className="block w-full rounded-[4px] border-2 border-black dark:border-[#30363d] bg-white dark:bg-[#0d1117] text-black dark:text-white px-3 py-2 text-sm font-medium nb-input-focus"
+              className="block w-full rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-white px-3 py-2 text-sm placeholder:text-[#86868b] dark:placeholder:text-[#636366] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-shadow"
               rows={8}
               value={content}
               onChange={(e) => setContent(e.target.value)}

@@ -31,19 +31,18 @@ export default function CoverLettersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">
             Cover Letters
           </h1>
-          <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-0.5">
+          <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-0.5">
             AI-generated cover letters for your applications
           </p>
         </div>
-        <Link
-          href="/jobs"
-          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-xs font-black uppercase tracking-wide rounded-[3px] border-2 border-black dark:border-white nb-shadow nb-lift"
-        >
-          <Mail className="h-3.5 w-3.5" />
-          Generate New
+        <Link href="/jobs">
+          <Button>
+            <Mail className="h-4 w-4" />
+            Generate New
+          </Button>
         </Link>
       </div>
 
@@ -60,17 +59,17 @@ export default function CoverLettersPage() {
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <h3 className="font-black text-black dark:text-white text-sm uppercase tracking-wide">
+                        <h3 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
                           {cl.jobTitle || "Untitled"}
                         </h3>
-                        <Badge className="bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 border-gray-400 dark:border-gray-600 text-[10px]">
+                        <Badge className="bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#86868b] dark:text-[#8e8e93] text-[10px]">
                           {cl.aiProvider}
                         </Badge>
                       </div>
-                      <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e]">
+                      <p className="text-xs text-[#86868b] dark:text-[#8e8e93]">
                         {cl.company} · {formatDate(cl.createdAt)}
                       </p>
-                      <p className="text-xs text-gray-600 dark:text-[#8b949e] mt-2 line-clamp-2 font-medium">
+                      <p className="text-xs text-[#6e6e73] dark:text-[#8e8e93] mt-2 line-clamp-2">
                         {cl.content.substring(0, 200)}...
                       </p>
                     </div>
@@ -104,10 +103,10 @@ export default function CoverLettersPage() {
                 disabled={page === 0}
                 onClick={() => setPage(page - 1)}
               >
-                <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                <ChevronLeft className="h-3.5 w-3.5" />
                 Previous
               </Button>
-              <span className="px-3 py-1.5 text-xs font-black text-black dark:text-[#c9d1d9] uppercase tracking-wide border-2 border-black dark:border-[#30363d] rounded-[3px] bg-white dark:bg-[#161b22]">
+              <span className="px-3 py-1.5 text-xs font-medium text-[#86868b] dark:text-[#8e8e93] bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full">
                 {page + 1} / {data.totalPages}
               </span>
               <Button
@@ -117,30 +116,29 @@ export default function CoverLettersPage() {
                 onClick={() => setPage(page + 1)}
               >
                 Next
-                <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             </div>
           )}
         </>
       ) : (
         <div className="flex flex-col items-center py-16 gap-4 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-black dark:border-white bg-indigo-50 dark:bg-indigo-600/10" style={{ boxShadow: "4px 4px 0 #000" }}>
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-600/10">
             <Mail className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-black dark:text-white uppercase tracking-tight">
+            <h3 className="text-lg font-semibold text-[#1d1d1f] dark:text-white">
               No cover letters yet
             </h3>
-            <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-1 max-w-xs">
+            <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-1 max-w-xs">
               Generate one by finding a job and clicking &ldquo;Quick Apply&rdquo;
             </p>
           </div>
-          <Link
-            href="/jobs"
-            className="px-4 py-2 bg-indigo-600 text-white text-xs font-black uppercase tracking-wide rounded-[3px] border-2 border-black dark:border-white nb-shadow nb-lift flex items-center gap-1.5"
-          >
-            <Mail className="h-3.5 w-3.5" />
-            Find Jobs & Generate
+          <Link href="/jobs">
+            <Button>
+              <Mail className="h-4 w-4" />
+              Find Jobs & Generate
+            </Button>
           </Link>
         </div>
       )}
@@ -148,14 +146,14 @@ export default function CoverLettersPage() {
       <Modal
         open={!!viewing}
         onClose={() => setViewing(null)}
-        title={viewing ? `Cover Letter — ${viewing.jobTitle}` : ""}
+        title={viewing ? `${viewing.jobTitle} — Cover Letter` : ""}
       >
         {viewing && (
           <div className="max-h-96 overflow-y-auto">
-            <p className="text-xs font-bold text-gray-500 dark:text-[#8b949e] mb-3 uppercase tracking-wide">
+            <p className="text-xs text-[#86868b] dark:text-[#8e8e93] mb-3">
               {viewing.company} · Generated by {viewing.aiProvider}
             </p>
-            <div className="text-sm text-gray-700 dark:text-[#c9d1d9] whitespace-pre-line font-medium leading-relaxed">
+            <div className="text-sm text-[#1d1d1f] dark:text-[#e5e5ea] whitespace-pre-line leading-relaxed">
               {viewing.content}
             </div>
           </div>

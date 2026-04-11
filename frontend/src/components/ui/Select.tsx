@@ -13,14 +13,16 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div>
         {label && (
-          <label className="block text-xs font-black text-black dark:text-white uppercase tracking-wider mb-1.5">
+          <label className="block text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-1.5">
             {label}
           </label>
         )}
         <select
           ref={ref}
           className={cn(
-            "block w-full rounded-[4px] border-2 border-black dark:border-[#30363d] bg-white dark:bg-[#0d1117] px-3 py-2 text-black dark:text-white text-sm font-medium nb-input-focus appearance-none cursor-pointer",
+            "block w-full rounded-xl border border-black/10 dark:border-white/10",
+            "bg-white dark:bg-[#1c1c1e] px-3 py-2 text-[#1d1d1f] dark:text-white text-sm",
+            "nb-input-focus appearance-none cursor-pointer",
             className
           )}
           {...props}

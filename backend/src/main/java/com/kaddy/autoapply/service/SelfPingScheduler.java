@@ -67,7 +67,7 @@ public class SelfPingScheduler {
             webClient.get()
                     .uri(target.url())
                     .retrieve()
-                    .bodyToMono(String.class)
+                    .toBodilessEntity()   // discards body immediately — avoids IllegalStateException when timeout cancels a partially-received response
                     .timeout(Duration.ofSeconds(TIMEOUT_S))
 
                     .retryWhen(Retry.fixedDelay(1, Duration.ofSeconds(RETRY_DELAY_S))
@@ -84,7 +84,7 @@ public class SelfPingScheduler {
                     .subscribe(ignored -> {
                         failures.put(target.name(), 0);
                         log.trace("[keep-alive] {} OK", target.name());
-                    });
+                    }, err -> {}); // onError already handled by onErrorResume; this prevents unhandled-error noise
         }
     }
 

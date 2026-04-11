@@ -277,7 +277,7 @@ export default function JobsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Find Jobs</h1>
+        <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">Find Jobs</h1>
       </div>
 
       <Card>
@@ -307,9 +307,9 @@ export default function JobsPage() {
                   type="checkbox"
                   checked={isRemote}
                   onChange={(e) => setIsRemote(e.target.checked)}
-                  className="h-4 w-4 rounded-[3px] border-2 border-black dark:border-[#30363d] text-indigo-600 focus:ring-indigo-500"
+                  className="h-4 w-4 rounded border border-black/20 dark:border-white/20 text-indigo-600 focus:ring-indigo-500"
                 />
-                <span className="text-xs font-black text-black dark:text-white uppercase tracking-wide">
+                <span className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">
                   Remote Only
                 </span>
               </label>
@@ -331,38 +331,33 @@ export default function JobsPage() {
                       ...base,
                       minHeight: "38px",
                       fontSize: "13px",
-                      fontWeight: "500",
-                      borderColor: state.isFocused ? "#6366f1" : "#000000",
-                      borderWidth: "2px",
-                      boxShadow: state.isFocused ? "3px 3px 0 #6366f1" : "2px 2px 0 #000",
-                      "&:hover": { borderColor: "#6366f1" },
-                      borderRadius: "4px",
+                      borderColor: state.isFocused ? "#6366f1" : "rgba(0,0,0,0.1)",
+                      borderWidth: "1px",
+                      boxShadow: state.isFocused ? "0 0 0 3px rgba(99,102,241,0.25)" : "none",
+                      borderRadius: "12px",
                       backgroundColor: "white",
+                      "&:hover": { borderColor: "#6366f1" },
                     }),
                     menu: (base) => ({
                       ...base,
                       zIndex: 50,
-                      borderRadius: "4px",
-                      border: "2px solid #000",
-                      boxShadow: "4px 4px 0 #000",
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)",
                       fontSize: "13px",
                       overflow: "hidden",
                     }),
                     option: (base, state) => ({
                       ...base,
-                      backgroundColor: state.isSelected
-                        ? "#6366f1"
-                        : state.isFocused
-                          ? "#eef2ff"
-                          : "white",
-                      color: state.isSelected ? "white" : "#111827",
-                      fontWeight: state.isSelected ? "700" : "500",
-                      fontSize: "12px",
+                      backgroundColor: state.isSelected ? "#6366f1" : state.isFocused ? "#f5f5f7" : "white",
+                      color: state.isSelected ? "white" : "#1d1d1f",
+                      fontWeight: state.isSelected ? "600" : "400",
+                      fontSize: "13px",
                     }),
-                    singleValue: (base) => ({ ...base, color: "#111827", fontWeight: "600" }),
-                    placeholder: (base) => ({ ...base, color: "#9ca3af", fontSize: "12px" }),
+                    singleValue: (base) => ({ ...base, color: "#1d1d1f" }),
+                    placeholder: (base) => ({ ...base, color: "#86868b", fontSize: "13px" }),
                     clearIndicator: (base) => ({ ...base, cursor: "pointer" }),
-                    input: (base) => ({ ...base, color: "#111827" }),
+                    input: (base) => ({ ...base, color: "#1d1d1f" }),
                   }}
                 />
               </div>
@@ -371,14 +366,14 @@ export default function JobsPage() {
             {}
             <div className="flex flex-wrap items-end gap-4">
               <div className="flex items-center gap-1 pb-[9px]">
-                <IndianRupee className="h-4 w-4 text-gray-500 dark:text-[#8b949e]" />
-                <span className="text-xs font-black text-black dark:text-white uppercase tracking-wide">
+                <IndianRupee className="h-4 w-4 text-[#86868b] dark:text-[#8e8e93]" />
+                <span className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">
                   Salary / CTC (LPA)
                 </span>
               </div>
               <div className="flex items-end gap-2">
                 <div>
-                  <label className="block text-xs font-black text-gray-500 dark:text-[#8b949e] uppercase tracking-wide mb-1">
+                  <label className="block text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-1">
                     Min
                   </label>
                   <input
@@ -387,12 +382,12 @@ export default function JobsPage() {
                     placeholder="e.g. 5"
                     value={minSalary}
                     onChange={(e) => setMinSalary(e.target.value)}
-                    className="w-28 rounded-[4px] border-2 border-black dark:border-[#30363d] bg-white dark:bg-[#0d1117] text-black dark:text-white px-3 py-2 text-sm font-medium nb-input-focus outline-none"
+                    className="w-28 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-white px-3 py-2 text-sm font-medium nb-input-focus outline-none"
                   />
                 </div>
                 <span className="pb-2 text-gray-400 font-bold">—</span>
                 <div>
-                  <label className="block text-xs font-black text-gray-500 dark:text-[#8b949e] uppercase tracking-wide mb-1">
+                  <label className="block text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-1">
                     Max
                   </label>
                   <input
@@ -401,7 +396,7 @@ export default function JobsPage() {
                     placeholder="e.g. 30"
                     value={maxSalary}
                     onChange={(e) => setMaxSalary(e.target.value)}
-                    className="w-28 rounded-[4px] border-2 border-black dark:border-[#30363d] bg-white dark:bg-[#0d1117] text-black dark:text-white px-3 py-2 text-sm font-medium nb-input-focus outline-none"
+                    className="w-28 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-white px-3 py-2 text-sm font-medium nb-input-focus outline-none"
                   />
                 </div>
               </div>
@@ -410,8 +405,8 @@ export default function JobsPage() {
             {}
             <div className="flex items-end gap-4">
               <div className="flex items-center gap-1 pb-[9px]">
-                <Clock className="h-4 w-4 text-gray-500 dark:text-[#8b949e]" />
-                <span className="text-xs font-black text-black dark:text-white uppercase tracking-wide">
+                <Clock className="h-4 w-4 text-[#86868b] dark:text-[#8e8e93]" />
+                <span className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">
                   Posted within
                 </span>
               </div>
@@ -421,7 +416,7 @@ export default function JobsPage() {
                     key={d}
                     type="button"
                     onClick={() => setMaxAgeDays(d)}
-                    className={`rounded-[3px] border-2 px-3 py-1 text-xs font-black uppercase tracking-wide transition-all ${maxAgeDays === d ? "bg-indigo-600 text-white border-black dark:border-white nb-shadow" : "bg-white dark:bg-[#161b22] text-black dark:text-[#c9d1d9] border-black dark:border-[#30363d] hover:bg-amber-50 dark:hover:bg-[#21262d]"}`}
+                    className={`rounded-full border px-3 py-1 text-xs font-medium transition-all ${maxAgeDays === d ? "border-indigo-600 bg-indigo-600 text-white" : "border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-[#e5e5ea] hover:bg-[#f5f5f7] dark:hover:bg-[#2c2c2e]"}`}
                   >
                     {d}d
                   </button>
@@ -432,7 +427,7 @@ export default function JobsPage() {
             {}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <label className="text-xs font-black text-black dark:text-white uppercase tracking-wide">
+                <label className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">
                   Skills from Resume
                 </label>
                 {resumeSkills.length > 0 && (
@@ -445,7 +440,7 @@ export default function JobsPage() {
                 {skillTags.map((skill) => (
                   <span
                     key={skill}
-                    className="inline-flex items-center gap-1 rounded-[3px] border border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2.5 py-0.5 text-xs font-bold"
+                    className="inline-flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2.5 py-0.5 text-xs font-medium"
                   >
                     {skill}
                     <button
@@ -462,7 +457,7 @@ export default function JobsPage() {
               {resumeSkills.length > 0 &&
                 skillTags.length < resumeSkills.length && (
                   <div className="mt-2">
-                    <p className="text-xs font-bold text-gray-500 dark:text-[#8b949e] mb-1">
+                    <p className="text-xs font-bold text-[#86868b] dark:text-[#8e8e93] mb-1">
                       More skills from your resume:
                     </p>
                     <div className="flex flex-wrap gap-1">
@@ -473,7 +468,7 @@ export default function JobsPage() {
                             key={skill}
                             type="button"
                             onClick={() => addSkill(skill)}
-                            className="rounded-[3px] border-2 border-dashed border-gray-400 dark:border-[#30363d] text-gray-500 dark:text-[#8b949e] px-2 py-0.5 text-xs font-bold hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                            className="rounded-full border border-dashed border-black/10 dark:border-white/10 text-[#86868b] dark:text-[#8e8e93] px-2.5 py-0.5 text-xs font-medium hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                           >
                             + {skill}
                           </button>
@@ -495,7 +490,7 @@ export default function JobsPage() {
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-          <span className="ml-3 text-sm font-bold text-gray-500 dark:text-[#8b949e]">
+          <span className="ml-3 text-sm font-bold text-[#86868b] dark:text-[#8e8e93]">
             {aiSearchEnabled && !searchQuery
               ? "AI is crafting your search keywords…"
               : "Searching jobs…"}
@@ -504,11 +499,11 @@ export default function JobsPage() {
       )}
 
       {generatedQuery && (
-        <div className="flex items-center gap-2 rounded-[4px] border-2 border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-4 py-2.5 text-sm">
+        <div className="flex items-center gap-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 px-4 py-2.5 text-sm">
           <Sparkles className="h-4 w-4 shrink-0 text-indigo-500" />
-          <span className="text-gray-600 dark:text-[#8b949e] font-medium">
+          <span className="text-[#6e6e73] dark:text-[#8e8e93] font-medium">
             AI searched for:{" "}
-            <span className="font-black text-indigo-700 dark:text-indigo-400">
+            <span className="font-semibold text-indigo-700 dark:text-indigo-400">
               {generatedQuery}
             </span>
           </span>
@@ -529,14 +524,14 @@ export default function JobsPage() {
         <div className="space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-3 flex-wrap">
-              <p className="text-xs font-black text-black dark:text-white uppercase tracking-wide">
+              <p className="text-sm font-medium text-[#1d1d1f] dark:text-white">
                 {!canSeeAllJobs() && searchQuery
                   ? `Showing 2 of many results (free plan)`
                   : totalElements > 0
                     ? `${totalElements.toLocaleString()} jobs found`
                     : `${jobs.length} jobs found`}
                 {canSeeAllJobs() && totalPages > 1 && (
-                  <span className="text-gray-500 dark:text-[#8b949e]">
+                  <span className="text-[#86868b] dark:text-[#8e8e93]">
                     {" "}
                     · page {page + 1} of {totalPages}
                   </span>
@@ -585,7 +580,7 @@ export default function JobsPage() {
 
           {bulkResult && (
             <div
-              className={`text-xs font-bold px-4 py-2 rounded-[4px] border-2 ${bulkResult.includes("Failed") ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-400" : "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-400"}`}
+              className={`text-xs font-medium px-4 py-2 rounded-xl border ${bulkResult.includes("Failed") ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-400" : "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-400"}`}
             >
               {bulkResult}
             </div>
@@ -608,7 +603,7 @@ export default function JobsPage() {
                   <button
                     type="button"
                     onClick={() => setSummaryModal(job)}
-                    className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-gray-500 dark:text-[#8b949e] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors border border-gray-300 dark:border-[#30363d] rounded-[3px] px-2 py-0.5 hover:border-indigo-400"
+                    className="inline-flex items-center gap-1 text-[10px] font-medium text-[#86868b] dark:text-[#8e8e93] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors bg-[#f5f5f7] dark:bg-[#2c2c2e] hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg px-2.5 py-1"
                   >
                     <FileText className="h-3 w-3" /> Summarize
                   </button>
@@ -618,7 +613,7 @@ export default function JobsPage() {
                       setMatchModal(job);
                       setMatchResult(null);
                     }}
-                    className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-gray-500 dark:text-[#8b949e] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors border border-gray-300 dark:border-[#30363d] rounded-[3px] px-2 py-0.5 hover:border-indigo-400"
+                    className="inline-flex items-center gap-1 text-[10px] font-medium text-[#86868b] dark:text-[#8e8e93] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors bg-[#f5f5f7] dark:bg-[#2c2c2e] hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg px-2.5 py-1"
                   >
                     <Target className="h-3 w-3" /> Match Score
                   </button>
@@ -628,12 +623,12 @@ export default function JobsPage() {
           ))}
 
           {!canSeeAllJobs() && searchQuery && (
-            <div className="rounded-[4px] border-2 border-dashed border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 p-6 text-center space-y-3" style={{ boxShadow: "3px 3px 0 #4f46e5" }}>
+            <div className="rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 p-6 text-center space-y-3">
               <Lock className="h-8 w-8 text-indigo-600 dark:text-indigo-400 mx-auto" />
-              <h3 className="font-black text-black dark:text-white uppercase tracking-tight">
+              <h3 className="font-semibold text-[#1d1d1f] dark:text-white">
                 Unlock All Job Results
               </h3>
-              <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">
+              <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93]">
                 You&apos;re seeing 2 of many matching jobs. Upgrade to see all
                 results and apply faster.
               </p>
@@ -686,7 +681,7 @@ export default function JobsPage() {
                     <button
                       key={p}
                       onClick={() => setPage(Number(p) - 1)}
-                      className={`min-w-[2rem] h-8 rounded-[3px] border-2 px-2 text-xs font-black uppercase transition-all ${Number(p) - 1 === page ? "bg-indigo-600 text-white border-black dark:border-white nb-shadow" : "text-black dark:text-[#c9d1d9] border-black dark:border-[#30363d] bg-white dark:bg-[#161b22] hover:bg-gray-50 dark:hover:bg-[#21262d]"}`}
+                      className={`min-w-[2rem] h-8 px-2 transition-all ${Number(p) - 1 === page ? "rounded-full bg-indigo-600 text-white font-medium text-xs" : "rounded-full border border-black/10 dark:border-white/10 text-[#1d1d1f] dark:text-[#e5e5ea] bg-white dark:bg-[#1c1c1e] hover:bg-[#f5f5f7] dark:hover:bg-[#2c2c2e] font-medium text-xs"}`}
                     >
                       {p}
                     </button>
@@ -716,27 +711,27 @@ export default function JobsPage() {
       )}
 
       {searchQuery && !isLoading && jobs.length === 0 && (
-        <div className="text-center py-12 font-bold text-gray-500 dark:text-[#8b949e]">
+        <div className="text-center py-12 font-bold text-[#86868b] dark:text-[#8e8e93]">
           No jobs found. Try different skills or locations.
         </div>
       )}
 
       {!searchQuery && !aiSearchEnabled && (
         <div className="flex flex-col items-center py-16 gap-4 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-black dark:border-white bg-gray-50 dark:bg-[#161b22]" style={{ boxShadow: "4px 4px 0 #000" }}>
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#f2f2f7] dark:bg-[#2c2c2e]">
             <Search className="h-8 w-8 text-gray-400 dark:text-[#8b949e]" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-black dark:text-white uppercase tracking-tight">
+            <h3 className="text-lg font-semibold text-[#1d1d1f] dark:text-white">
               Search for jobs
             </h3>
-            <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e] mb-2 max-w-sm mt-1">
+            <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93] mb-2 max-w-sm mt-1">
               {resumeSkills.length > 0
                 ? "Your resume skills are loaded. Hit Search and AI will craft the perfect keywords!"
                 : "Upload a resume to auto-detect your skills, or type keywords and hit Search."}
             </p>
             {resumeSkills.length > 0 && (
-              <p className="text-xs font-black text-indigo-600 dark:text-indigo-400 flex items-center justify-center gap-1">
+              <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 flex items-center justify-center gap-1">
                 <Sparkles className="h-3 w-3" />
                 Leave the keyword box empty to let AI generate professional search
                 terms from your profile
@@ -754,8 +749,8 @@ export default function JobsPage() {
         {summaryModal && (
           <div className="space-y-4">
             <div>
-              <p className="font-black text-black dark:text-white text-sm uppercase tracking-wide">{summaryModal.title}</p>
-              <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e]">{summaryModal.company}</p>
+              <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">{summaryModal.title}</p>
+              <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">{summaryModal.company}</p>
             </div>
             {summaryModal.aiSummary ? (
               <p className="text-sm font-medium text-gray-700 dark:text-[#c9d1d9] whitespace-pre-line">
@@ -763,7 +758,7 @@ export default function JobsPage() {
               </p>
             ) : (
               <div className="space-y-3">
-                <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">
+                <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93]">
                   Generate a concise AI summary of this job&apos;s key
                   requirements and tech stack.
                 </p>
@@ -803,8 +798,8 @@ export default function JobsPage() {
         {matchModal && (
           <div className="space-y-4">
             <div>
-              <p className="font-black text-black dark:text-white text-sm uppercase tracking-wide">{matchModal.title}</p>
-              <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e]">{matchModal.company}</p>
+              <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">{matchModal.title}</p>
+              <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">{matchModal.company}</p>
             </div>
             {matchResult ? (
               <div className="space-y-3">
@@ -826,7 +821,7 @@ export default function JobsPage() {
                 {matchResult.missingSkills &&
                   matchResult.missingSkills.length > 0 && (
                     <div>
-                      <p className="text-xs font-black text-gray-500 dark:text-[#8b949e] mb-1 uppercase tracking-wide">
+                      <p className="text-xs font-black text-[#86868b] dark:text-[#8e8e93] mb-1 uppercase tracking-wide">
                         Missing skills:
                       </p>
                       <div className="flex flex-wrap gap-1">
@@ -844,7 +839,7 @@ export default function JobsPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">
+                <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93]">
                   Compare this job against your resume skills to see your match
                   score and skill gaps.
                 </p>
@@ -882,8 +877,8 @@ export default function JobsPage() {
         {applyModal && (
           <div className="space-y-4">
             <div>
-              <p className="font-black text-black dark:text-white text-sm uppercase tracking-wide">{applyModal.title}</p>
-              <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e]">{applyModal.company}</p>
+              <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">{applyModal.title}</p>
+              <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">{applyModal.company}</p>
             </div>
             <Select
               label="AI Provider for Cover Letter"
@@ -891,7 +886,7 @@ export default function JobsPage() {
               onChange={(e) => setAiProvider(e.target.value)}
               options={AI_PROVIDERS}
             />
-            <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">
+            <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93]">
               A customized cover letter will be generated using AI and attached
               to your application.
             </p>
@@ -934,7 +929,7 @@ function AddSkillInline({ onAdd }: { onAdd: (skill: string) => void }) {
       <button
         type="button"
         onClick={() => setAdding(true)}
-        className="rounded-[3px] border-2 border-dashed border-gray-400 dark:border-[#30363d] text-gray-500 dark:text-[#8b949e] px-2.5 py-0.5 text-xs font-bold hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+        className="rounded-full border border-dashed border-black/10 dark:border-white/10 text-[#86868b] dark:text-[#8e8e93] px-2.5 py-0.5 text-xs font-medium hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
       >
         + Add skill
       </button>

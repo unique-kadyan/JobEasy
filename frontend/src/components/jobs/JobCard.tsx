@@ -53,10 +53,10 @@ export default function JobCard({ job, onApply, applied, selected, onSelect, sho
           {showCheckbox && (
             <button
               className={cn(
-                "mt-1 shrink-0 w-5 h-5 rounded-[3px] border-2 flex items-center justify-center transition-colors",
+                "mt-1 shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors",
                 selected
                   ? "bg-indigo-600 border-black dark:border-white"
-                  : "border-black dark:border-[#30363d] hover:border-indigo-400"
+                  : "border-black/20 dark:border-white/20 hover:border-indigo-400"
               )}
               onClick={() => onSelect?.(job)}
             >
@@ -72,24 +72,24 @@ export default function JobCard({ job, onApply, applied, selected, onSelect, sho
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <Link
                 href={`/jobs/${job.id}`}
-                className="text-sm font-black text-black dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 truncate uppercase tracking-wide"
+                className="text-sm font-semibold text-[#1d1d1f] dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 truncate"
               >
                 {job.title}
               </Link>
               <Badge className={SOURCE_COLORS[job.source] ?? "bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 border-gray-400"}>{job.source}</Badge>
               {applied && (
-                <span className="flex items-center gap-1 text-[10px] font-black text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-400 px-2 py-0.5 rounded-[3px] uppercase tracking-wide">
+                <span className="flex items-center gap-1 text-[10px] font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-400 px-2 py-0.5 rounded-full">
                   <CheckCircle2 className="h-3 w-3" /> Applied
                 </span>
               )}
               {score != null && (
-                <span className={`text-[10px] font-black px-2 py-0.5 rounded-[3px] border uppercase tracking-wide ${scoreStyle}`}>
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${scoreStyle}`}>
                   {score}% match
                 </span>
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-gray-500 dark:text-[#8b949e] mb-2">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-[#86868b] dark:text-[#8e8e93] mb-2">
               <span className="flex items-center gap-1">
                 <Building2 className="h-3.5 w-3.5" />
                 {job.company}
@@ -116,7 +116,7 @@ export default function JobCard({ job, onApply, applied, selected, onSelect, sho
 
             {score != null && (
               <div className="mb-2">
-                <div className="h-1.5 w-full bg-gray-100 dark:bg-[#21262d] rounded-[2px] overflow-hidden border border-black/10 dark:border-[#30363d]">
+                <div className="h-1 w-full bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full overflow-hidden">
                   <div
                     className={cn("h-full transition-all duration-700", barColor)}
                     style={{ width: `${score}%` }}
@@ -126,7 +126,7 @@ export default function JobCard({ job, onApply, applied, selected, onSelect, sho
             )}
 
             {job.description && (
-              <p className="text-xs font-medium text-gray-600 dark:text-[#8b949e] line-clamp-2">
+              <p className="text-xs text-[#86868b] dark:text-[#8e8e93] line-clamp-2">
                 {job.description.substring(0, 200)}...
               </p>
             )}
@@ -134,7 +134,7 @@ export default function JobCard({ job, onApply, applied, selected, onSelect, sho
             {job.tags && job.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {job.tags.slice(0, 4).map((tag) => (
-                  <span key={tag} className="text-[10px] font-bold bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 border border-gray-400 dark:border-gray-600 px-2 py-0.5 rounded-[3px]">
+                  <span key={tag} className="text-[10px] font-medium bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#6e6e73] dark:text-[#8e8e93] px-2 py-0.5 rounded-full">
                     {tag}
                   </span>
                 ))}
@@ -160,10 +160,10 @@ export default function JobCard({ job, onApply, applied, selected, onSelect, sho
             <button
               onClick={() => setBookmarked((v) => !v)}
               className={cn(
-                "w-full flex items-center justify-center py-1 rounded-[3px] border-2 text-xs transition-all",
+                "w-full flex items-center justify-center py-1 rounded-xl border text-xs transition-all",
                 bookmarked
                   ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border-indigo-400"
-                  : "text-gray-400 dark:text-[#8b949e] border-gray-300 dark:border-[#30363d] hover:text-gray-600 dark:hover:text-[#c9d1d9] hover:bg-gray-50 dark:hover:bg-[#21262d]"
+                  : "text-gray-400 dark:text-[#8b949e] border-black/10 dark:border-white/10 hover:text-gray-600 dark:hover:text-[#c9d1d9] hover:bg-gray-50 dark:hover:bg-[#21262d]"
               )}
               title={bookmarked ? "Remove bookmark" : "Save for later"}
             >

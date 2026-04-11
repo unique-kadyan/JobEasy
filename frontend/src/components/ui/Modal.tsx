@@ -20,20 +20,17 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/60" onClick={onClose} />
-      <div
-        className="relative z-10 w-full max-w-lg rounded-[4px] bg-white dark:bg-[#161b22] border-2 border-black dark:border-white p-6 mx-4"
-        style={{ boxShadow: "var(--nb-shadow-lg)" }}
-      >
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-lg rounded-2xl bg-white dark:bg-[#1c1c1e] shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6 mx-4">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-black text-black dark:text-white uppercase tracking-tight">
+          <h3 className="text-base font-semibold text-[#1d1d1f] dark:text-white">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="flex items-center justify-center w-7 h-7 rounded-[3px] border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors nb-lift nb-shadow-sm"
+            className="flex items-center justify-center w-7 h-7 rounded-full text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.08] transition-colors"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
         {children}

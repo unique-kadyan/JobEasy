@@ -24,6 +24,12 @@ spring:
           max-idle: 3
           min-idle: 0
           max-wait: 2000ms
+    mongodb:
+      auto-index-creation: false   # Skip per-collection index verification against Atlas on startup
+
+  mvc:
+    servlet:
+      load-on-startup: 1   # Eager DispatcherServlet init — avoids 100ms first-request lag after Tomcat binds port
 
   jmx:
     enabled: false
@@ -40,6 +46,8 @@ management:
   health:
     mongodb:
       enabled: false   # Atlas blocks hello:1 on the `local` system DB → always reports DOWN
+    redis:
+      enabled: false   # Redis health check was taking 24+ s → blocks /actuator/health response
 
 springdoc:
   api-docs:

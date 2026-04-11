@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
@@ -37,15 +37,15 @@ export default function SettingsPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Settings</h1>
-        <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-0.5">Manage your profile and preferences</p>
+        <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">Settings</h1>
+        <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-0.5">Manage your profile and preferences</p>
       </div>
 
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <User className="h-5 w-5 text-indigo-600" />
-            <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Profile</h2>
+            <User className="h-4 w-4 text-indigo-600" />
+            <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Profile</h2>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -59,7 +59,7 @@ export default function SettingsPage() {
               label="Email"
               value={user?.email || ""}
               disabled
-              className="bg-gray-50"
+              className="opacity-50"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -83,11 +83,11 @@ export default function SettingsPage() {
             placeholder="e.g., Senior Software Engineer"
           />
           <div>
-            <label className="block text-xs font-black text-black dark:text-white uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-1.5">
               Professional Summary
             </label>
             <textarea
-              className="block w-full rounded-[4px] border-2 border-black dark:border-[#30363d] bg-white dark:bg-[#0d1117] text-black dark:text-white px-3 py-2 text-sm font-medium nb-input-focus"
+              className="block w-full rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-white px-3 py-2 text-sm nb-input-focus placeholder:text-[#86868b]"
               rows={4}
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
@@ -99,8 +99,8 @@ export default function SettingsPage() {
               <Save className="h-4 w-4" /> Save Changes
             </Button>
             {saved && (
-              <span className="flex items-center gap-1 text-xs font-black text-green-600 dark:text-green-400 uppercase tracking-wide border border-green-400 rounded-[3px] px-2 py-1 bg-green-50 dark:bg-green-900/20">
-                <CheckCircle className="h-3.5 w-3.5" /> Saved
+              <span className="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
+                <CheckCircle className="h-4 w-4" /> Saved
               </span>
             )}
           </div>

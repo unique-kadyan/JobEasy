@@ -16,6 +16,12 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // For FormData (file uploads), suppress the default application/json Content-Type so the
+  // browser can set multipart/form-data with the correct boundary automatically.
+  // In Axios 1.x, setting a header to `false` removes it from the outgoing request.
+  if (config.data instanceof FormData) {
+    (config.headers as Record<string, unknown>)["Content-Type"] = false;
+  }
   return config;
 });
 

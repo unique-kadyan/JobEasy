@@ -54,14 +54,14 @@ function ProfileCompletion({ user }: { user: UserType | null }) {
       : "bg-amber-500";
 
   return (
-    <div className="bg-white dark:bg-[#161b22] border-2 border-black dark:border-[#30363d] rounded-[4px] p-4" style={{ boxShadow: "3px 3px 0 #000" }}>
+    <div className="rounded-2xl bg-white dark:bg-[#1c1c1e] border border-black/[0.06] dark:border-white/[0.07] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.4)]">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-black text-black dark:text-white uppercase tracking-wide">Profile Completion</p>
+        <p className="text-xs font-semibold text-[#1d1d1f] dark:text-white">Profile Completion</p>
         <span className={`text-sm font-black ${pct >= 85 ? "text-green-600" : pct >= 50 ? "text-indigo-600" : "text-amber-600"}`}>
           {pct}%
         </span>
       </div>
-      <div className="h-2.5 w-full bg-gray-100 dark:bg-[#21262d] rounded-[2px] overflow-hidden border border-black dark:border-[#30363d]">
+      <div className="h-1.5 w-full bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-700 ${color}`}
           style={{ width: `${pct}%` }}
@@ -71,7 +71,7 @@ function ProfileCompletion({ user }: { user: UserType | null }) {
         {checks.map((c) => (
           <span
             key={c.label}
-            className={`text-xs flex items-center gap-1 font-bold ${c.done ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-gray-600"}`}
+            className={`text-xs flex items-center gap-1 font-medium ${c.done ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-gray-600"}`}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${c.done ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600"}`} />
             {c.label}
@@ -183,8 +183,8 @@ export default function ProfilePage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">My Profile</h1>
-          <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-0.5">
+          <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">My Profile</h1>
+          <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-0.5">
             Consolidated view of your professional identity
           </p>
         </div>
@@ -227,7 +227,7 @@ export default function ProfilePage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-indigo-600" />
-            <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Personal Information</h2>
+            <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Personal Information</h2>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -243,11 +243,11 @@ export default function ProfilePage() {
               </div>
               <Input label="Job Title" placeholder="Senior Software Engineer" {...field("title")} />
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-1.5">
                   Professional Summary
                 </label>
                 <textarea
-                  className="block w-full rounded-[4px] border-2 border-black dark:border-[#30363d] bg-white dark:bg-[#0d1117] text-black dark:text-white px-3 py-2 text-sm font-medium nb-input-focus"
+                  className="block w-full rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-black dark:text-white px-3 py-2 text-sm font-medium nb-input-focus"
                   rows={4}
                   placeholder="A brief summary of your experience and career goals..."
                   {...field("summary")}
@@ -284,17 +284,17 @@ export default function ProfilePage() {
                 <InfoRow label="Member since" value={user?.createdAt ? formatDate(user.createdAt) : undefined} />
               </div>
               {user?.summary && (
-                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                <div className="pt-2 border-t border-black/[0.06] dark:border-white/[0.07]">
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Summary</p>
                   <p className="text-sm text-gray-700 dark:text-gray-300">{user.summary}</p>
                 </div>
               )}
               {user?.targetRoles && user.targetRoles.length > 0 && (
-                <div className="pt-2 border-t-2 border-black/10 dark:border-[#30363d]">
-                  <p className="text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Target Roles</p>
+                <div className="pt-2 border-t border-black/[0.06] dark:border-white/[0.07]">
+                  <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-2">Target Roles</p>
                   <div className="flex flex-wrap gap-1.5">
                     {user.targetRoles.map((role) => (
-                      <span key={role} className="rounded-[3px] border border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 text-xs font-bold">
+                      <span key={role} className="rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2.5 py-0.5 text-xs font-medium">
                         {role}
                       </span>
                     ))}
@@ -310,7 +310,7 @@ export default function ProfilePage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Briefcase className="h-5 w-5 text-indigo-600" />
-            <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Connected Profiles</h2>
+            <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Connected Profiles</h2>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -369,9 +369,9 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <GitBranch className="h-5 w-5 text-gray-800 dark:text-gray-300" />
-                <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">GitHub Projects</h2>
+                <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">GitHub Projects</h2>
                 {githubRepos && (
-                  <span className="text-xs text-gray-500 dark:text-[#8b949e] font-bold border border-gray-300 dark:border-[#30363d] rounded-[3px] px-1.5 py-0.5">
+                  <span className="text-xs text-[#86868b] dark:text-[#8e8e93] bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full px-2 py-0.5">
                     {githubRepos.filter((r) => !r.fork).length} repos
                   </span>
                 )}
@@ -403,7 +403,7 @@ export default function ProfilePage() {
                             href={repo.html_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm font-black text-indigo-600 dark:text-indigo-400 hover:underline truncate shrink-0 max-w-[40%] uppercase tracking-wide"
+                            className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline truncate shrink-0 max-w-[40%]"
                           >
                             {repo.name}
                           </a>
@@ -411,7 +411,7 @@ export default function ProfilePage() {
                             {techs.map((t) => (
                               <span
                                 key={t}
-                                className="rounded-[3px] border border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 text-[10px] font-bold whitespace-nowrap"
+                                className="rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2.5 py-0.5 text-[10px] font-medium whitespace-nowrap"
                               >
                                 {t}
                               </span>
@@ -432,7 +432,7 @@ export default function ProfilePage() {
                   {ownRepos.length > 6 && (
                     <button
                       onClick={() => setShowAllRepos((v) => !v)}
-                      className="mt-3 text-xs font-black text-indigo-600 dark:text-indigo-400 hover:underline uppercase tracking-wide"
+                      className="mt-3 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
                     >
                       {showAllRepos
                         ? "Show less"
@@ -452,13 +452,13 @@ export default function ProfilePage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Code2 className="h-5 w-5 text-indigo-600" />
-            <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Skills</h2>
+            <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Skills</h2>
           </div>
         </CardHeader>
         <CardContent>
           {parsedSkills.length > 0 && (
             <div className="mb-4">
-              <p className="text-xs font-black text-gray-500 dark:text-[#8b949e] mb-2 uppercase tracking-wide">
+              <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-2">
                 Detected from resume
               </p>
               <div className="flex flex-wrap gap-2">
@@ -472,7 +472,7 @@ export default function ProfilePage() {
           )}
           {displaySkills.length > 0 && (
             <div>
-              <p className="text-xs font-black text-gray-500 dark:text-[#8b949e] mb-2 uppercase tracking-wide">
+              <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-2">
                 Profile skills
               </p>
               <div className="flex flex-wrap gap-2">
@@ -497,22 +497,22 @@ export default function ProfilePage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-indigo-600" />
-              <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Primary Resume</h2>
+              <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Primary Resume</h2>
             </div>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-black text-black dark:text-white text-sm uppercase tracking-wide">{primaryResume.filename}</p>
+                <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">{primaryResume.filename}</p>
                 <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e] mt-0.5">
                   Uploaded {formatDate(primaryResume.createdAt)}
                   {primaryResume.fileSize &&
                     ` · ${(primaryResume.fileSize / 1024).toFixed(0)} KB`}
                 </p>
                 <div className="flex gap-2 mt-2 flex-wrap">
-                  {(primaryResume.parsedData?.experience?.length ?? 0) > 0 && <span className="text-[10px] font-black text-green-700 dark:text-green-400 border border-green-400 bg-green-50 dark:bg-green-900/20 rounded-[3px] px-1.5 py-0.5">✓ Experience</span>}
-                  {(primaryResume.parsedData?.education?.length ?? 0) > 0 && <span className="text-[10px] font-black text-green-700 dark:text-green-400 border border-green-400 bg-green-50 dark:bg-green-900/20 rounded-[3px] px-1.5 py-0.5">✓ Education</span>}
-                  {(primaryResume.parsedData?.projects?.length ?? 0) > 0 && <span className="text-[10px] font-black text-green-700 dark:text-green-400 border border-green-400 bg-green-50 dark:bg-green-900/20 rounded-[3px] px-1.5 py-0.5">✓ Projects</span>}
+                  {(primaryResume.parsedData?.experience?.length ?? 0) > 0 && <span className="text-[10px] font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-full px-2 py-0.5">✓ Experience</span>}
+                  {(primaryResume.parsedData?.education?.length ?? 0) > 0 && <span className="text-[10px] font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-full px-2 py-0.5">✓ Education</span>}
+                  {(primaryResume.parsedData?.projects?.length ?? 0) > 0 && <span className="text-[10px] font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-full px-2 py-0.5">✓ Projects</span>}
                   {primaryResume.parsedData?.wordCount && (
                     <span className="text-[10px] font-bold text-gray-500 dark:text-[#8b949e]">{primaryResume.parsedData.wordCount} words</span>
                   )}
@@ -528,7 +528,7 @@ export default function ProfilePage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <GraduationCap className="h-5 w-5 text-indigo-600" />
-            <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Education</h2>
+            <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Education</h2>
           </div>
         </CardHeader>
         <CardContent>
@@ -559,8 +559,8 @@ interface GitHubRepo {
 function InfoRow({ label, value }: { label: string; value?: string }) {
   return (
     <div>
-      <p className="text-xs font-black text-gray-500 dark:text-[#8b949e] uppercase tracking-wide mb-0.5">{label}</p>
-      <p className="text-sm font-bold text-black dark:text-white">{value || <span className="text-gray-400 dark:text-gray-600 font-normal italic">Not set</span>}</p>
+      <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-0.5">{label}</p>
+      <p className="text-sm font-medium text-[#1d1d1f] dark:text-white">{value || <span className="text-gray-400 dark:text-gray-600 font-normal italic">Not set</span>}</p>
     </div>
   );
 }
@@ -575,10 +575,10 @@ function ProfileLink({
   url?: string;
 }) {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-[3px] border-2 border-black/10 dark:border-[#30363d] bg-gray-50 dark:bg-[#0d1117]">
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-[#f5f5f7] dark:bg-[#1c1c1e]">
       {icon}
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-black text-gray-500 dark:text-[#8b949e] uppercase tracking-wide">{label}</p>
+        <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">{label}</p>
         {url ? (
           <a
             href={url}

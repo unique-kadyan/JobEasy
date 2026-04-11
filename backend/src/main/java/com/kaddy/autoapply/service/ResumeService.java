@@ -1,25 +1,5 @@
 package com.kaddy.autoapply.service;
 
-import com.kaddy.autoapply.config.FeatureConfig;
-import com.kaddy.autoapply.exception.BadRequestException;
-import com.kaddy.autoapply.exception.ResourceNotFoundException;
-import com.kaddy.autoapply.model.Resume;
-import com.kaddy.autoapply.security.SecurityUtils;
-import com.kaddy.autoapply.model.User;
-import com.kaddy.autoapply.repository.ResumeRepository;
-import com.kaddy.autoapply.repository.UserRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,8 +7,28 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.kaddy.autoapply.config.FeatureConfig;
+import com.kaddy.autoapply.exception.BadRequestException;
+import com.kaddy.autoapply.exception.ResourceNotFoundException;
+import com.kaddy.autoapply.model.Resume;
+import com.kaddy.autoapply.model.User;
+import com.kaddy.autoapply.repository.ResumeRepository;
+import com.kaddy.autoapply.repository.UserRepository;
+import com.kaddy.autoapply.security.SecurityUtils;
 
 @Service
 @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -46,13 +46,13 @@ public class ResumeService {
     private final Executor executor;
 
     public ResumeService(ResumeRepository resumeRepository,
-                         ResumeParserService parserService,
-                         UserRepository userRepository,
-                         @Lazy JobService jobService,
-                         @Lazy ResumeProfileService resumeProfileService,
-                         FeatureConfig featureConfig,
-                         @Value("${app.upload.dir}") String uploadDir,
-                         @Qualifier("virtualThreadExecutor") Executor executor) {
+            ResumeParserService parserService,
+            UserRepository userRepository,
+            @Lazy JobService jobService,
+            @Lazy ResumeProfileService resumeProfileService,
+            FeatureConfig featureConfig,
+            @Value("${app.upload.dir}") String uploadDir,
+            @Qualifier("virtualThreadExecutor") Executor executor) {
         this.resumeRepository = resumeRepository;
         this.parserService = parserService;
         this.userRepository = userRepository;
@@ -63,7 +63,7 @@ public class ResumeService {
         this.executor = executor;
     }
 
-    private static final byte[] PDF_MAGIC = {'%', 'P', 'D', 'F'};
+    private static final byte[] PDF_MAGIC = { '%', 'P', 'D', 'F' };
 
     public Resume upload(String userId, MultipartFile file) {
         if (file.isEmpty()) {
@@ -74,7 +74,8 @@ public class ResumeService {
             throw new BadRequestException("Only PDF files are supported");
         }
 
-        // Read bytes once — avoids stream-position bugs when getInputStream() is called multiple times
+        // Read bytes once — avoids stream-position bugs when getInputStream() is called
+        // multiple times
         final byte[] fileBytes;
         try {
             fileBytes = file.getBytes();
@@ -97,29 +98,34 @@ public class ResumeService {
                 if (existing >= maxResumes) {
                     throw new BadRequestException(
                             "Resume limit of " + maxResumes + " reached on your "
-                            + owner.getSubscriptionTier().name().toLowerCase()
-                            + " plan. Delete an existing resume or upgrade to upload more.");
+                                    + owner.getSubscriptionTier().name().toLowerCase()
+                                    + " plan. Delete an existing resume or upgrade to upload more.");
                 }
             }
         }
 
+        String parsedText = parserService.extractTextFromBytes(fileBytes);
+        Map<String, Object> parsedData = parserService.parseStructuredData(parsedText);
+
+        String savedFilePath = null;
         try {
             Path uploadPath = Paths.get(uploadDir, userId);
             Files.createDirectories(uploadPath);
-
             String filename = UUID.randomUUID() + ".pdf";
             Path filePath = uploadPath.resolve(filename);
             Files.write(filePath, fileBytes);
+            savedFilePath = filePath.toString();
+        } catch (IOException | RuntimeException e) {
+            log.warn("Could not persist resume file to disk for user {} (non-fatal): {}", userId, e.getMessage());
+        }
 
-            String parsedText = parserService.extractText(filePath);
-            Map<String, Object> parsedData = parserService.parseStructuredData(parsedText);
-
+        try {
             boolean isFirst = resumeRepository.findByUserIdOrderByCreatedAtDesc(userId).isEmpty();
 
             Resume resume = Resume.builder()
                     .userId(userId)
                     .filename(file.getOriginalFilename())
-                    .filePath(filePath.toString())
+                    .filePath(savedFilePath)
                     .fileSize(fileBytes.length)
                     .contentType(contentType)
                     .parsedText(parsedText)
@@ -129,7 +135,7 @@ public class ResumeService {
 
             Resume saved = resumeRepository.save(resume);
 
-            final String savedId   = saved.getId();
+            final String savedId = saved.getId();
             final String finalText = parsedText;
             CompletableFuture.runAsync(() -> {
                 try {
@@ -142,8 +148,10 @@ public class ResumeService {
             triggerAutoSearch(userId, parsedData);
 
             return saved;
-        } catch (IOException e) {
-            throw new BadRequestException("Failed to save uploaded file: " + e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Resume upload failed for user {} — {} : {}",
+                    userId, e.getClass().getName(), e.getMessage(), e);
+            throw e;
         }
     }
 
@@ -151,7 +159,8 @@ public class ResumeService {
         try {
             User user = userRepository.findById(userId).orElse(null);
             String query = buildQueryFromParsedData(parsedData, user);
-            if (query.isBlank()) return;
+            if (query.isBlank())
+                return;
 
             CompletableFuture.runAsync(() -> {
                 try {
@@ -170,7 +179,8 @@ public class ResumeService {
         if (user != null && user.getTitle() != null && !user.getTitle().isBlank()) {
             return user.getTitle();
         }
-        if (parsedData == null) return "";
+        if (parsedData == null)
+            return "";
         Object skillsRaw = parsedData.get("skills");
         if (skillsRaw instanceof Map<?, ?> skillsMap) {
             return skillsMap.values().stream()
