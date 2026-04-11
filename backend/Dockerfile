@@ -40,4 +40,5 @@ ENTRYPOINT ["sh", "-c", "java \
   -XX:+EnableDynamicAgentLoading \
   --enable-native-access=ALL-UNNAMED \
   -jar app.jar \
-  --server.port=${PORT:-8080}"]
+  --server.port=${PORT:-8080} \
+  --spring.profiles.active=${SPRING_PROFILES_ACTIVE:-default}"]

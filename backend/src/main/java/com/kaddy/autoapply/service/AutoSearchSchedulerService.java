@@ -57,7 +57,7 @@ public class AutoSearchSchedulerService {
         this.executor            = executor;
     }
 
-    @Scheduled(fixedDelayString = "${auto.search.check.interval.ms:3600000}")
+    @Scheduled(initialDelayString = "${auto.search.initial.delay.ms:120000}", fixedDelayString = "${auto.search.check.interval.ms:3600000}")
     public void runScheduledSearches() {
         int pageNum = 0;
         int totalDispatched = 0;

@@ -10,8 +10,6 @@ server:
     connection-timeout: 10000ms
 
 spring:
-  main:
-    lazy-initialization: true
 
   mongodb:
     uri: ${MONGODB_URI}
