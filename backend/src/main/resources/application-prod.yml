@@ -13,6 +13,9 @@ spring:
   main:
     lazy-initialization: true
 
+  mongodb:
+    uri: ${MONGODB_URI}
+
   data:
     redis:
       timeout: 2000ms

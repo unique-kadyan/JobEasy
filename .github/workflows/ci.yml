@@ -47,6 +47,7 @@ jobs:
         run: ./mvnw --batch-mode verify
         env:
           MONGODB_URI: mongodb://localhost:27017/kaddy_test
+          JWT_SECRET: ci-test-secret-key-must-be-at-least-256-bits-long-for-hmac-sha256
 
       - name: Upload test results
         if: always()

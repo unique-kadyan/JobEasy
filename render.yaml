@@ -5,7 +5,7 @@
 # Render dashboard provisions the full stack from this file:
 #
 #   kaddy-redis     — Render managed Redis (Key Value store)
-#   kaddy-backend   — Spring Boot 3 / Java 25 (Docker runtime)
+#   kaddy-backend   — Spring Boot 4 / Java 25 (Docker runtime)
 #   kaddy-frontend  — Next.js 14 (native Node.js runtime)
 #
 # Docs: https://render.com/docs/blueprint-spec
@@ -42,7 +42,7 @@ services:
     maxmemoryPolicy: allkeys-lru   # matches redis.conf — evict LRU keys on memory pressure
     ipAllowList: []         # empty = accessible only from services in this Render account
 
-  # ── Backend — Spring Boot (Java 25 via Docker) ─────────────────────────────
+  # ── Backend — Spring Boot 4 (Java 25 via Docker) ──────────────────────────
   #
   # Docker runtime is required because Render's native Java runtime supports
   # up to Java 21.  The Dockerfile at backend/Dockerfile uses the official
@@ -68,7 +68,8 @@ services:
 
       # ── Redis ───────────────────────────────────────────────────────────────
       # REDIS_URL is injected automatically from the kaddy-redis service above.
-      # The Spring app reads this via  spring.data.redis.url: ${REDIS_URL:}
+      # RedisConfig.java reads it directly via @Value("${REDIS_URL:}") and
+      # parses host/port/password from the connection string.
       # No REDIS_HOST / REDIS_PORT / REDIS_PASSWORD entries are needed.
       - key: REDIS_URL
         fromService:
@@ -100,7 +101,7 @@ services:
         value: OPENAI       # change to GROQ / CLAUDE / GEMINI etc. as preferred
       - key: OPENAI_API_KEY
         sync: false
-      - key: CLAUDE_API_KEY
+      - key: ANTHROPIC_API_KEY      # Claude — app reads ${ANTHROPIC_API_KEY:}
         sync: false
       - key: GEMINI_API_KEY
         sync: false
@@ -112,6 +113,10 @@ services:
         sync: false
       - key: TOGETHER_API_KEY
         sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: HYPERBOLIC_API_KEY
+        sync: false
       - key: SAMBANOVA_API_KEY
         sync: false
       - key: NOVITA_API_KEY
@@ -120,7 +125,7 @@ services:
       # ── Job Scrapers ────────────────────────────────────────────────────────
       - key: JSEARCH_API_KEY
         sync: false
-      - key: SERPAPI_KEY
+      - key: SERPAPI_API_KEY        # app reads ${SERPAPI_API_KEY:}
         sync: false
       - key: ADZUNA_APP_ID
         sync: false
