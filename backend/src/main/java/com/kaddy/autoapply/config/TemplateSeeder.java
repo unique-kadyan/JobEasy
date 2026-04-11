@@ -22,13 +22,19 @@ public class TemplateSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (!templateRepository.findByIsSystemTrue().isEmpty()) {
+        try {
+            if (!templateRepository.findByIsSystemTrue().isEmpty()) {
+                return;
+            }
+        } catch (Exception e) {
+            log.warn("Template seeding skipped — database unavailable at startup: {}", e.getMessage());
             return;
         }
 
         log.info("Seeding system cover letter templates...");
 
-        templateRepository.saveAll(List.of(
+        try {
+            templateRepository.saveAll(List.of(
             Template.builder()
                 .name("Professional")
                 .content("""
@@ -117,8 +123,10 @@ public class TemplateSeeder implements CommandLineRunner {
                 .description("Ideal for career changers highlighting transferable skills")
                 .isSystem(true)
                 .build()
-        ));
-
-        log.info("Seeded 4 system templates.");
+            ));
+            log.info("Seeded 4 system templates.");
+        } catch (Exception e) {
+            log.warn("Template seeding failed — will retry on next startup: {}", e.getMessage());
+        }
     }
 }

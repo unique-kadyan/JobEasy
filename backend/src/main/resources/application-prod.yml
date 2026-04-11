@@ -1,40 +1,37 @@
 server:
+  port: ${PORT:8080}
+  address: 0.0.0.0
   tomcat:
-    # Virtual threads make platform threads cheap — keep pool small to save RAM.
     threads:
-      max: 20          # base: 200 — each idle platform thread ~1 MB stack
-      min-spare: 2     # base: 10
-    max-connections: 200    # base: 20000
-    accept-count: 50        # base: 500
+      max: 20
+      min-spare: 2
+    max-connections: 200
+    accept-count: 50
     connection-timeout: 10000ms
 
 spring:
   data:
     redis:
-      # REDIS_URL is read programmatically in RedisConfig.java — no url property needed here.
-      timeout: 200ms           # fail fast — don't block 2s waiting for slow Redis
-      connect-timeout: 200ms   # fail fast on TCP connect
+      timeout: 200ms
+      connect-timeout: 200ms
       lettuce:
         pool:
-          max-active: 10   # base: 50 — slight increase, each holds a socket buffer
-          max-idle: 3      # base: 20
-          min-idle: 1      # base: 5
-          max-wait: 200ms  # don't block long when pool is exhausted — fail fast
+          max-active: 10
+          max-idle: 3
+          min-idle: 0
+          max-wait: 200ms
 
-  # Disable Spring Boot's lazy-loading of JMX / MBean infrastructure (saves ~10 MB).
   jmx:
     enabled: false
 
-# Reduce MongoDB connection pool for low-memory deployment.
 app:
   mongodb:
     pool:
-      max-size: 10     # base: 100
-      min-size: 2      # base: 10
+      max-size: 10
+      min-size: 2
   webclient:
-    max-connections: 50   # base: 500 — Netty channel pool, each holds a direct buffer
+    max-connections: 50
 
-# Disable Swagger/OpenAPI in production — saves ~23s on startup and reduces attack surface.
 springdoc:
   api-docs:
     enabled: false
@@ -43,4 +40,4 @@ springdoc:
 
 logging:
   level:
-    "[com.kaddy.autoapply]": INFO   # less verbose than DEBUG in production
+    "[com.kaddy.autoapply]": INFO
