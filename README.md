@@ -366,12 +366,16 @@ export BREVO_API_KEY=your_key
 
 # Premium AI providers
 export OPENAI_API_KEY=your_key
-export ANTHROPIC_API_KEY=your_key
+export ANTHROPIC_API_KEY=your_key    # Claude (app reads ANTHROPIC_API_KEY)
 export GEMINI_API_KEY=your_key
 
+# Additional free AI providers (highly recommended — widen the failover cascade)
+export DEEPSEEK_API_KEY=your_key     # platform.deepseek.com — free tier
+export HYPERBOLIC_API_KEY=your_key   # app.hyperbolic.xyz — free tier
+
 # Job board scrapers
-export JSEARCH_API_KEY=your_key    # rapidapi.com/jsearch
-export SERPAPI_KEY=your_key
+export JSEARCH_API_KEY=your_key       # rapidapi.com/jsearch
+export SERPAPI_API_KEY=your_key       # serpapi.com (app reads SERPAPI_API_KEY)
 
 # Payments (Razorpay — dev mode works without keys)
 export RAZORPAY_KEY_ID=your_id
@@ -522,7 +526,7 @@ CI=true MONGODB_URI=mongodb://localhost:27017/kaddy_test ./mvnw test
 | -------- | --------------------- | ------ | ---------------------------------------- |
 | `GET`    | `/api/users/profile`  | Bearer | Get authenticated user profile           |
 | `PUT`    | `/api/users/profile`  | Bearer | Update profile, skills, and target roles |
-| `POST`   | `/api/resumes/upload` | Bearer | Upload PDF/DOC/DOCX resume               |
+| `POST`   | `/api/resumes/upload` | Bearer | Upload PDF resume (magic-byte validated) |
 | `GET`    | `/api/resumes`        | Bearer | List uploaded resumes                    |
 | `DELETE` | `/api/resumes/{id}`   | Bearer | Delete a resume                          |
 
@@ -591,10 +595,10 @@ The platform uses a **free → premium cascade** with automatic failover. Provid
 
 **Default order:**
 
-| Tier    | Order                                                        |
-| ------- | ------------------------------------------------------------ |
-| Free    | Cerebras → Groq → Together AI → Mistral → SambaNova → Novita |
-| Premium | Gemini → OpenAI → Claude                                     |
+| Tier    | Order                                                                                                       |
+| ------- | ----------------------------------------------------------------------------------------------------------- |
+| Free    | DeepSeek → Together (DeepSeek V3) → Hyperbolic → Cerebras (Qwen) → Groq → Cerebras → Together → Mistral → SambaNova → Novita |
+| Premium | Gemini → OpenAI → Claude                                                                                    |
 
 Free providers are always tried before premium. If all free providers fail, the cascade escalates to premium. If all providers fail, a `503 Service Unavailable` is returned.
 
@@ -716,9 +720,12 @@ The `backend/Dockerfile` uses a **multi-stage build** with **BuildKit cache moun
 
 > **Why `-Xms128m` not `-Xms32m`?** Spring Boot with Security, MongoDB, Redis, WebFlux, and Resilience4j requires ~150 MB of heap at startup. Starting at 32 MB forced ZGC to perform dozens of heap expansion cycles during `ApplicationContext` initialisation, pushing startup to 60+ seconds and triggering Render health-check timeouts. Starting near the working size eliminates expansion pauses.
 
-**Application startup optimisation (`application-prod.yml`):**
+**Application startup optimisation (`application-prod.yml` + `Dockerfile`):**
 
-- `spring.main.lazy-initialization: true` — defers non-infrastructure bean creation until first use, cutting startup time by ~40–60%. Spring Boot excludes actuator health beans from lazy loading, so `/actuator/health` is available immediately.
+- **Eager initialisation (no lazy-init)** — `spring.main.lazy-initialization: true` was explicitly removed. Lazy init defers `DispatcherServlet` and all web-layer beans to the first HTTP request; on Render that request is the health check itself, which blocks for 30+ seconds while the servlet container initialises and triggers a "No open HTTP ports" deployment failure. Eager init ensures the HTTP port is bound before Render's first health-check scan.
+- **MongoDB health indicator disabled** — `management.health.mongodb.enabled: false` prevents `MongoHealthIndicator` from running `{ hello: 1, $db: "local" }` against the Atlas cluster. MongoDB Atlas blocks all user access to the internal `local` system database (oplog), returning `AtlasError 8000 Unauthorized`. This caused `/actuator/health` to return HTTP 503 on every request, which Render interprets as a failing service and marks the deploy as unhealthy.
+- **`--spring.profiles.active` in Dockerfile ENTRYPOINT** — the production profile is activated via `--spring.profiles.active=${SPRING_PROFILES_ACTIVE:-default}` passed as a command-line argument. This is more reliable than environment variable binding at container start and ensures `application-prod.yml` (which sets `server.address: 0.0.0.0`) is always loaded when `SPRING_PROFILES_ACTIVE=prod` is set in Render.
+- **AutoSearchScheduler 2-minute initial delay** — `@Scheduled(initialDelayString = "${auto.search.initial.delay.ms:120000}", ...)` prevents the background job scheduler from firing at T=0 and competing for MongoDB connections and CPU during the critical startup window.
 - Redis `connect-timeout` raised to `2000ms` — Render free tier network latency between services can exceed the previous 200 ms limit, causing silent connection failures during pool initialisation.
 
 ---
