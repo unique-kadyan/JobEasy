@@ -712,9 +712,9 @@ The `backend/Dockerfile` uses a **multi-stage build** with **BuildKit cache moun
 | Flag                            | Value           | Purpose                                                                                   |
 | ------------------------------- | --------------- | ----------------------------------------------------------------------------------------- |
 | `-XX:+UseZGC`                   | —               | ZGC with generational mode (default since Java 24); sub-millisecond GC pauses             |
-| `-Xms128m -Xmx180m`             | 128–180 MB heap | Pre-allocates heap near the working size; prevents GC-driven heap expansion during startup |
-| `-XX:SoftMaxHeapSize=160m`      | 160 MB          | ZGC tries to stay under this before expanding                                             |
-| `-XX:MaxMetaspaceSize=96m`      | 96 MB           | Prevents metaspace growth from reflection-heavy frameworks                                |
+| `-Xms128m -Xmx160m`             | 128–160 MB heap | Pre-allocates heap near the working size; prevents GC-driven heap expansion during startup |
+| `-XX:SoftMaxHeapSize=148m`      | 148 MB          | ZGC tries to stay under this before expanding                                             |
+| `-XX:MaxMetaspaceSize=128m`     | 128 MB          | Holds class metadata + Spring proxy classes; 96m was too small for 14 MongoDB repos + WebFlux + Security CGLIB proxies → OOM: Metaspace |
 | `-XX:ReservedCodeCacheSize=32m` | 32 MB           | JIT code cache                                                                            |
 | `-XX:MaxDirectMemorySize=32m`   | 32 MB           | Netty direct buffers (WebFlux)                                                            |
 

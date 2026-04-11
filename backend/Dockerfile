@@ -32,9 +32,9 @@ EXPOSE 8080
 ENTRYPOINT ["sh", "-c", "java \
   -XX:+UseZGC \
   -Xms128m \
-  -Xmx180m \
-  -XX:SoftMaxHeapSize=160m \
-  -XX:MaxMetaspaceSize=96m \
+  -Xmx160m \
+  -XX:SoftMaxHeapSize=148m \
+  -XX:MaxMetaspaceSize=128m \
   -XX:ReservedCodeCacheSize=32m \
   -XX:MaxDirectMemorySize=32m \
   -XX:+EnableDynamicAgentLoading \
