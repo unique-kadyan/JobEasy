@@ -9,7 +9,9 @@ import com.kaddy.autoapply.model.ResumeProfile.EducationTag;
 import com.kaddy.autoapply.model.ResumeProfile.ExperienceTag;
 import com.kaddy.autoapply.model.ResumeProfile.PreferencesTag;
 import com.kaddy.autoapply.model.ResumeProfile.ProjectTag;
+import com.kaddy.autoapply.model.User;
 import com.kaddy.autoapply.repository.ResumeProfileRepository;
+import com.kaddy.autoapply.repository.UserRepository;
 import com.kaddy.autoapply.service.ai.AiTextGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,15 +54,18 @@ public class ResumeProfileService {
             """;
 
     private final ResumeProfileRepository repo;
+    private final UserRepository userRepository;
     private final AiTextGenerator aiGenerator;
     private final ObjectMapper objectMapper;
 
     public ResumeProfileService(ResumeProfileRepository repo,
+                                UserRepository userRepository,
                                 AiTextGenerator aiGenerator,
                                 ObjectMapper objectMapper) {
-        this.repo         = repo;
-        this.aiGenerator  = aiGenerator;
-        this.objectMapper = objectMapper;
+        this.repo           = repo;
+        this.userRepository = userRepository;
+        this.aiGenerator    = aiGenerator;
+        this.objectMapper   = objectMapper;
     }
 
     public ResumeProfile getOrCreate(String userId) {
@@ -92,7 +97,73 @@ public class ResumeProfileService {
         profile.setSourceResumeId(resumeId);
         profile.setUpdatedAt(LocalDateTime.now());
         profile.setVersion(profile.getVersion() + 1);
-        return repo.save(profile);
+        ResumeProfile saved = repo.save(profile);
+        syncToUser(userId, saved);
+        return saved;
+    }
+
+    private void syncToUser(String userId, ResumeProfile profile) {
+        userRepository.findById(userId).ifPresent(user -> {
+            boolean changed = false;
+
+            ContactTag contact = profile.getContact();
+            if (contact != null) {
+                if (isBlank(user.getPhone()) && !isBlank(contact.phone())) {
+                    user.setPhone(contact.phone());
+                    changed = true;
+                }
+                if (isBlank(user.getLocation()) && !isBlank(contact.location())) {
+                    user.setLocation(contact.location());
+                    changed = true;
+                }
+                if (isBlank(user.getLinkedinUrl()) && !isBlank(contact.linkedin())) {
+                    user.setLinkedinUrl(contact.linkedin());
+                    changed = true;
+                }
+                if (isBlank(user.getGithubUrl()) && !isBlank(contact.github())) {
+                    user.setGithubUrl(contact.github());
+                    changed = true;
+                }
+                if (isBlank(user.getPortfolioUrl()) && !isBlank(contact.portfolio())) {
+                    user.setPortfolioUrl(contact.portfolio());
+                    changed = true;
+                }
+            }
+
+            if (isBlank(user.getTitle()) && !isBlank(profile.getHeadline())) {
+                user.setTitle(profile.getHeadline());
+                changed = true;
+            }
+            if (isBlank(user.getSummary()) && !isBlank(profile.getSummary())) {
+                user.setSummary(profile.getSummary());
+                changed = true;
+            }
+            if (user.getExperienceYears() == 0 && profile.getYearsOfExperience() != null
+                    && profile.getYearsOfExperience() > 0) {
+                user.setExperienceYears(profile.getYearsOfExperience().intValue());
+                changed = true;
+            }
+            if ((user.getSkills() == null || user.getSkills().isEmpty())
+                    && profile.getSkills() != null && !profile.getSkills().isEmpty()) {
+                user.setSkills(new HashMap<>(profile.getSkills()));
+                changed = true;
+            }
+            if ((user.getTargetRoles() == null || user.getTargetRoles().isEmpty())
+                    && profile.getTargetRoles() != null && !profile.getTargetRoles().isEmpty()) {
+                user.setTargetRoles(profile.getTargetRoles());
+                changed = true;
+            }
+
+            if (changed) {
+                user.setUpdatedAt(LocalDateTime.now());
+                userRepository.save(user);
+                log.info("Synced resume profile fields to user {}", userId);
+            }
+        });
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.isBlank();
     }
 
     public ResumeProfile patch(String userId, Map<String, Object> updates) {

@@ -81,7 +81,7 @@ export default function WelcomeScreen({ type, userName, onComplete }: WelcomeScr
   const greeting =
     type === "login"
       ? `Welcome Back, ${userName}!`
-      : `Welcome to Kaddy, ${userName}!`;
+      : `Welcome to Rolevo, ${userName}!`;
 
   useEffect(() => {
     const interval = setInterval(() => {

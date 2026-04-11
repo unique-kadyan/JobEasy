@@ -82,7 +82,7 @@ export default function PaymentModal({ open, resumeId, onClose, onSuccess }: Pro
       key: order.keyId,
       amount: order.amount,
       currency: order.currency,
-      name: "Kaddy Auto Apply",
+      name: "Rolevo",
       description: "Optimized Resume Download",
       order_id: order.orderId,
       handler: (response: {

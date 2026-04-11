@@ -21,7 +21,7 @@ public class CerebrasConfig {
 
     @Bean
     CerebrasAiProvider cerebrasQwen(WebClient.Builder builder,
-            @Value("${app.ai.cerebras.model.qwen:qwen-3-235b}") String model) {
+            @Value("${app.ai.cerebras.model.qwen:qwen-3-32b}") String model) {
         return new CerebrasAiProvider(builder, apiKey, model, "CEREBRAS_QWEN");
     }
 

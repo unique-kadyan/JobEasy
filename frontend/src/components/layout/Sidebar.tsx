@@ -79,7 +79,7 @@ export default function Sidebar() {
         <div className="flex h-8 w-8 items-center justify-center rounded-[3px] bg-indigo-600 border-2 border-black" style={{ boxShadow: "2px 2px 0 #000" }}>
           <Zap className="h-4 w-4 text-white" />
         </div>
-        <span className="text-lg font-black text-black tracking-tight">Kaddy</span>
+        <span className="text-lg font-black text-black tracking-tight">Rolevo</span>
         <span className="text-[10px] bg-black text-white px-2 py-0.5 rounded-[2px] font-bold ml-auto uppercase tracking-widest">
           AI
         </span>

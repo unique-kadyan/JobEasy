@@ -22,18 +22,13 @@ public class AiProviderFactory {
     public enum TaskType {
         RESUME_GENERATION(List.of(
                 "CLAUDE", "OPENAI",
-                "TOGETHER_DEEPSEEK_V3", "HYPERBOLIC_DEEPSEEK_V3", "DEEPSEEK",
-                "TOGETHER_QWEN3_CODER", "HYPERBOLIC_QWEN3_CODER",
-                "TOGETHER_KIMI_K2", "CEREBRAS_QWEN")),
+                "TOGETHER_QWEN3_CODER", "TOGETHER_KIMI_K2",
+                "HYPERBOLIC_QWEN3_CODER", "CEREBRAS_QWEN")),
         REASONING(List.of(
-                "DEEPSEEK_R1",
-                "HYPERBOLIC_DEEPSEEK_R1_0528", "HYPERBOLIC_DEEPSEEK_R1",
-                "TOGETHER_DEEPSEEK_R1",
                 "CLAUDE",
                 "GROQ_COMPOUND", "GROQ_COMPOUND_MINI")),
         COVER_LETTER(List.of(
                 "CLAUDE", "OPENAI",
-                "DEEPSEEK", "TOGETHER_DEEPSEEK_V3",
                 "TOGETHER_MISTRAL_SMALL", "MISTRAL")),
         FAST_TEXT(List.of(
                 "GROQ", "GROQ_LLAMA_4_SCOUT",
@@ -137,7 +132,7 @@ public class AiProviderFactory {
         throw new AiServiceException(
                 "All AI providers are currently unavailable. " +
                         "Configure at least one of: CEREBRAS_API_KEY, GROQ_API_KEY, TOGETHER_API_KEY, " +
-                        "DEEPSEEK_API_KEY, HYPERBOLIC_API_KEY, MISTRAL_API_KEY, " +
-                        "SAMBANOVA_API_KEY, NOVITA_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY.");
+                        "HYPERBOLIC_API_KEY, MISTRAL_API_KEY, SAMBANOVA_API_KEY, NOVITA_API_KEY, " +
+                        "GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY.");
     }
 }

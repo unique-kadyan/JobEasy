@@ -114,7 +114,7 @@ export default function Navbar({
           <Zap className="h-3.5 w-3.5 text-white" />
         </div>
         <span className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
-          Kaddy
+          Rolevo
         </span>
         <span className="text-[10px] bg-indigo-600 text-white px-1.5 py-0.5 rounded font-medium">
           AI

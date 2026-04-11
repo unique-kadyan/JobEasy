@@ -4,6 +4,7 @@ import com.kaddy.autoapply.dto.response.JobResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -13,12 +14,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+// Disabled by default — returns 404 (API endpoint gone).
+// To re-enable: set app.scraper.themuse.enabled=true in application.properties
 @Component
 public non-sealed class TheMuseScraper implements JobScraper {
 
     private static final Logger log = LoggerFactory.getLogger(TheMuseScraper.class);
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
             new ParameterizedTypeReference<>() {};
+
+    @Value("${app.scraper.themuse.enabled:false}")
+    private boolean enabled;
 
     private final WebClient webClient;
 
@@ -35,6 +41,7 @@ public non-sealed class TheMuseScraper implements JobScraper {
     @Override
     @SuppressWarnings("unchecked")
     public List<JobResponse> fetchJobs(String query, String location, int page) {
+        if (!enabled) return List.of();
         try {
             Map<String, Object> response = webClient.get()
                     .uri(uriBuilder -> uriBuilder

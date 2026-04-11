@@ -11,7 +11,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Zap className="h-7 w-7 text-indigo-600" />
-            <span className="text-xl font-bold text-gray-900">Kaddy</span>
+            <span className="text-xl font-bold text-gray-900">Rolevo</span>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/login">
@@ -100,7 +100,7 @@ export default function LandingPage() {
             Ready to automate your job search?
           </h2>
           <p className="text-gray-500 text-lg mb-8">
-            Join thousands of job seekers who use Kaddy to apply faster and smarter.
+            Join thousands of job seekers who use Rolevo to apply faster and smarter.
           </p>
           <Link href="/signup">
             <Button size="lg">
@@ -114,7 +114,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between text-sm text-gray-500">
           <div className="flex items-center gap-2">
             <Zap className="h-4 w-4 text-indigo-600" />
-            <span>Kaddy Auto Apply</span>
+            <span>Rolevo Auto Apply</span>
           </div>
           <p>&copy; 2026 KadyanIndustries. All rights reserved.</p>
         </div>

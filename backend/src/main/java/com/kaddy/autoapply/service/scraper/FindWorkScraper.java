@@ -4,6 +4,7 @@ import com.kaddy.autoapply.dto.response.JobResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -12,12 +13,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+// Disabled by default — returns 401 Unauthorized (invalid/expired key).
+// To re-enable: set app.scraper.findwork.enabled=true in application.properties
 @Component
 public non-sealed class FindWorkScraper implements JobScraper {
 
     private static final Logger log = LoggerFactory.getLogger(FindWorkScraper.class);
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
             new ParameterizedTypeReference<>() {};
+
+    @Value("${app.scraper.findwork.enabled:false}")
+    private boolean enabled;
 
     private final WebClient webClient;
 
@@ -33,6 +39,7 @@ public non-sealed class FindWorkScraper implements JobScraper {
     @Override
     @SuppressWarnings("unchecked")
     public List<JobResponse> fetchJobs(String query, String location, int page) {
+        if (!enabled) return List.of();
         try {
             Map<String, Object> response = webClient.get()
                     .uri(uriBuilder -> uriBuilder

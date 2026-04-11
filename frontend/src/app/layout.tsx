@@ -15,7 +15,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Kaddy - Auto Apply with AI",
+  title: "Rolevo - Auto Apply with AI",
   description: "AI-powered job application platform. Search jobs, generate cover letters, and auto-apply with one click.",
 };
 

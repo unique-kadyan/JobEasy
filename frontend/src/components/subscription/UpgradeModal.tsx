@@ -139,7 +139,7 @@ export default function UpgradeModal({ open, onClose, targetTier, billingCycle =
         key: order.keyId,
         amount: order.amount,
         currency: order.currency,
-        name: "Kaddy",
+        name: "Rolevo",
         description: `${plan.name} Plan — ${cycle === "ANNUAL" ? "Annual" : "Semi-Annual"}`,
         order_id: order.orderId,
         handler: async (response: Record<string, string>) => {

@@ -16,7 +16,7 @@ export default function SignupPage() {
             <div className="flex h-12 w-12 items-center justify-center rounded-[4px] bg-white border-2 border-black" style={{ boxShadow: "4px 4px 0 #000" }}>
               <Zap className="h-7 w-7 text-indigo-600" />
             </div>
-            <span className="text-3xl font-black uppercase tracking-tight">Kaddy</span>
+            <span className="text-3xl font-black uppercase tracking-tight">Rolevo</span>
             <span className="text-xs bg-white text-indigo-600 px-2 py-0.5 rounded-[3px] font-black border-2 border-black uppercase tracking-widest">AI</span>
           </div>
           <h1 className="text-4xl font-black mb-4 uppercase tracking-tight leading-tight">
@@ -48,7 +48,7 @@ export default function SignupPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-[3px] bg-indigo-600 border-2 border-black" style={{ boxShadow: "3px 3px 0 #000" }}>
               <Zap className="h-5 w-5 text-white" />
             </div>
-            <span className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Kaddy</span>
+            <span className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Rolevo</span>
             <span className="text-xs bg-black dark:bg-white text-white dark:text-black px-1.5 py-0.5 rounded-[2px] font-black uppercase tracking-widest">AI</span>
           </div>
           <h2 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight mb-2">

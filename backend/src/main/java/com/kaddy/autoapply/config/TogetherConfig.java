@@ -2,6 +2,7 @@ package com.kaddy.autoapply.config;
 
 import com.kaddy.autoapply.service.ai.TogetherAiProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -12,22 +13,26 @@ public class TogetherConfig {
     @Value("${app.ai.together.api-key:}")
     private String apiKey;
 
+    // Disabled — Together DeepSeek R1 returns 402, DeepSeek V3 returns 404 (model renamed/removed).
+    // To re-enable: set app.ai.together.deepseek.enabled=true (and verify model names first)
     @Bean
-    TogetherAiProvider together(WebClient.Builder builder,
-            @Value("${app.ai.together.model:meta-llama/Llama-3.3-70B-Instruct-Turbo}") String model) {
-        return new TogetherAiProvider(builder, apiKey, model, "TOGETHER");
-    }
-
-    @Bean
+    @ConditionalOnProperty(name = "app.ai.together.deepseek.enabled", havingValue = "true", matchIfMissing = false)
     TogetherAiProvider togetherDeepSeekR1(WebClient.Builder builder,
             @Value("${app.ai.together.model.deepseek-r1:deepseek-ai/DeepSeek-R1-0528}") String model) {
         return new TogetherAiProvider(builder, apiKey, model, "TOGETHER_DEEPSEEK_R1");
     }
 
     @Bean
+    @ConditionalOnProperty(name = "app.ai.together.deepseek.enabled", havingValue = "true", matchIfMissing = false)
     TogetherAiProvider togetherDeepSeekV3(WebClient.Builder builder,
             @Value("${app.ai.together.model.deepseek-v3:deepseek-ai/DeepSeek-V3-1}") String model) {
         return new TogetherAiProvider(builder, apiKey, model, "TOGETHER_DEEPSEEK_V3");
+    }
+
+    @Bean
+    TogetherAiProvider together(WebClient.Builder builder,
+            @Value("${app.ai.together.model:meta-llama/Llama-3.3-70B-Instruct-Turbo}") String model) {
+        return new TogetherAiProvider(builder, apiKey, model, "TOGETHER");
     }
 
     @Bean

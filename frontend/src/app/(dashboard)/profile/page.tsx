@@ -141,17 +141,29 @@ export default function ProfilePage() {
       setForm((f) => ({ ...f, [key]: e.target.value })),
   });
 
-  const displaySkills = (() => {
-    const skills = user?.skills;
-    if (!skills) return [];
-    if (Array.isArray(skills)) return skills as string[];
-    return Object.values(skills).flat() as string[];
-  })();
-
-  const parsedSkills: string[] = (() => {
-    const s = primaryResume?.parsedData?.skills;
-    if (!s) return [];
-    return Object.values(s).flat().filter(Boolean) as string[];
+  // Preserve grouped structure: prefer user.skills grouped map, fall back to parsedData.skills
+  const skillsGrouped: Record<string, string[]> = (() => {
+    const us = user?.skills;
+    if (us && !Array.isArray(us) && typeof us === "object") {
+      const result: Record<string, string[]> = {};
+      for (const [k, v] of Object.entries(us as Record<string, unknown>)) {
+        if (Array.isArray(v) && v.length > 0)
+          result[k] = (v as unknown[]).filter(Boolean).map(String);
+      }
+      if (Object.keys(result).length > 0) return result;
+    }
+    if (Array.isArray(us) && (us as string[]).length > 0)
+      return { Skills: us as string[] };
+    const ps = primaryResume?.parsedData?.skills;
+    if (ps && typeof ps === "object" && !Array.isArray(ps)) {
+      const result: Record<string, string[]> = {};
+      for (const [k, v] of Object.entries(ps as Record<string, unknown>)) {
+        if (Array.isArray(v) && v.length > 0)
+          result[k] = (v as unknown[]).filter(Boolean).map(String);
+      }
+      if (Object.keys(result).length > 0) return result;
+    }
+    return {};
   })();
 
   const githubUsername = (() => {
@@ -162,6 +174,36 @@ export default function ProfilePage() {
   })();
 
   const [showAllRepos, setShowAllRepos] = useState(false);
+
+  const CATEGORY_PALETTES = [
+    { label: "text-indigo-600 dark:text-indigo-400", badge: "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300" },
+    { label: "text-violet-600 dark:text-violet-400", badge: "bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300" },
+    { label: "text-sky-600 dark:text-sky-400", badge: "bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300" },
+    { label: "text-emerald-600 dark:text-emerald-400", badge: "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300" },
+    { label: "text-amber-600 dark:text-amber-400", badge: "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300" },
+    { label: "text-rose-600 dark:text-rose-400", badge: "bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300" },
+    { label: "text-cyan-600 dark:text-cyan-400", badge: "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300" },
+    { label: "text-orange-600 dark:text-orange-400", badge: "bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300" },
+  ];
+
+  const TAG_COLORS = [
+    "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300",
+    "bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300",
+    "bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300",
+    "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300",
+    "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300",
+    "bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300",
+    "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300",
+    "bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300",
+    "bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300",
+    "bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300",
+  ];
+
+  const tagColor = (tag: string) => {
+    let h = 0;
+    for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
+    return TAG_COLORS[h % TAG_COLORS.length];
+  };
 
   const { data: githubRepos, isLoading: loadingRepos } = useQuery({
     queryKey: ["github-repos", githubUsername],
@@ -385,46 +427,49 @@ export default function ProfilePage() {
               const ownRepos = githubRepos.filter((r) => !r.fork);
               const visible = showAllRepos ? ownRepos : ownRepos.slice(0, 6);
               return (
-                <div className="space-y-0">
+                <div className="divide-y divide-black/[0.04] dark:divide-white/[0.05]">
                   {visible.map((repo) => {
-                    const techs = [
-                      ...(repo.topics ?? []),
-                      ...(repo.language && !repo.topics?.includes(repo.language.toLowerCase())
-                        ? [repo.language]
-                        : []),
-                    ].slice(0, 6);
+                    const langTag = repo.language ?? null;
+                    const topics = repo.topics ?? [];
+                    // All topics + language (deduplicated, case-insensitive)
+                    const topicsLower = new Set(topics.map((t) => t.toLowerCase()));
+                    const allTechs = [
+                      ...topics,
+                      ...(langTag && !topicsLower.has(langTag.toLowerCase()) ? [langTag] : []),
+                    ];
                     return (
-                      <div
-                        key={repo.id}
-                        className="py-3 border-b border-gray-50 last:border-0"
-                      >
-                        <div className="flex items-center justify-between gap-3 min-w-0">
+                      <div key={repo.id} className="py-3.5 first:pt-0 last:pb-0">
+                        <div className="flex items-center gap-3 mb-1">
                           <a
                             href={repo.html_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline truncate shrink-0 max-w-[40%]"
+                            className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline text-sm"
                           >
                             {repo.name}
                           </a>
-                          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-                            {techs.map((t) => (
+                          {repo.stargazers_count > 0 && (
+                            <span className="flex items-center gap-0.5 text-[11px] text-[#86868b] dark:text-[#8e8e93] font-medium">
+                              <Star className="h-3 w-3" /> {repo.stargazers_count}
+                            </span>
+                          )}
+                        </div>
+                        {repo.description && (
+                          <p className="text-xs text-[#86868b] dark:text-[#8e8e93] mb-2 line-clamp-2">
+                            {repo.description}
+                          </p>
+                        )}
+                        {allTechs.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {allTechs.map((t) => (
                               <span
                                 key={t}
-                                className="rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2.5 py-0.5 text-[10px] font-medium whitespace-nowrap"
+                                className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium whitespace-nowrap ${tagColor(t.toLowerCase())}`}
                               >
                                 {t}
                               </span>
                             ))}
-                            <span className="flex items-center gap-0.5 text-xs text-gray-500 dark:text-[#8b949e] font-bold whitespace-nowrap ml-1">
-                              <Star className="h-3 w-3" /> {repo.stargazers_count}
-                            </span>
                           </div>
-                        </div>
-                        {repo.description && (
-                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                            {repo.description}
-                          </p>
                         )}
                       </div>
                     );
@@ -432,7 +477,7 @@ export default function ProfilePage() {
                   {ownRepos.length > 6 && (
                     <button
                       onClick={() => setShowAllRepos((v) => !v)}
-                      className="mt-3 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+                      className="pt-3 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
                     >
                       {showAllRepos
                         ? "Show less"
@@ -453,38 +498,38 @@ export default function ProfilePage() {
           <div className="flex items-center gap-2">
             <Code2 className="h-5 w-5 text-indigo-600" />
             <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Skills</h2>
+            {Object.keys(skillsGrouped).length > 0 && (
+              <span className="text-xs text-[#86868b] dark:text-[#8e8e93] bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full px-2 py-0.5">
+                {Object.values(skillsGrouped).flat().length} skills
+              </span>
+            )}
           </div>
         </CardHeader>
         <CardContent>
-          {parsedSkills.length > 0 && (
-            <div className="mb-4">
-              <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-2">
-                Detected from resume
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {(parsedSkills as string[]).map((skill) => (
-                  <Badge key={skill} className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-400">
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
+          {Object.keys(skillsGrouped).length > 0 ? (
+            <div className="space-y-4">
+              {Object.entries(skillsGrouped).map(([category, skills], idx) => {
+                const palette = CATEGORY_PALETTES[idx % CATEGORY_PALETTES.length];
+                return (
+                  <div key={category} className="flex gap-3 items-start">
+                    <span className={`text-xs font-semibold w-32 shrink-0 pt-0.5 ${palette.label}`}>
+                      {category}
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {skills.map((skill) => (
+                        <span
+                          key={skill}
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${palette.badge}`}
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          )}
-          {displaySkills.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-2">
-                Profile skills
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {displaySkills.map((skill) => (
-                  <Badge key={skill} className="bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 border-gray-400 dark:border-gray-600">
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-          {parsedSkills.length === 0 && displaySkills.length === 0 && (
+          ) : (
             <p className="text-sm font-medium text-gray-400 dark:text-[#8b949e]">
               Upload a resume to auto-detect your skills.
             </p>
