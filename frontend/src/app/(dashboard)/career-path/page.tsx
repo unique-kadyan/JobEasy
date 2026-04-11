@@ -42,32 +42,32 @@ const LEVEL_COLORS: Record<string, string> = {
 function UpgradeGate() {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center px-4">
-      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-900/20 mb-6">
+      <div className="flex h-20 w-20 items-center justify-center rounded-[4px] border-2 border-black dark:border-white bg-amber-50 dark:bg-amber-900/20 mb-6" style={{ boxShadow: "4px 4px 0 #000" }}>
         <Lock className="h-9 w-9 text-amber-500" />
       </div>
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+      <h2 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight mb-3">
         Career Path Analysis
       </h2>
-      <p className="text-gray-500 dark:text-gray-400 max-w-md mb-2">
+      <p className="text-gray-500 dark:text-[#8b949e] max-w-md mb-2 font-medium">
         Unlock AI-powered career path recommendations, role progression
         checkpoints, and mandatory skill plans.
       </p>
-      <p className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-8">
+      <p className="text-sm font-black text-amber-600 dark:text-amber-400 mb-8 uppercase tracking-wide">
         Available on Gold and Platinum plans
       </p>
       <div className="flex gap-4 justify-center flex-wrap">
-        <div className="rounded-xl border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-6 py-4 text-left min-w-[180px]">
-          <p className="font-semibold text-yellow-700 dark:text-yellow-400 mb-1">Gold</p>
-          <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+        <div className="rounded-[4px] border-2 border-black dark:border-yellow-700 bg-amber-50 dark:bg-yellow-900/20 px-6 py-4 text-left min-w-[180px]" style={{ boxShadow: "3px 3px 0 #000" }}>
+          <p className="font-black text-amber-700 dark:text-yellow-400 mb-2 uppercase tracking-wide text-sm">Gold</p>
+          <ul className="text-sm text-gray-600 dark:text-[#8b949e] space-y-1 font-medium">
             <li>✓ Career path analysis</li>
             <li>✓ 10 job results</li>
             <li>✓ Smart resume</li>
             <li>✓ 25 cover letters/day</li>
           </ul>
         </div>
-        <div className="rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/40 px-6 py-4 text-left min-w-[180px]">
-          <p className="font-semibold text-slate-600 dark:text-slate-300 mb-1">Platinum</p>
-          <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+        <div className="rounded-[4px] border-2 border-black dark:border-slate-600 bg-slate-50 dark:bg-slate-800/40 px-6 py-4 text-left min-w-[180px]" style={{ boxShadow: "3px 3px 0 #000" }}>
+          <p className="font-black text-slate-600 dark:text-slate-300 mb-2 uppercase tracking-wide text-sm">Platinum</p>
+          <ul className="text-sm text-gray-600 dark:text-[#8b949e] space-y-1 font-medium">
             <li>✓ Everything in Gold</li>
             <li>✓ Unlimited job results</li>
             <li>✓ Auto-apply</li>
@@ -91,44 +91,44 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
         >
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-900/30">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] border-2 border-black dark:border-[#30363d] bg-indigo-50 dark:bg-indigo-900/30">
                 <Target className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-gray-900 dark:text-white truncate">
+                <p className="font-black text-black dark:text-white uppercase tracking-wide text-sm truncate">
                   {role}
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e] truncate">
                   {path.description}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <Badge className="bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 whitespace-nowrap">
+              <Badge className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-400 whitespace-nowrap">
                 <Clock className="h-3 w-3 mr-1" />
                 ~{path.estimatedYears}y
               </Badge>
               {expanded ? (
-                <ChevronUp className="h-4 w-4 text-gray-400" />
+                <ChevronUp className="h-4 w-4 text-gray-500 dark:text-[#8b949e]" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-gray-400" />
+                <ChevronDown className="h-4 w-4 text-gray-500 dark:text-[#8b949e]" />
               )}
             </div>
           </div>
         </button>
 
         {expanded && (
-          <div className="mt-4 space-y-4 border-t border-gray-100 dark:border-gray-800 pt-4">
+          <div className="mt-4 space-y-4 border-t-2 border-black/10 dark:border-[#30363d] pt-4">
             {path.mandatorySkills.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                <p className="text-xs font-black text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-2">
                   Mandatory Skills
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {path.mandatorySkills.map((skill) => (
                     <Badge
                       key={skill}
-                      className="bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
+                      className="bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 border-violet-400"
                     >
                       {skill}
                     </Badge>
@@ -139,21 +139,21 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
 
             {path.checkpoints.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                <p className="text-xs font-black text-gray-500 dark:text-[#8b949e] uppercase tracking-wider mb-3">
                   Checkpoints
                 </p>
-                <ol className="relative border-l-2 border-indigo-200 dark:border-indigo-800 ml-2 space-y-4">
+                <ol className="relative border-l-2 border-indigo-300 dark:border-indigo-800 ml-2 space-y-4">
                   {path.checkpoints.map((cp, i) => (
                     <li key={i} className="ml-5">
-                      <span className="absolute -left-[9px] flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 ring-4 ring-white dark:ring-gray-900">
+                      <span className="absolute -left-[9px] flex h-4 w-4 items-center justify-center rounded-[3px] border-2 border-black dark:border-white bg-indigo-600">
                         <CheckCircle2 className="h-2.5 w-2.5 text-white" />
                       </span>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-medium text-gray-900 dark:text-white text-sm">
+                          <p className="font-black text-black dark:text-white text-sm uppercase tracking-wide">
                             {cp.milestone}
                           </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                          <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e] mt-0.5">
                             {cp.description}
                           </p>
                           {cp.skills.length > 0 && (
@@ -161,7 +161,7 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
                               {cp.skills.map((s) => (
                                 <Badge
                                   key={s}
-                                  className="bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 text-xs"
+                                  className="bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 border-gray-400 dark:border-gray-600 text-[10px]"
                                 >
                                   {s}
                                 </Badge>
@@ -169,7 +169,7 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
                             </div>
                           )}
                         </div>
-                        <Badge className="bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400 whitespace-nowrap shrink-0 text-xs">
+                        <Badge className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-400 whitespace-nowrap shrink-0 text-[10px]">
                           <BookOpen className="h-3 w-3 mr-1" />
                           {cp.timelineMonths}mo
                         </Badge>
@@ -205,10 +205,10 @@ export default function CareerPathPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">
             Career Path
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-0.5">
             AI-powered career progression analysis
           </p>
         </div>
@@ -221,10 +221,10 @@ export default function CareerPathPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">
             Career Path
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-0.5">
             AI-powered analysis of your next career moves
           </p>
         </div>
@@ -241,36 +241,38 @@ export default function CareerPathPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 text-sm text-red-700 dark:text-red-400">
+        <div className="rounded-[4px] bg-red-50 dark:bg-red-900/20 border-2 border-red-500 dark:border-red-800 p-4 text-sm font-bold text-red-700 dark:text-red-400">
           {(error as Error).message || "Analysis failed. Please ensure your resume and profile are complete, then try again."}
         </div>
       )}
 
       {!data && !isLoading && !error && (
-        <div className="text-center py-16">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 mx-auto mb-4">
-            <TrendingUp className="h-8 w-8 text-indigo-400" />
+        <div className="flex flex-col items-center py-16 gap-4 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-black dark:border-white bg-indigo-50 dark:bg-indigo-900/20" style={{ boxShadow: "4px 4px 0 #000" }}>
+            <TrendingUp className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-            Ready to map your career
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400 text-sm max-w-md mx-auto">
-            Upload your resume and complete your profile for the most accurate
-            analysis. Click &ldquo;Analyse My Career&rdquo; to start.
-          </p>
+          <div>
+            <h3 className="text-lg font-black text-black dark:text-white uppercase tracking-tight">
+              Ready to map your career
+            </h3>
+            <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e] max-w-md mx-auto mt-1">
+              Upload your resume and complete your profile for the most accurate
+              analysis. Click &ldquo;Analyse My Career&rdquo; to start.
+            </p>
+          </div>
         </div>
       )}
 
       {data && (
         <div className="space-y-6">
           <div className="flex items-center gap-3">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-xs font-black text-gray-500 dark:text-[#8b949e] uppercase tracking-wide">
               Current level:
             </p>
             <Badge
               className={
                 LEVEL_COLORS[data.currentLevel] ??
-                "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                "bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 border-gray-400"
               }
             >
               {LEVEL_LABELS[data.currentLevel] ?? data.currentLevel}
@@ -280,14 +282,14 @@ export default function CareerPathPage() {
           {data.suggestedRoles.length > 0 && (
             <Card>
               <CardContent className="py-4">
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                <p className="text-xs font-black text-black dark:text-[#c9d1d9] uppercase tracking-widest mb-3">
                   Suggested Next Roles
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {data.suggestedRoles.map((role) => (
                     <Badge
                       key={role}
-                      className="bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                      className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-400"
                     >
                       {role}
                     </Badge>
@@ -298,7 +300,7 @@ export default function CareerPathPage() {
           )}
 
           <div>
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+            <p className="text-xs font-black text-black dark:text-[#c9d1d9] uppercase tracking-widest mb-3">
               Career Paths
             </p>
             <div className="space-y-3">

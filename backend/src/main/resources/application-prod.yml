@@ -10,16 +10,19 @@ server:
     connection-timeout: 10000ms
 
 spring:
+  main:
+    lazy-initialization: true
+
   data:
     redis:
-      timeout: 200ms
-      connect-timeout: 200ms
+      timeout: 2000ms
+      connect-timeout: 2000ms
       lettuce:
         pool:
           max-active: 10
           max-idle: 3
           min-idle: 0
-          max-wait: 200ms
+          max-wait: 2000ms
 
   jmx:
     enabled: false

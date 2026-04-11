@@ -110,50 +110,60 @@ export default function PaymentModal({ open, resumeId, onClose, onSuccess }: Pro
 
   return (
     <Modal open={open} onClose={onClose} title="Unlock Full Resume">
-      <div className="space-y-5">
-        <div className="rounded-lg bg-indigo-50 p-4 space-y-2">
-          <p className="font-semibold text-indigo-900">What you get:</p>
+      <div className="space-y-4">
+        {/* What you get */}
+        <div
+          className="rounded-[4px] border-2 border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 p-4 space-y-2"
+          style={{ boxShadow: "3px 3px 0 #6366f1" }}
+        >
+          <p className="text-xs font-black text-indigo-900 dark:text-indigo-300 uppercase tracking-wide mb-2">What you get:</p>
           {[
             "AI-optimized, ATS-ready resume",
             "Complete multi-page resume",
             "PDF download",
             "Professional formatting",
           ].map((item) => (
-            <div key={item} className="flex items-center gap-2 text-sm text-indigo-800">
-              <CheckCircle className="h-4 w-4 text-indigo-600 shrink-0" />
+            <div key={item} className="flex items-center gap-2 text-xs font-medium text-indigo-800 dark:text-indigo-300">
+              <CheckCircle className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
               {item}
             </div>
           ))}
         </div>
 
-        <div className="rounded-lg border border-gray-200 p-4 flex items-center justify-between">
+        {/* Price */}
+        <div className="rounded-[4px] border-2 border-black dark:border-[#30363d] bg-white dark:bg-[#161b22] p-4 flex items-center justify-between">
           <div>
-            <p className="font-semibold text-gray-900">One-time payment</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-sm font-black text-black dark:text-white uppercase tracking-wide">One-time payment</p>
+            <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e]">
               {country === "IN" ? "Includes 8% cess" : "Includes 25% international cess"}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-black text-black dark:text-white">
               {country === "IN" ? "₹54" : "$0.76"}
             </p>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs font-medium text-gray-400 dark:text-[#8b949e]">
               {country === "IN" ? "INR" : "USD equivalent"}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          <Lock className="h-4 w-4 text-gray-400 shrink-0" />
-          Secured by Razorpay · 256-bit SSL encryption
-        </div>
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          <Shield className="h-4 w-4 text-gray-400 shrink-0" />
-          One-time charge · No subscription · No auto-renewal
+        {/* Security notices */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-[#8b949e]">
+            <Lock className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+            Secured by Razorpay · 256-bit SSL encryption
+          </div>
+          <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-[#8b949e]">
+            <Shield className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+            One-time charge · No subscription · No auto-renewal
+          </div>
         </div>
 
         {error && (
-          <p className="text-sm text-red-600 bg-red-50 rounded px-3 py-2">{error}</p>
+          <div className="rounded-[4px] border-2 border-red-500 bg-red-50 dark:bg-red-900/20 p-3 text-sm font-bold text-red-700 dark:text-red-400">
+            {error}
+          </div>
         )}
 
         <div className="flex gap-3">

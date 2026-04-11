@@ -70,6 +70,7 @@ The platform is horizontally scalable: the backend runs on Java 25 virtual threa
 | **Analytics & Reporting**     | Application funnel metrics, weekly activity timeline, breakdown by job board source and status, response rate calculation                                                                                                                                                                           |
 | **Payments**                  | Razorpay integration for premium resume generation; HMAC-SHA256 signature verification; dev-mode mock orders when keys are blank                                                                                                                                                                    |
 | **Rate Limiting**             | Redis-backed per-user limits (authenticated) + Nginx per-IP zones (unauthenticated); applied to search, AI cover letters, resume upload, smart resume, bulk apply, and career path endpoints; limits scale with subscription tier                                                                   |
+| **UI Design System**          | Neubrutalism theme throughout: `border-2 border-black`, `rounded-[4px]`, offset box-shadows (`3px 3px 0 #000`), `font-black uppercase tracking-tight` typography; full dark mode parity; icon-first buttons (Lucide); consistent across all pages, modals, forms, and UI primitives                |
 | **Load Balancing**            | Nginx reverse proxy with `least_conn` upstream, per-endpoint rate limit zones, gzip, security headers, Docker Compose horizontal scaling (`--scale api=N`)                                                                                                                                          |
 | **Security & Compliance**     | OWASP-aligned HTTP security headers (CSP, HSTS, X-Frame-Options), AOP audit logging, prompt injection sanitisation, OWASP Dependency Check, Trivy secret scanning; all secrets in environment variables — never committed                                                                           |
 
@@ -129,7 +130,7 @@ All platform capabilities are gated by subscription tier. Every limit is enforce
 | Concern                 | Decision                                                                | Rationale                                                                                                                                                         |
 | ----------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Concurrency**         | Java 25 virtual threads (`spring.threads.virtual.enabled=true`)         | Eliminates thread-pool exhaustion under high I/O concurrency from AI and scraper calls                                                                            |
-| **GC**                  | Generational ZGC (`-XX:+UseZGC -XX:+ZGenerational`) on Ubuntu/glibc     | Sub-millisecond pauses under load; glibc (Ubuntu Jammy) is required — Alpine (musl libc) is incompatible with ZGC                                                 |
+| **GC**                  | ZGC (`-XX:+UseZGC`) on Ubuntu/glibc                                     | Sub-millisecond pauses under load; Generational ZGC is the default in Java 24+ (flag removed in 24.0); glibc (Ubuntu Jammy) is required — Alpine (musl libc) is incompatible with ZGC |
 | **AI Resilience**       | Resilience4j circuit breaker + retry per provider, 10 providers total   | Prevents cascading failures; free providers are tried first, premium providers escalate automatically                                                             |
 | **AI Search Keywords**  | `SearchKeywordGeneratorService` with graceful fallback                  | When a user has no explicit query, LLM generates a professional targeted query from their profile; falls back to `targetRoles[0]` or `title` if AI is unavailable |
 | **Onboarding State**    | `onboardingCompleted` set locally before navigation                     | Prevents infinite redirect loops if the backend is temporarily unreachable during the final onboarding step                                                       |
@@ -169,7 +170,7 @@ All platform capabilities are gated by subscription tier. Every limit is enforce
 | ------------------ | --------------------------------------- | ------- |
 | Framework          | Next.js (App Router)                    | 16      |
 | Language           | TypeScript                              | 6       |
-| Styling            | Tailwind CSS                            | 4       |
+| Styling            | Tailwind CSS v4 + Neubrutalism design system | 4       |
 | Server State       | TanStack React Query                    | 5       |
 | Client State       | Zustand (with localStorage persistence) | 5       |
 | Forms & Validation | React Hook Form + Zod                   | —       |
@@ -266,9 +267,11 @@ auto_apply_with_kaddy/
 │       │   │                            # /cover-letters · /profile · /settings · /smart-resume
 │       │   └── onboarding/              # 3-step wizard; local-first completion to prevent loops
 │       ├── components/
-│       │   ├── ui/                      # Button, Input, Card, Modal, Badge, Select
-│       │   ├── layout/                  # Navbar, WarmUpBanner (Render cold-start indicator)
-│       │   └── …/                       # Feature-specific components
+│       │   ├── ui/                      # Button, Input, Card, Modal, Badge, Select,
+│       │   │                            # MultiSelect, EmptyState, CommandPalette
+│       │   ├── layout/                  # Navbar, Topbar, Sidebar, WelcomeScreen, WarmUpBanner
+│       │   └── …/                       # Feature-specific components (JobCard, StatsCards,
+│       │                                # UpgradeModal, PaymentModal)
 │       ├── hooks/                       # useJobs (aiSearchEnabled param), useApplications,
 │       │                                # useResumes, useCoverLetters, useKeepAlive
 │       ├── lib/
@@ -629,20 +632,27 @@ export AI_PREMIUM_ORDER=OPENAI,CLAUDE,GEMINI
 | **CORS**                | Configured via `CORS_ORIGINS` env var; restrictive defaults                                                                              |
 | **Security Headers**    | CSP, X-Frame-Options (DENY), X-Content-Type-Options, Referrer-Policy, Permissions-Policy via `SecurityHeadersFilter`                     |
 | **Dependency Scanning** | OWASP Dependency Check in CI (CVSSv3 ≥ 7 blocks merge); npm audit; Trivy container + secrets scan                                        |
-| **Code Analysis**       | CodeQL `security-extended` on every push; SpotBugs + PMD code quality gates                                                              |
+| **Code Analysis**       | CodeQL `security-extended` on every PR + weekly schedule; SpotBugs + PMD code quality gates on PRs                                       |
 
 ---
 
 ## CI/CD & Quality Gates
 
-Every push to `main` and every pull request runs four GitHub Actions workflows:
+**On every push to `main`:**
 
 | Workflow              | What it checks                                                                                            |
 | --------------------- | --------------------------------------------------------------------------------------------------------- |
 | **CI — Build & Test** | Maven build + 123 unit/web-layer tests (JDK 25, MongoDB 7, Redis 7) + Next.js lint, type-check, and build |
-| **CodeQL**            | Static security analysis with `security-extended` query suite                                             |
-| **Security Scan**     | OWASP Dependency Check, npm audit, Trivy (container + secrets), GitHub Dependency Review                  |
-| **Code Quality**      | SpotBugs (max effort, medium threshold) + PMD                                                             |
+
+**On pull requests to `main`** (in addition to CI):
+
+| Workflow          | What it checks                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------ |
+| **CodeQL**        | Static security analysis with `security-extended` query suite (also runs on weekly schedule)     |
+| **Security Scan** | OWASP Dependency Check, npm audit, Trivy (container + secrets), GitHub Dependency Review         |
+| **Code Quality**  | SpotBugs (max effort, medium threshold) + PMD (also runs on weekly schedule for Security Scan)   |
+
+> Quality and security workflows run on PRs rather than every push to avoid redundant Maven compiles that would triple CI time without adding signal — `main` is already protected by the CI gate.
 
 Additionally, a `keep-alive` workflow pings deployed Render services on a schedule to prevent free-tier sleep.
 
@@ -680,23 +690,32 @@ The project ships with a `render.yaml` Blueprint that provisions the entire stac
 
 ### Docker Notes
 
-The `backend/Dockerfile` uses a **multi-stage build**:
+The `backend/Dockerfile` uses a **multi-stage build** with **BuildKit cache mounts**:
 
 - **Build stage:** `eclipse-temurin:25-jdk-jammy` — compiles the JAR with Maven Wrapper
 - **Runtime stage:** `eclipse-temurin:25-jre-jammy` — minimal JRE image (~280 MB)
+- **Maven dependency cache:** `--mount=type=cache,target=/root/.m2` persists the local Maven repository between Render builds. Only invalidated when `pom.xml` changes — source-only changes skip the dependency download entirely.
+- **`.dockerignore`:** Excludes `target/`, `.git`, `.idea`, and test reports from the build context, reducing context size significantly.
 
 > **Why Ubuntu Jammy (not Alpine)?** ZGC (`-XX:+UseZGC`) requires glibc. Alpine Linux uses musl libc, which is incompatible with ZGC and causes the JVM to crash on startup. Ubuntu Jammy provides the correct glibc environment.
 
 **JVM tuning for Render free tier (512 MB RAM):**
 
-| Flag                             | Value          | Purpose                                                    |
-| -------------------------------- | -------------- | ---------------------------------------------------------- |
-| `-XX:+UseZGC -XX:+ZGenerational` | —              | Generational ZGC; sub-millisecond GC pauses                |
-| `-Xms32m -Xmx180m`               | 32–180 MB heap | Stays well within 512 MB container limit                   |
-| `-XX:SoftMaxHeapSize=150m`       | 150 MB         | ZGC tries to stay under this before expanding              |
-| `-XX:MaxMetaspaceSize=96m`       | 96 MB          | Prevents metaspace growth from reflection-heavy frameworks |
-| `-XX:ReservedCodeCacheSize=32m`  | 32 MB          | JIT code cache                                             |
-| `-XX:MaxDirectMemorySize=32m`    | 32 MB          | Netty direct buffers (WebFlux)                             |
+| Flag                            | Value           | Purpose                                                                                   |
+| ------------------------------- | --------------- | ----------------------------------------------------------------------------------------- |
+| `-XX:+UseZGC`                   | —               | ZGC with generational mode (default since Java 24); sub-millisecond GC pauses             |
+| `-Xms128m -Xmx180m`             | 128–180 MB heap | Pre-allocates heap near the working size; prevents GC-driven heap expansion during startup |
+| `-XX:SoftMaxHeapSize=160m`      | 160 MB          | ZGC tries to stay under this before expanding                                             |
+| `-XX:MaxMetaspaceSize=96m`      | 96 MB           | Prevents metaspace growth from reflection-heavy frameworks                                |
+| `-XX:ReservedCodeCacheSize=32m` | 32 MB           | JIT code cache                                                                            |
+| `-XX:MaxDirectMemorySize=32m`   | 32 MB           | Netty direct buffers (WebFlux)                                                            |
+
+> **Why `-Xms128m` not `-Xms32m`?** Spring Boot with Security, MongoDB, Redis, WebFlux, and Resilience4j requires ~150 MB of heap at startup. Starting at 32 MB forced ZGC to perform dozens of heap expansion cycles during `ApplicationContext` initialisation, pushing startup to 60+ seconds and triggering Render health-check timeouts. Starting near the working size eliminates expansion pauses.
+
+**Application startup optimisation (`application-prod.yml`):**
+
+- `spring.main.lazy-initialization: true` — defers non-infrastructure bean creation until first use, cutting startup time by ~40–60%. Spring Boot excludes actuator health beans from lazy loading, so `/actuator/health` is available immediately.
+- Redis `connect-timeout` raised to `2000ms` — Render free tier network latency between services can exceed the previous 200 ms limit, causing silent connection failures during pool initialisation.
 
 ---
 

@@ -192,12 +192,12 @@ export default function WelcomeScreen({ type, userName, onComplete }: WelcomeScr
 
       <div className="relative z-10 text-center px-8 max-w-2xl mx-auto">
         <div
-          className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-2xl"
+          className="mx-auto mb-8 flex h-20 w-20 items-center justify-center"
           style={{
-            background: "rgba(99,102,241,0.15)",
-            border: "1px solid rgba(129,140,248,0.3)",
-            backdropFilter: "blur(8px)",
-            boxShadow: "0 0 40px rgba(99,102,241,0.2)",
+            background: "rgba(99,102,241,0.2)",
+            border: "3px solid rgba(129,140,248,0.8)",
+            borderRadius: "8px",
+            boxShadow: "6px 6px 0 rgba(99,102,241,0.5)",
           }}
         >
           <svg
@@ -210,18 +210,18 @@ export default function WelcomeScreen({ type, userName, onComplete }: WelcomeScr
             <path
               d="M20 4L24.5 15.5H36.5L26.5 22.5L30.5 34L20 27L9.5 34L13.5 22.5L3.5 15.5H15.5L20 4Z"
               fill="rgba(167,139,250,0.9)"
-              stroke="rgba(196,181,253,0.5)"
-              strokeWidth="0.5"
+              stroke="rgba(196,181,253,0.7)"
+              strokeWidth="1"
             />
           </svg>
         </div>
 
         <h1
-          className="font-bold text-white mb-4 tracking-tight"
+          className="font-black text-white mb-4 uppercase tracking-tight"
           style={{
             fontSize: "clamp(1.8rem, 5vw, 3.2rem)",
             lineHeight: 1.15,
-            textShadow: "0 0 40px rgba(167,139,250,0.4)",
+            textShadow: "3px 3px 0 rgba(99,102,241,0.6)",
             animation: "welcomeFadeSlideUp 0.6s ease-out both",
           }}
         >
@@ -230,9 +230,9 @@ export default function WelcomeScreen({ type, userName, onComplete }: WelcomeScr
 
         <p
           key={sloganIndex}
-          className="text-lg"
+          className="text-base font-bold"
           style={{
-            color: "rgba(196,181,253,0.75)",
+            color: "rgba(196,181,253,0.85)",
             animation: "welcomeFadeSlideUp 0.45s ease-out both",
             minHeight: "1.75rem",
           }}
@@ -244,11 +244,12 @@ export default function WelcomeScreen({ type, userName, onComplete }: WelcomeScr
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="rounded-full"
               style={{
-                width: 8,
-                height: 8,
-                backgroundColor: "rgba(129,140,248,0.8)",
+                width: 10,
+                height: 10,
+                borderRadius: "2px",
+                border: "2px solid rgba(129,140,248,0.8)",
+                backgroundColor: "rgba(129,140,248,0.4)",
                 animation: `welcomePulse 1.5s ${i * 0.22}s ease-in-out infinite`,
               }}
             />
@@ -256,8 +257,8 @@ export default function WelcomeScreen({ type, userName, onComplete }: WelcomeScr
         </div>
 
         <p
-          className="mt-6 text-sm"
-          style={{ color: "rgba(148,163,184,0.5)" }}
+          className="mt-6 text-xs font-black uppercase tracking-widest"
+          style={{ color: "rgba(148,163,184,0.6)" }}
         >
           Preparing your dashboard…
         </p>

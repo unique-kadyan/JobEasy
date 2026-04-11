@@ -69,21 +69,21 @@ export default function MultiSelect({
   return (
     <div className={cn("relative", className)} ref={ref}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-black text-black dark:text-white uppercase tracking-wider mb-1.5">
           {label}
         </label>
       )}
       <div
-        className="min-h-[38px] flex flex-wrap items-center gap-1 rounded-lg border border-gray-300 px-2 py-1.5 cursor-pointer bg-white hover:border-gray-400 transition-colors"
+        className="min-h-[38px] flex flex-wrap items-center gap-1 rounded-[4px] border-2 border-black dark:border-[#30363d] px-2 py-1.5 cursor-pointer bg-white dark:bg-[#0d1117] hover:border-indigo-600 dark:hover:border-indigo-500 transition-colors"
         onClick={() => setOpen(!open)}
       >
         {selected.length === 0 && (
-          <span className="text-sm text-gray-400 px-1">{placeholder}</span>
+          <span className="text-sm font-medium text-gray-400 dark:text-[#8b949e] px-1">{placeholder}</span>
         )}
         {selected.map((val) => (
           <span
             key={val}
-            className="inline-flex items-center gap-1 rounded-md bg-indigo-50 text-indigo-700 px-2 py-0.5 text-xs font-medium"
+            className="inline-flex items-center gap-1 rounded-[3px] border border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 text-xs font-black uppercase tracking-wide"
           >
             {getLabel(val)}
             <button
@@ -92,24 +92,27 @@ export default function MultiSelect({
                 e.stopPropagation();
                 remove(val);
               }}
-              className="hover:text-indigo-900"
+              className="hover:text-indigo-900 dark:hover:text-indigo-200"
             >
               <X className="h-3 w-3" />
             </button>
           </span>
         ))}
-        <ChevronDown className="h-4 w-4 text-gray-400 ml-auto shrink-0" />
+        <ChevronDown className="h-4 w-4 text-gray-400 dark:text-[#8b949e] ml-auto shrink-0" />
       </div>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-64 overflow-hidden">
+        <div
+          className="absolute z-50 mt-1 w-full rounded-[4px] border-2 border-black dark:border-[#30363d] bg-white dark:bg-[#161b22] max-h-64 overflow-hidden"
+          style={{ boxShadow: "4px 4px 0 #000" }}
+        >
           {searchable && (
-            <div className="p-2 border-b border-gray-100">
-              <div className="flex items-center gap-2 rounded-md border border-gray-200 px-2 py-1.5">
-                <Search className="h-3.5 w-3.5 text-gray-400" />
+            <div className="p-2 border-b-2 border-black dark:border-[#30363d]">
+              <div className="flex items-center gap-2 rounded-[3px] border-2 border-black dark:border-[#30363d] bg-gray-50 dark:bg-[#0d1117] px-2 py-1.5">
+                <Search className="h-3.5 w-3.5 text-gray-400 dark:text-[#8b949e]" />
                 <input
                   type="text"
-                  className="flex-1 text-sm outline-none placeholder:text-gray-400"
+                  className="flex-1 text-sm font-medium outline-none bg-transparent text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-[#8b949e]"
                   placeholder="Search..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -122,7 +125,7 @@ export default function MultiSelect({
             {Object.entries(grouped).map(([group, opts]) => (
               <div key={group}>
                 {group && (
-                  <div className="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50">
+                  <div className="px-3 py-1.5 text-[10px] font-black text-gray-400 dark:text-[#8b949e] uppercase tracking-widest bg-gray-50 dark:bg-[#0d1117] border-b border-gray-100 dark:border-[#21262d]">
                     {group}
                   </div>
                 )}
@@ -131,8 +134,8 @@ export default function MultiSelect({
                     key={opt.value}
                     type="button"
                     className={cn(
-                      "w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 transition-colors",
-                      selected.includes(opt.value) && "bg-indigo-50 text-indigo-700"
+                      "w-full text-left px-3 py-2 text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#21262d] flex items-center gap-2 transition-colors text-black dark:text-white",
+                      selected.includes(opt.value) && "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400"
                     )}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -141,10 +144,10 @@ export default function MultiSelect({
                   >
                     <div
                       className={cn(
-                        "h-4 w-4 rounded border flex items-center justify-center shrink-0",
+                        "h-4 w-4 rounded-[2px] border-2 flex items-center justify-center shrink-0",
                         selected.includes(opt.value)
                           ? "bg-indigo-600 border-indigo-600"
-                          : "border-gray-300"
+                          : "border-black dark:border-[#30363d]"
                       )}
                     >
                       {selected.includes(opt.value) && (
@@ -159,7 +162,7 @@ export default function MultiSelect({
               </div>
             ))}
             {filtered.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-3">No results found</p>
+              <p className="text-xs font-bold text-gray-400 dark:text-[#8b949e] text-center py-3 uppercase tracking-wide">No results found</p>
             )}
           </div>
         </div>

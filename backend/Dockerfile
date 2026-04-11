@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM eclipse-temurin:25-jdk-jammy AS build
 
 WORKDIR /app
@@ -6,10 +7,16 @@ COPY .mvn/  .mvn/
 COPY mvnw   mvnw
 COPY pom.xml pom.xml
 
-RUN chmod +x mvnw && ./mvnw dependency:go-offline --batch-mode -q
+RUN chmod +x mvnw
+
+# Cache Maven dependencies across builds — only invalidated when pom.xml changes
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw dependency:go-offline --batch-mode -q
 
 COPY src/ src/
-RUN ./mvnw --batch-mode package -DskipTests
+
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw --batch-mode package -DskipTests -q
 
 FROM eclipse-temurin:25-jre-jammy AS runtime
 
@@ -24,10 +31,9 @@ EXPOSE 8080
 
 ENTRYPOINT ["sh", "-c", "java \
   -XX:+UseZGC \
-  -XX:+ZGenerational \
-  -Xms32m \
+  -Xms128m \
   -Xmx180m \
-  -XX:SoftMaxHeapSize=150m \
+  -XX:SoftMaxHeapSize=160m \
   -XX:MaxMetaspaceSize=96m \
   -XX:ReservedCodeCacheSize=32m \
   -XX:MaxDirectMemorySize=32m \

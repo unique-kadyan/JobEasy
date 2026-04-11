@@ -13,7 +13,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Legend,
 } from "recharts";
 import api from "@/lib/api";
 import type { Analytics, Application, PagedResponse } from "@/types";
@@ -42,13 +41,13 @@ const STATUS_PIE_COLORS: Record<string, string> = {
   WITHDRAWN: "#6b7280",
 };
 
-const STATUS_LABEL_COLORS: Record<string, string> = {
-  SAVED: "text-blue-400",
-  APPLIED: "text-emerald-400",
-  INTERVIEWING: "text-yellow-400",
-  OFFERED: "text-indigo-400",
-  REJECTED: "text-red-400",
-  WITHDRAWN: "text-gray-400",
+const STATUS_BORDER_COLORS: Record<string, string> = {
+  SAVED: "border-blue-400 text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10",
+  APPLIED: "border-emerald-400 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10",
+  INTERVIEWING: "border-yellow-400 text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-500/10",
+  OFFERED: "border-indigo-400 text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10",
+  REJECTED: "border-red-400 text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-500/10",
+  WITHDRAWN: "border-gray-400 text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-500/10",
 };
 
 function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string }) {
@@ -73,12 +72,12 @@ function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string
 }
 
 const STAT_CARDS = (a: Analytics | undefined) => [
-  { label: "Total Applied", value: a?.totalApplications ?? 0, icon: Send, color: "text-blue-400", bg: "bg-blue-500/10", suffix: "" },
-  { label: "Applied", value: a?.applied ?? 0, icon: Send, color: "text-emerald-400", bg: "bg-emerald-500/10", suffix: "" },
-  { label: "Interviewing", value: a?.interviewing ?? 0, icon: MessageSquare, color: "text-yellow-400", bg: "bg-yellow-500/10", suffix: "" },
-  { label: "Offers", value: a?.offered ?? 0, icon: Trophy, color: "text-indigo-400", bg: "bg-indigo-500/10", suffix: "" },
-  { label: "Rejected", value: a?.rejected ?? 0, icon: XCircle, color: "text-red-400", bg: "bg-red-500/10", suffix: "" },
-  { label: "Avg Match", value: a?.responseRate ?? 0, icon: TrendingUp, color: "text-purple-400", bg: "bg-purple-500/10", suffix: "%" },
+  { label: "Total Applied", value: a?.totalApplications ?? 0, icon: Send, borderColor: "border-blue-500", iconClass: "text-blue-600 dark:text-blue-400", suffix: "" },
+  { label: "Applied", value: a?.applied ?? 0, icon: Send, borderColor: "border-emerald-500", iconClass: "text-emerald-600 dark:text-emerald-400", suffix: "" },
+  { label: "Interviewing", value: a?.interviewing ?? 0, icon: MessageSquare, borderColor: "border-yellow-500", iconClass: "text-yellow-600 dark:text-yellow-400", suffix: "" },
+  { label: "Offers", value: a?.offered ?? 0, icon: Trophy, borderColor: "border-indigo-500", iconClass: "text-indigo-600 dark:text-indigo-400", suffix: "" },
+  { label: "Rejected", value: a?.rejected ?? 0, icon: XCircle, borderColor: "border-red-500", iconClass: "text-red-600 dark:text-red-400", suffix: "" },
+  { label: "Avg Match", value: a?.responseRate ?? 0, icon: TrendingUp, borderColor: "border-purple-500", iconClass: "text-purple-600 dark:text-purple-400", suffix: "%" },
 ];
 
 const FUNNEL_STEPS = (a: Analytics | undefined) => [
@@ -88,14 +87,14 @@ const FUNNEL_STEPS = (a: Analytics | undefined) => [
   { name: "Offered", value: a?.offered ?? 0, fill: "#6366f1" },
 ];
 
-function DarkTooltip({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; fill: string }[]; label?: string }) {
+function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; fill: string }[]; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#1c2128] border border-[#30363d] rounded-lg px-3 py-2 text-sm shadow-xl">
-      {label && <p className="text-[#8b949e] mb-1">{label}</p>}
+    <div className="bg-white dark:bg-[#1c2128] border-2 border-black dark:border-[#30363d] rounded-[4px] px-3 py-2 text-sm" style={{ boxShadow: "3px 3px 0 #000" }}>
+      {label && <p className="text-gray-500 dark:text-[#8b949e] mb-1 font-bold text-xs uppercase">{label}</p>}
       {payload.map((p) => (
-        <p key={p.name} style={{ color: p.fill || "#c9d1d9" }}>
-          {p.name}: <span className="font-semibold text-white">{p.value}</span>
+        <p key={p.name} className="font-bold" style={{ color: p.fill || "#6366f1" }}>
+          {p.name}: <span className="text-black dark:text-white">{p.value}</span>
         </p>
       ))}
     </div>
@@ -136,22 +135,27 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-          <p className="text-sm text-[#8b949e] mt-0.5">Your job search at a glance</p>
+          <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">
+            Dashboard
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-[#8b949e] mt-0.5 font-medium">
+            Welcome back, {firstName}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href="/jobs"
-            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-xs font-black uppercase tracking-wide rounded-[3px] border-2 border-black dark:border-white nb-shadow nb-lift transition-colors"
           >
-            <Search className="h-4 w-4" />
+            <Search className="h-3.5 w-3.5" />
             Search Jobs
           </Link>
           <Link
             href="/applications"
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] text-sm font-medium rounded-lg border border-[#30363d] transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-[#21262d] text-black dark:text-[#c9d1d9] text-xs font-black uppercase tracking-wide rounded-[3px] border-2 border-black dark:border-[#30363d] nb-shadow nb-lift transition-colors"
           >
-            All Jobs
+            <Send className="h-3.5 w-3.5" />
+            All Applications
           </Link>
         </div>
       </div>
@@ -160,28 +164,29 @@ export default function DashboardPage() {
         {stats.map((s) => (
           <div
             key={s.label}
-            className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 flex items-center gap-3 hover:border-[#58a6ff]/40 transition-colors"
+            className={`bg-white dark:bg-[#161b22] border-2 border-black dark:border-[#30363d] rounded-[4px] p-4 flex items-center gap-3`}
+            style={{ boxShadow: "3px 3px 0 #000" }}
           >
-            <div className={`flex h-9 w-9 items-center justify-center rounded-lg shrink-0 ${s.bg}`}>
-              <s.icon className={`h-4 w-4 ${s.color}`} />
+            <div className={`flex h-9 w-9 items-center justify-center rounded-[3px] border-2 ${s.borderColor} shrink-0`}>
+              <s.icon className={`h-4 w-4 ${s.iconClass}`} />
             </div>
             <div className="min-w-0">
-              <p className="text-xl font-bold text-white leading-none">
+              <p className="text-xl font-black text-black dark:text-white leading-none">
                 {analyticsLoading ? (
-                  <span className="inline-block w-8 h-5 bg-[#30363d] rounded animate-pulse" />
+                  <span className="inline-block w-8 h-5 bg-gray-200 dark:bg-[#30363d] rounded-[3px] animate-pulse" />
                 ) : (
                   <AnimatedNumber value={s.value} suffix={s.suffix} />
                 )}
               </p>
-              <p className="text-xs text-[#8b949e] mt-0.5 truncate">{s.label}</p>
+              <p className="text-xs font-bold text-gray-500 dark:text-[#8b949e] mt-0.5 truncate uppercase tracking-wide">{s.label}</p>
             </div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-[#c9d1d9] mb-4 uppercase tracking-wide">
+        <div className="bg-white dark:bg-[#161b22] border-2 border-black dark:border-[#30363d] rounded-[4px] p-5" style={{ boxShadow: "3px 3px 0 #000" }}>
+          <h3 className="text-xs font-black text-black dark:text-[#c9d1d9] mb-4 uppercase tracking-widest border-b-2 border-black dark:border-[#30363d] pb-2">
             Status Breakdown
           </h3>
           {pieData.length > 0 ? (
@@ -203,26 +208,25 @@ export default function DashboardPage() {
                     />
                   ))}
                 </Pie>
-                <Tooltip content={<DarkTooltip />} />
-                <Legend
-                  layout="vertical"
-                  align="right"
-                  verticalAlign="middle"
-                  formatter={(value) => (
-                    <span className={`text-xs ${STATUS_LABEL_COLORS[value] ?? "text-[#8b949e]"}`}>
-                      {value}
-                    </span>
-                  )}
-                />
+                <Tooltip content={<ChartTooltip />} />
               </PieChart>
             </ResponsiveContainer>
           ) : (
             <EmptyChart label="No application data yet" />
           )}
+          {pieData.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {pieData.map((entry) => (
+                <span key={entry.name} className={`text-[10px] font-bold px-2 py-0.5 rounded-[3px] border ${STATUS_BORDER_COLORS[entry.name] ?? "border-gray-400 text-gray-600"}`}>
+                  {entry.name}: {entry.value}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-[#c9d1d9] mb-4 uppercase tracking-wide">
+        <div className="bg-white dark:bg-[#161b22] border-2 border-black dark:border-[#30363d] rounded-[4px] p-5" style={{ boxShadow: "3px 3px 0 #000" }}>
+          <h3 className="text-xs font-black text-black dark:text-[#c9d1d9] mb-4 uppercase tracking-widest border-b-2 border-black dark:border-[#30363d] pb-2">
             Application Funnel
           </h3>
           {funnelData.some((d) => d.value > 0) ? (
@@ -243,7 +247,7 @@ export default function DashboardPage() {
                   tickLine={false}
                   width={80}
                 />
-                <Tooltip content={<DarkTooltip />} />
+                <Tooltip content={<ChartTooltip />} />
                 <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                   {funnelData.map((entry) => (
                     <Cell key={entry.name} fill={entry.fill} />
@@ -258,8 +262,8 @@ export default function DashboardPage() {
       </div>
 
       {sourceData.length > 0 && (
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-[#c9d1d9] mb-4 uppercase tracking-wide">
+        <div className="bg-white dark:bg-[#161b22] border-2 border-black dark:border-[#30363d] rounded-[4px] p-5" style={{ boxShadow: "3px 3px 0 #000" }}>
+          <h3 className="text-xs font-black text-black dark:text-[#c9d1d9] mb-4 uppercase tracking-widest border-b-2 border-black dark:border-[#30363d] pb-2">
             Applications by Source
           </h3>
           <ResponsiveContainer width="100%" height={180}>
@@ -276,46 +280,48 @@ export default function DashboardPage() {
                 axisLine={false}
                 tickLine={false}
               />
-              <Tooltip content={<DarkTooltip />} />
-              <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              <Tooltip content={<ChartTooltip />} />
+              <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-2">
-          <h3 className="text-sm font-semibold text-[#c9d1d9] uppercase tracking-wide mb-3">
+        <div className="bg-white dark:bg-[#161b22] border-2 border-black dark:border-[#30363d] rounded-[4px] p-5 space-y-2" style={{ boxShadow: "3px 3px 0 #000" }}>
+          <h3 className="text-xs font-black text-black dark:text-[#c9d1d9] uppercase tracking-widest border-b-2 border-black dark:border-[#30363d] pb-2 mb-3">
             Quick Actions
           </h3>
           {[
-            { href: "/jobs", icon: Search, label: "Search Jobs", color: "text-blue-400" },
-            { href: "/resumes", icon: FileText, label: "Upload Resume", color: "text-indigo-400" },
-            { href: "/smart-resume", icon: Sparkles, label: "Smart Resume", color: "text-purple-400" },
-            { href: "/cover-letters", icon: Zap, label: "Cover Letters", color: "text-yellow-400" },
+            { href: "/jobs", icon: Search, label: "Search Jobs", color: "text-blue-600 dark:text-blue-400", border: "border-blue-400" },
+            { href: "/resumes", icon: FileText, label: "Upload Resume", color: "text-indigo-600 dark:text-indigo-400", border: "border-indigo-400" },
+            { href: "/smart-resume", icon: Sparkles, label: "Smart Resume", color: "text-purple-600 dark:text-purple-400", border: "border-purple-400" },
+            { href: "/cover-letters", icon: Zap, label: "Cover Letters", color: "text-amber-600 dark:text-yellow-400", border: "border-amber-400" },
           ].map((a) => (
             <Link
               key={a.href}
               href={a.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#0d1117] hover:bg-[#21262d] border border-[#30363d] transition-colors group"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-[3px] bg-gray-50 dark:bg-[#0d1117] hover:bg-amber-50 dark:hover:bg-[#21262d] border-2 border-black dark:border-[#30363d] hover:border-amber-400 dark:hover:border-amber-400 transition-all group"
             >
-              <a.icon className={`h-4 w-4 ${a.color}`} />
-              <span className="text-sm text-[#c9d1d9] group-hover:text-white transition-colors">
+              <div className={`flex h-7 w-7 items-center justify-center rounded-[3px] border-2 ${a.border} shrink-0`}>
+                <a.icon className={`h-3.5 w-3.5 ${a.color}`} />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wide text-black dark:text-[#c9d1d9] group-hover:text-black dark:group-hover:text-white transition-colors">
                 {a.label}
               </span>
-              <ArrowRight className="h-3.5 w-3.5 ml-auto text-[#30363d] group-hover:text-[#8b949e] transition-colors" />
+              <ArrowRight className="h-3.5 w-3.5 ml-auto text-gray-400 dark:text-[#30363d] group-hover:text-black dark:group-hover:text-[#8b949e] transition-colors" />
             </Link>
           ))}
         </div>
 
-        <div className="lg:col-span-2 bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-[#c9d1d9] uppercase tracking-wide">
+        <div className="lg:col-span-2 bg-white dark:bg-[#161b22] border-2 border-black dark:border-[#30363d] rounded-[4px] p-5" style={{ boxShadow: "3px 3px 0 #000" }}>
+          <div className="flex items-center justify-between border-b-2 border-black dark:border-[#30363d] pb-2 mb-4">
+            <h3 className="text-xs font-black text-black dark:text-[#c9d1d9] uppercase tracking-widest">
               Recently Applied
             </h3>
             <Link
               href="/applications"
-              className="text-xs text-[#58a6ff] hover:text-blue-300 flex items-center gap-1 transition-colors"
+              className="text-xs font-black text-indigo-600 dark:text-[#58a6ff] hover:text-indigo-800 dark:hover:text-blue-300 flex items-center gap-1 uppercase tracking-wide transition-colors"
             >
               View all <ArrowRight className="h-3 w-3" />
             </Link>
@@ -324,21 +330,21 @@ export default function DashboardPage() {
           {appsLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-10 bg-[#21262d] rounded-lg animate-pulse" />
+                <div key={i} className="h-10 bg-gray-100 dark:bg-[#21262d] rounded-[3px] animate-pulse" />
               ))}
             </div>
           ) : recentApps?.content && recentApps.content.length > 0 ? (
-            <div className="divide-y divide-[#21262d]">
+            <div className="divide-y-2 divide-black/10 dark:divide-[#21262d]">
               {recentApps.content.map((app) => (
                 <div
                   key={app.id}
                   className="flex items-center justify-between py-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-white truncate">
+                    <p className="text-sm font-bold text-black dark:text-white truncate">
                       {app.job.title}
                     </p>
-                    <p className="text-xs text-[#8b949e]">
+                    <p className="text-xs text-gray-500 dark:text-[#8b949e] font-medium">
                       {app.job.company} · {formatDate(app.appliedAt)}
                     </p>
                   </div>
@@ -348,16 +354,16 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center py-10 gap-3 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#21262d]">
-                <Zap className="h-6 w-6 text-indigo-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-[4px] border-2 border-black dark:border-white bg-indigo-50 dark:bg-indigo-600/10">
+                <Zap className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
               </div>
-              <p className="text-sm font-medium text-[#c9d1d9]">No applications yet</p>
-              <p className="text-xs text-[#8b949e] max-w-xs">
+              <p className="text-sm font-black text-black dark:text-[#c9d1d9] uppercase tracking-wide">No applications yet</p>
+              <p className="text-xs text-gray-500 dark:text-[#8b949e] max-w-xs font-medium">
                 Search jobs and apply with one click to track your progress here.
               </p>
               <Link
                 href="/jobs"
-                className="mt-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+                className="mt-1 px-4 py-2 bg-indigo-600 text-white text-xs font-black uppercase tracking-wide rounded-[3px] border-2 border-black dark:border-white nb-shadow nb-lift flex items-center gap-1.5"
               >
                 <Search className="h-3.5 w-3.5" />
                 Find Jobs
@@ -370,20 +376,11 @@ export default function DashboardPage() {
   );
 }
 
-const STATUS_BADGE_COLORS: Record<string, string> = {
-  SAVED: "bg-blue-500/15 text-blue-400",
-  APPLIED: "bg-emerald-500/15 text-emerald-400",
-  INTERVIEWING: "bg-yellow-500/15 text-yellow-400",
-  OFFERED: "bg-indigo-500/15 text-indigo-400",
-  REJECTED: "bg-red-500/15 text-red-400",
-  WITHDRAWN: "bg-gray-500/15 text-gray-400",
-};
-
 function StatusBadge({ status }: { status: string }) {
   return (
     <span
-      className={`ml-3 text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${
-        STATUS_BADGE_COLORS[status] ?? "bg-gray-500/15 text-gray-400"
+      className={`ml-3 text-[10px] font-black px-2 py-0.5 rounded-[3px] border shrink-0 uppercase tracking-wide ${
+        STATUS_BORDER_COLORS[status] ?? "border-gray-400 text-gray-600 bg-gray-50"
       }`}
     >
       {status}
@@ -393,7 +390,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function EmptyChart({ label }: { label: string }) {
   return (
-    <div className="flex items-center justify-center h-[220px] text-sm text-[#8b949e]">
+    <div className="flex items-center justify-center h-[220px] text-sm font-bold text-gray-500 dark:text-[#8b949e] uppercase tracking-wide">
       {label}
     </div>
   );

@@ -35,17 +35,24 @@ function VerifyEmailContent() {
   return (
     <>
       {status === "loading" && (
-        <div className="space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-indigo-600 mx-auto" />
-          <p className="text-gray-600">Verifying your email...</p>
+        <div className="space-y-4 text-center">
+          <div className="flex justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">Verifying your email...</p>
         </div>
       )}
 
       {status === "success" && (
-        <div className="space-y-4">
-          <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-          <h1 className="text-2xl font-bold text-gray-900">Email Verified!</h1>
-          <p className="text-gray-600">{message}</p>
+        <div className="space-y-4 text-center">
+          <div
+            className="flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-green-500 bg-green-50 dark:bg-green-900/20 mx-auto"
+            style={{ boxShadow: "3px 3px 0 #22c55e" }}
+          >
+            <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+          </div>
+          <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Email Verified!</h1>
+          <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">{message}</p>
           <Link href="/login">
             <Button size="lg" className="mt-4">
               Sign In to Your Account
@@ -55,10 +62,15 @@ function VerifyEmailContent() {
       )}
 
       {status === "error" && (
-        <div className="space-y-4">
-          <XCircle className="h-16 w-16 text-red-500 mx-auto" />
-          <h1 className="text-2xl font-bold text-gray-900">Verification Failed</h1>
-          <p className="text-gray-600">{message}</p>
+        <div className="space-y-4 text-center">
+          <div
+            className="flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-red-500 bg-red-50 dark:bg-red-900/20 mx-auto"
+            style={{ boxShadow: "3px 3px 0 #ef4444" }}
+          >
+            <XCircle className="h-8 w-8 text-red-500" />
+          </div>
+          <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Verification Failed</h1>
+          <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">{message}</p>
           <div className="flex gap-3 justify-center mt-4">
             <Link href="/login">
               <Button variant="outline">Sign In</Button>
@@ -75,22 +87,35 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-8">
-      <div className="w-full max-w-md text-center">
+    <div className="flex min-h-screen items-center justify-center bg-[#f5f2ea] dark:bg-[#0d1117] p-8">
+      <div className="w-full max-w-md">
+        {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <Zap className="h-8 w-8 text-indigo-600" />
-          <span className="text-2xl font-bold text-gray-900">Kaddy</span>
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-[4px] bg-indigo-600 border-2 border-black"
+            style={{ boxShadow: "3px 3px 0 #000" }}
+          >
+            <Zap className="h-6 w-6 text-white" />
+          </div>
+          <span className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Kaddy</span>
+          <span className="text-[10px] bg-black dark:bg-white text-white dark:text-black px-1.5 py-0.5 rounded-[2px] font-black uppercase tracking-widest">AI</span>
         </div>
-        <Suspense
-          fallback={
-            <div className="space-y-4">
-              <Loader2 className="h-12 w-12 animate-spin text-indigo-600 mx-auto" />
-              <p className="text-gray-600">Loading...</p>
-            </div>
-          }
+
+        <div
+          className="rounded-[4px] border-2 border-black dark:border-white bg-white dark:bg-[#161b22] p-8"
+          style={{ boxShadow: "6px 6px 0 #000" }}
         >
-          <VerifyEmailContent />
-        </Suspense>
+          <Suspense
+            fallback={
+              <div className="space-y-4 text-center">
+                <Loader2 className="h-12 w-12 animate-spin text-indigo-600 mx-auto" />
+                <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">Loading...</p>
+              </div>
+            }
+          >
+            <VerifyEmailContent />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

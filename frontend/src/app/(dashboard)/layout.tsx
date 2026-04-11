@@ -59,7 +59,7 @@ export default function DashboardLayout({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0d1117]">
+      <div className="min-h-screen bg-[#f5f2ea] dark:bg-[#0d1117]">
         {user && !user.emailVerified && (
           <div className="fixed top-12 left-0 right-0 z-30 bg-amber-900/80 border-b border-amber-700 px-4 py-2 text-center text-sm text-amber-200">
             Please verify your email to unlock all features.{" "}

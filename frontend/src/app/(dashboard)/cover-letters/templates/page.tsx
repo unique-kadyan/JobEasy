@@ -84,10 +84,10 @@ export default function TemplatesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">
             Cover Letter Templates
           </h1>
-          <p className="text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-0.5">
             Manage templates for cover letter generation
           </p>
         </div>
@@ -107,19 +107,19 @@ export default function TemplatesPage() {
               <CardContent className="py-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <FileText className="h-4 w-4 text-indigo-600" />
-                      <h3 className="font-semibold text-gray-900">{t.name}</h3>
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <FileText className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                      <h3 className="font-black text-black dark:text-white text-sm uppercase tracking-wide">{t.name}</h3>
                       {t.isSystem && (
-                        <Badge className="bg-indigo-100 text-indigo-700">
+                        <Badge className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-400 text-[10px]">
                           System
                         </Badge>
                       )}
                     </div>
                     {t.description && (
-                      <p className="text-sm text-gray-500">{t.description}</p>
+                      <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e]">{t.description}</p>
                     )}
-                    <p className="text-sm text-gray-400 mt-2 line-clamp-2">
+                    <p className="text-xs font-medium text-gray-400 dark:text-[#8b949e] mt-2 line-clamp-2">
                       {t.content.substring(0, 150)}...
                     </p>
                   </div>
@@ -167,11 +167,11 @@ export default function TemplatesPage() {
             placeholder="Brief description of this template"
           />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-black text-black dark:text-white uppercase tracking-wider mb-1.5">
               Content
             </label>
             <textarea
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              className="block w-full rounded-[4px] border-2 border-black dark:border-[#30363d] bg-white dark:bg-[#0d1117] text-black dark:text-white px-3 py-2 text-sm font-medium nb-input-focus"
               rows={8}
               value={content}
               onChange={(e) => setContent(e.target.value)}

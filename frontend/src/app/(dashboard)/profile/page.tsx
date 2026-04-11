@@ -54,33 +54,31 @@ function ProfileCompletion({ user }: { user: UserType | null }) {
       : "bg-amber-500";
 
   return (
-    <Card className="border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-      <CardContent className="py-4">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-sm font-semibold text-gray-900">Profile Completion</p>
-          <span className={`text-sm font-bold ${pct >= 85 ? "text-green-600" : pct >= 50 ? "text-indigo-600" : "text-amber-600"}`}>
-            {pct}%
+    <div className="bg-white dark:bg-[#161b22] border-2 border-black dark:border-[#30363d] rounded-[4px] p-4" style={{ boxShadow: "3px 3px 0 #000" }}>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-black text-black dark:text-white uppercase tracking-wide">Profile Completion</p>
+        <span className={`text-sm font-black ${pct >= 85 ? "text-green-600" : pct >= 50 ? "text-indigo-600" : "text-amber-600"}`}>
+          {pct}%
+        </span>
+      </div>
+      <div className="h-2.5 w-full bg-gray-100 dark:bg-[#21262d] rounded-[2px] overflow-hidden border border-black dark:border-[#30363d]">
+        <div
+          className={`h-full transition-all duration-700 ${color}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
+        {checks.map((c) => (
+          <span
+            key={c.label}
+            className={`text-xs flex items-center gap-1 font-bold ${c.done ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-gray-600"}`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${c.done ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600"}`} />
+            {c.label}
           </span>
-        </div>
-        <div className="h-2 w-full bg-white/70 rounded-full overflow-hidden border border-white/50">
-          <div
-            className={`h-full rounded-full transition-all duration-700 ${color}`}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
-          {checks.map((c) => (
-            <span
-              key={c.label}
-              className={`text-xs flex items-center gap-1 ${c.done ? "text-green-600" : "text-gray-400"}`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${c.done ? "bg-green-500" : "bg-gray-300"}`} />
-              {c.label}
-            </span>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -185,8 +183,8 @@ export default function ProfilePage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-500">
+          <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">My Profile</h1>
+          <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-0.5">
             Consolidated view of your professional identity
           </p>
         </div>
@@ -229,7 +227,7 @@ export default function ProfilePage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-indigo-600" />
-            <h2 className="font-semibold text-gray-900">Personal Information</h2>
+            <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Personal Information</h2>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -249,7 +247,7 @@ export default function ProfilePage() {
                   Professional Summary
                 </label>
                 <textarea
-                  className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  className="block w-full rounded-[4px] border-2 border-black dark:border-[#30363d] bg-white dark:bg-[#0d1117] text-black dark:text-white px-3 py-2 text-sm font-medium nb-input-focus"
                   rows={4}
                   placeholder="A brief summary of your experience and career goals..."
                   {...field("summary")}
@@ -292,11 +290,11 @@ export default function ProfilePage() {
                 </div>
               )}
               {user?.targetRoles && user.targetRoles.length > 0 && (
-                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Target Roles</p>
+                <div className="pt-2 border-t-2 border-black/10 dark:border-[#30363d]">
+                  <p className="text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Target Roles</p>
                   <div className="flex flex-wrap gap-1.5">
                     {user.targetRoles.map((role) => (
-                      <span key={role} className="rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2.5 py-0.5 text-xs font-medium">
+                      <span key={role} className="rounded-[3px] border border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 text-xs font-bold">
                         {role}
                       </span>
                     ))}
@@ -312,7 +310,7 @@ export default function ProfilePage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Briefcase className="h-5 w-5 text-indigo-600" />
-            <h2 className="font-semibold text-gray-900">Connected Profiles</h2>
+            <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Connected Profiles</h2>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -370,11 +368,11 @@ export default function ProfilePage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <GitBranch className="h-5 w-5 text-gray-800" />
-                <h2 className="font-semibold text-gray-900">GitHub Projects</h2>
+                <GitBranch className="h-5 w-5 text-gray-800 dark:text-gray-300" />
+                <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">GitHub Projects</h2>
                 {githubRepos && (
-                  <span className="text-xs text-gray-400 font-normal">
-                    {githubRepos.filter((r) => !r.fork).length} repositories
+                  <span className="text-xs text-gray-500 dark:text-[#8b949e] font-bold border border-gray-300 dark:border-[#30363d] rounded-[3px] px-1.5 py-0.5">
+                    {githubRepos.filter((r) => !r.fork).length} repos
                   </span>
                 )}
               </div>
@@ -405,7 +403,7 @@ export default function ProfilePage() {
                             href={repo.html_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm font-semibold text-indigo-600 hover:underline truncate shrink-0 max-w-[40%]"
+                            className="text-sm font-black text-indigo-600 dark:text-indigo-400 hover:underline truncate shrink-0 max-w-[40%] uppercase tracking-wide"
                           >
                             {repo.name}
                           </a>
@@ -413,12 +411,12 @@ export default function ProfilePage() {
                             {techs.map((t) => (
                               <span
                                 key={t}
-                                className="rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 text-xs font-medium whitespace-nowrap"
+                                className="rounded-[3px] border border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 text-[10px] font-bold whitespace-nowrap"
                               >
                                 {t}
                               </span>
                             ))}
-                            <span className="flex items-center gap-0.5 text-xs text-gray-400 whitespace-nowrap ml-1">
+                            <span className="flex items-center gap-0.5 text-xs text-gray-500 dark:text-[#8b949e] font-bold whitespace-nowrap ml-1">
                               <Star className="h-3 w-3" /> {repo.stargazers_count}
                             </span>
                           </div>
@@ -434,7 +432,7 @@ export default function ProfilePage() {
                   {ownRepos.length > 6 && (
                     <button
                       onClick={() => setShowAllRepos((v) => !v)}
-                      className="mt-3 text-xs text-indigo-600 hover:underline"
+                      className="mt-3 text-xs font-black text-indigo-600 dark:text-indigo-400 hover:underline uppercase tracking-wide"
                     >
                       {showAllRepos
                         ? "Show less"
@@ -454,18 +452,18 @@ export default function ProfilePage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Code2 className="h-5 w-5 text-indigo-600" />
-            <h2 className="font-semibold text-gray-900">Skills</h2>
+            <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Skills</h2>
           </div>
         </CardHeader>
         <CardContent>
           {parsedSkills.length > 0 && (
             <div className="mb-4">
-              <p className="text-xs font-medium text-gray-500 mb-2">
+              <p className="text-xs font-black text-gray-500 dark:text-[#8b949e] mb-2 uppercase tracking-wide">
                 Detected from resume
               </p>
               <div className="flex flex-wrap gap-2">
                 {(parsedSkills as string[]).map((skill) => (
-                  <Badge key={skill} className="bg-indigo-50 text-indigo-700">
+                  <Badge key={skill} className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-400">
                     {skill}
                   </Badge>
                 ))}
@@ -474,12 +472,12 @@ export default function ProfilePage() {
           )}
           {displaySkills.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-2">
+              <p className="text-xs font-black text-gray-500 dark:text-[#8b949e] mb-2 uppercase tracking-wide">
                 Profile skills
               </p>
               <div className="flex flex-wrap gap-2">
                 {displaySkills.map((skill) => (
-                  <Badge key={skill} className="bg-gray-100 text-gray-700">
+                  <Badge key={skill} className="bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 border-gray-400 dark:border-gray-600">
                     {skill}
                   </Badge>
                 ))}
@@ -487,7 +485,7 @@ export default function ProfilePage() {
             </div>
           )}
           {parsedSkills.length === 0 && displaySkills.length === 0 && (
-            <p className="text-sm text-gray-400">
+            <p className="text-sm font-medium text-gray-400 dark:text-[#8b949e]">
               Upload a resume to auto-detect your skills.
             </p>
           )}
@@ -499,28 +497,28 @@ export default function ProfilePage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-indigo-600" />
-              <h2 className="font-semibold text-gray-900">Primary Resume</h2>
+              <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Primary Resume</h2>
             </div>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-gray-900">{primaryResume.filename}</p>
-                <p className="text-sm text-gray-500">
+                <p className="font-black text-black dark:text-white text-sm uppercase tracking-wide">{primaryResume.filename}</p>
+                <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e] mt-0.5">
                   Uploaded {formatDate(primaryResume.createdAt)}
                   {primaryResume.fileSize &&
                     ` · ${(primaryResume.fileSize / 1024).toFixed(0)} KB`}
                 </p>
-                <div className="flex gap-3 mt-2 text-xs text-gray-500">
-                  {(primaryResume.parsedData?.experience?.length ?? 0) > 0 && <span>✓ Experience</span>}
-                  {(primaryResume.parsedData?.education?.length ?? 0) > 0 && <span>✓ Education</span>}
-                  {(primaryResume.parsedData?.projects?.length ?? 0) > 0 && <span>✓ Projects</span>}
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {(primaryResume.parsedData?.experience?.length ?? 0) > 0 && <span className="text-[10px] font-black text-green-700 dark:text-green-400 border border-green-400 bg-green-50 dark:bg-green-900/20 rounded-[3px] px-1.5 py-0.5">✓ Experience</span>}
+                  {(primaryResume.parsedData?.education?.length ?? 0) > 0 && <span className="text-[10px] font-black text-green-700 dark:text-green-400 border border-green-400 bg-green-50 dark:bg-green-900/20 rounded-[3px] px-1.5 py-0.5">✓ Education</span>}
+                  {(primaryResume.parsedData?.projects?.length ?? 0) > 0 && <span className="text-[10px] font-black text-green-700 dark:text-green-400 border border-green-400 bg-green-50 dark:bg-green-900/20 rounded-[3px] px-1.5 py-0.5">✓ Projects</span>}
                   {primaryResume.parsedData?.wordCount && (
-                    <span>{primaryResume.parsedData.wordCount} words</span>
+                    <span className="text-[10px] font-bold text-gray-500 dark:text-[#8b949e]">{primaryResume.parsedData.wordCount} words</span>
                   )}
                 </div>
               </div>
-              <Badge className="bg-yellow-100 text-yellow-700">Primary</Badge>
+              <Badge className="bg-amber-100 dark:bg-yellow-900/30 text-amber-700 dark:text-yellow-400 border-amber-400 dark:border-yellow-600">Primary</Badge>
             </div>
           </CardContent>
         </Card>
@@ -530,13 +528,13 @@ export default function ProfilePage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <GraduationCap className="h-5 w-5 text-indigo-600" />
-            <h2 className="font-semibold text-gray-900">Education</h2>
+            <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Education</h2>
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">
             Education details are extracted from your resume. Use{" "}
-            <a href="/smart-resume" className="text-indigo-600 hover:underline">
+            <a href="/smart-resume" className="text-indigo-600 dark:text-indigo-400 font-black hover:underline">
               Smart Resume
             </a>{" "}
             to view and improve your parsed education data.
@@ -561,8 +559,8 @@ interface GitHubRepo {
 function InfoRow({ label, value }: { label: string; value?: string }) {
   return (
     <div>
-      <p className="text-xs text-gray-400">{label}</p>
-      <p className="text-gray-800 font-medium">{value || <span className="text-gray-300 font-normal">Not set</span>}</p>
+      <p className="text-xs font-black text-gray-500 dark:text-[#8b949e] uppercase tracking-wide mb-0.5">{label}</p>
+      <p className="text-sm font-bold text-black dark:text-white">{value || <span className="text-gray-400 dark:text-gray-600 font-normal italic">Not set</span>}</p>
     </div>
   );
 }
@@ -577,22 +575,22 @@ function ProfileLink({
   url?: string;
 }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 p-3 rounded-[3px] border-2 border-black/10 dark:border-[#30363d] bg-gray-50 dark:bg-[#0d1117]">
       {icon}
-      <div className="flex-1">
-        <p className="text-xs text-gray-400">{label}</p>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-black text-gray-500 dark:text-[#8b949e] uppercase tracking-wide">{label}</p>
         {url ? (
           <a
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-indigo-600 hover:underline flex items-center gap-1"
+            className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 truncate"
           >
-            {url.replace(/^https?:\/\//, '')}
-            <ExternalLink className="h-3 w-3" />
+            <span className="truncate">{url.replace(/^https?:\/\//, '')}</span>
+            <ExternalLink className="h-3 w-3 shrink-0" />
           </a>
         ) : (
-          <p className="text-sm text-gray-400 italic">Not connected</p>
+          <p className="text-sm text-gray-400 dark:text-gray-600 italic font-medium">Not connected</p>
         )}
       </div>
     </div>

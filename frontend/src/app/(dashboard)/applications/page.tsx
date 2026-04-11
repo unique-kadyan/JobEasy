@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { useApplications, useUpdateStatus } from "@/hooks/useApplications";
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import { STATUS_COLORS, SOURCE_COLORS } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
-import { Loader2, ExternalLink } from "lucide-react";
+import { Loader2, ExternalLink, Send, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ApplicationStatus } from "@/types";
+import Link from "next/link";
 
 const STATUS_OPTIONS = [
   { value: "", label: "All Statuses" },
@@ -38,8 +39,8 @@ export default function ApplicationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Applications</h1>
-          <p className="text-gray-500">Track your job applications</p>
+          <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Applications</h1>
+          <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-0.5">Track your job applications</p>
         </div>
         <div className="w-48">
           <Select
@@ -63,10 +64,10 @@ export default function ApplicationsPage() {
             {data.content.map((app) => (
               <Card key={app.id}>
                 <CardContent className="py-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-gray-900">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className="font-black text-black dark:text-white text-sm uppercase tracking-wide">
                           {app.job.title}
                         </h3>
                         <Badge className={SOURCE_COLORS[app.job.source]}>
@@ -76,13 +77,13 @@ export default function ApplicationsPage() {
                           {app.status}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e]">
                         {app.job.company}
                         {app.job.location && ` · ${app.job.location}`}
                         {` · Applied ${formatDate(app.appliedAt)}`}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       <Select
                         value={app.status}
                         onChange={(e) =>
@@ -110,17 +111,18 @@ export default function ApplicationsPage() {
             ))}
           </div>
           {data.totalPages > 1 && (
-            <div className="flex justify-center gap-2 pt-4">
+            <div className="flex justify-center items-center gap-3 pt-4">
               <Button
                 variant="outline"
                 size="sm"
                 disabled={page === 0}
                 onClick={() => setPage(page - 1)}
               >
+                <ChevronLeft className="h-3.5 w-3.5 mr-1" />
                 Previous
               </Button>
-              <span className="px-3 py-1.5 text-sm text-gray-600">
-                Page {page + 1} of {data.totalPages}
+              <span className="px-3 py-1.5 text-xs font-black text-black dark:text-[#c9d1d9] uppercase tracking-wide border-2 border-black dark:border-[#30363d] rounded-[3px] bg-white dark:bg-[#161b22]">
+                {page + 1} / {data.totalPages}
               </span>
               <Button
                 variant="outline"
@@ -129,14 +131,27 @@ export default function ApplicationsPage() {
                 onClick={() => setPage(page + 1)}
               >
                 Next
+                <ChevronRight className="h-3.5 w-3.5 ml-1" />
               </Button>
             </div>
           )}
         </>
       ) : (
-        <div className="text-center py-16 text-gray-500">
-          <p className="text-lg font-medium mb-1">No applications yet</p>
-          <p className="text-sm">Search for jobs and start applying!</p>
+        <div className="flex flex-col items-center py-16 gap-4 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-[4px] border-2 border-black dark:border-white bg-indigo-50 dark:bg-indigo-600/10">
+            <Send className="h-7 w-7 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <div>
+            <p className="text-lg font-black text-black dark:text-white uppercase tracking-tight">No applications yet</p>
+            <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-1">Search for jobs and start applying!</p>
+          </div>
+          <Link
+            href="/jobs"
+            className="px-4 py-2 bg-indigo-600 text-white text-xs font-black uppercase tracking-wide rounded-[3px] border-2 border-black dark:border-white nb-shadow nb-lift flex items-center gap-1.5"
+          >
+            <Send className="h-3.5 w-3.5" />
+            Find Jobs to Apply
+          </Link>
         </div>
       )}
     </div>

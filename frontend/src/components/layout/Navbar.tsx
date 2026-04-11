@@ -22,29 +22,28 @@ import {
   Shield,
   CreditCard,
   LayoutDashboard,
+  Search,
+  Mail,
+  Sparkles,
+  TrendingUp,
+  Send,
 } from "lucide-react";
 import type { ServerStatus } from "@/hooks/useKeepAlive";
 
 const NAV_LINKS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/jobs", label: "Jobs" },
-  { href: "/applications", label: "Applications" },
-  { href: "/resumes", label: "Resumes" },
-  { href: "/smart-resume", label: "Smart Resume" },
-  { href: "/cover-letters", label: "Cover Letters" },
-  { href: "/career-path", label: "Career Path" },
+  { href: "/dashboard",     label: "Dashboard",     icon: LayoutDashboard },
+  { href: "/jobs",          label: "Jobs",           icon: Search },
+  { href: "/applications",  label: "Applications",   icon: Send },
+  { href: "/resumes",       label: "Resumes",        icon: FileText },
+  { href: "/smart-resume",  label: "Smart Resume",   icon: Sparkles },
+  { href: "/cover-letters", label: "Cover Letters",  icon: Mail },
+  { href: "/career-path",   label: "Career Path",    icon: TrendingUp },
 ];
 
 const TIER_BADGE: Record<string, { label: string; className: string }> = {
-  FREE: { label: "Free", className: "bg-gray-700 text-gray-300" },
-  GOLD: {
-    label: "Gold",
-    className: "bg-yellow-950 text-yellow-400 border border-yellow-700/60",
-  },
-  PLATINUM: {
-    label: "Platinum",
-    className: "bg-slate-800 text-slate-300 border border-slate-600/60",
-  },
+  FREE:     { label: "Free",     className: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-400 dark:border-gray-600" },
+  GOLD:     { label: "Gold",     className: "bg-amber-100 dark:bg-yellow-950 text-amber-800 dark:text-yellow-400 border-amber-500 dark:border-yellow-700" },
+  PLATINUM: { label: "Platinum", className: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-400 dark:border-slate-600" },
 };
 
 export default function Navbar({
@@ -97,13 +96,13 @@ export default function Navbar({
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 flex h-12 items-center border-b border-[#30363d] bg-[#0d1117] px-4 gap-6">
+    <header className="fixed top-0 left-0 right-0 z-40 flex h-12 items-center border-b-2 border-black dark:border-[#30363d] bg-white dark:bg-[#0d1117] px-4 gap-6">
       <Link href="/dashboard" className="flex items-center gap-1.5 shrink-0">
-        <div className="flex h-6 w-6 items-center justify-center rounded bg-indigo-600">
+        <div className="flex h-6 w-6 items-center justify-center rounded-[3px] bg-indigo-600 border-2 border-black dark:border-white">
           <Zap className="h-3.5 w-3.5 text-white" />
         </div>
-        <span className="text-sm font-bold text-white">Kaddy</span>
-        <span className="text-[10px] bg-indigo-900/50 text-indigo-400 border border-indigo-700/50 px-1.5 py-0.5 rounded-full font-medium">
+        <span className="text-sm font-black text-black dark:text-white tracking-tight">Kaddy</span>
+        <span className="text-[10px] bg-black dark:bg-white text-white dark:text-black px-1.5 py-0.5 rounded-[2px] font-bold uppercase tracking-widest">
           AI
         </span>
       </Link>
@@ -118,12 +117,13 @@ export default function Navbar({
               key={link.href}
               href={link.href}
               className={cn(
-                "px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap",
+                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-wide transition-colors whitespace-nowrap border",
                 isActive
-                  ? "bg-[#21262d] text-white"
-                  : "text-[#8b949e] hover:text-white hover:bg-[#21262d]"
+                  ? "border-white bg-white text-black"
+                  : "border-transparent text-[#8b949e] hover:text-white hover:border-[#30363d] hover:bg-[#21262d]"
               )}
             >
+              <link.icon className="h-3.5 w-3.5 shrink-0" />
               {link.label}
             </Link>
           );
@@ -134,16 +134,16 @@ export default function Navbar({
         {tier !== "PLATINUM" && (
           <Link
             href="/pricing"
-            className="flex items-center gap-1 text-xs font-medium text-yellow-400 hover:text-yellow-300 transition-colors"
+            className="flex items-center gap-1 text-xs font-black uppercase tracking-wide text-amber-600 dark:text-yellow-400 hover:text-amber-700 dark:hover:text-yellow-300 transition-colors border border-amber-400 dark:border-yellow-700 rounded-[3px] px-2 py-0.5"
           >
-            <Crown className="h-3.5 w-3.5" />
+            <Crown className="h-3 w-3" />
             Upgrade
           </Link>
         )}
 
         <span
           className={cn(
-            "text-xs font-medium px-2 py-0.5 rounded-full",
+            "text-xs font-black uppercase tracking-wide px-2 py-0.5 rounded-[3px] border",
             tierBadge.className
           )}
         >
@@ -158,12 +158,12 @@ export default function Navbar({
               setOpen((v) => !v);
               setSettingsOpen(false);
             }}
-            className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-[#21262d] transition-colors"
+            className="flex items-center gap-2 rounded-[3px] px-2 py-1 hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors border border-transparent hover:border-black dark:hover:border-[#30363d]"
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-700 text-white text-xs font-semibold shrink-0">
+            <div className="flex h-7 w-7 items-center justify-center rounded-[3px] bg-indigo-600 border-2 border-black dark:border-white text-white text-xs font-black shrink-0">
               {initials}
             </div>
-            <span className="text-sm text-[#c9d1d9] hidden lg:block max-w-[120px] truncate">
+            <span className="text-sm font-bold text-black dark:text-[#c9d1d9] hidden lg:block max-w-[120px] truncate">
               {user?.name}
             </span>
             <ChevronDown
@@ -175,10 +175,10 @@ export default function Navbar({
           </button>
 
           {open && !settingsOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-64 rounded-lg border border-[#30363d] bg-[#161b22] shadow-2xl shadow-black/50 overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#30363d] bg-[#0d1117]/50">
+            <div className="absolute right-0 top-full mt-2 w-64 rounded-[4px] border-2 border-black dark:border-white bg-white dark:bg-[#161b22] overflow-hidden" style={{ boxShadow: "var(--nb-shadow-lg)" }}>
+              <div className="px-4 py-3 border-b-2 border-black dark:border-[#30363d] bg-gray-50 dark:bg-[#0d1117]/50">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-700 text-white text-sm font-semibold shrink-0">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-[3px] bg-indigo-600 border-2 border-black dark:border-white text-white text-sm font-black shrink-0">
                     {initials}
                   </div>
                   <div className="min-w-0">
@@ -224,15 +224,15 @@ export default function Navbar({
                 />
                 {tier !== "PLATINUM" && (
                   <DropdownItem
-                    icon={<Crown className="h-4 w-4 text-yellow-400" />}
+                    icon={<Crown className="h-4 w-4 text-amber-500" />}
                     label="Upgrade Plan"
-                    labelClass="text-yellow-400"
+                    labelClass="text-amber-600 dark:text-yellow-400 font-black"
                     onClick={() => navigate("/pricing")}
                   />
                 )}
               </div>
 
-              <div className="border-t border-[#30363d] py-1">
+              <div className="border-t-2 border-black dark:border-[#30363d] py-1">
                 <DropdownItem
                   icon={<Settings className="h-4 w-4" />}
                   label="Settings"
@@ -242,10 +242,10 @@ export default function Navbar({
                 />
               </div>
 
-              <div className="border-t border-[#30363d] py-1">
+              <div className="border-t-2 border-black dark:border-[#30363d] py-1">
                 <button
                   onClick={handleLogout}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                  className="flex w-full items-center gap-3 px-4 py-2 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign out
@@ -255,30 +255,30 @@ export default function Navbar({
           )}
 
           {open && settingsOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-72 rounded-lg border border-[#30363d] bg-[#161b22] shadow-2xl shadow-black/50 overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-[#30363d] bg-[#0d1117]/50">
+            <div className="absolute right-0 top-full mt-2 w-72 rounded-[4px] border-2 border-black dark:border-white bg-white dark:bg-[#161b22] overflow-hidden" style={{ boxShadow: "var(--nb-shadow-lg)" }}>
+              <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-black dark:border-[#30363d] bg-gray-50 dark:bg-[#0d1117]/50">
                 <button
                   onClick={() => setSettingsOpen(false)}
-                  className="text-[#8b949e] hover:text-white transition-colors"
+                  className="text-gray-500 dark:text-[#8b949e] hover:text-black dark:hover:text-white transition-colors"
                 >
                   <ChevronDown className="h-4 w-4 rotate-90" />
                 </button>
-                <span className="text-sm font-semibold text-white">
+                <span className="text-sm font-black text-black dark:text-white uppercase tracking-wide">
                   Settings
                 </span>
               </div>
 
               <div className="py-1">
-                <div className="flex items-center justify-between px-4 py-3 hover:bg-[#21262d] transition-colors">
+                <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">
                   <div className="flex items-center gap-3">
                     {theme === "dark" ? (
-                      <Moon className="h-4 w-4 text-[#8b949e]" />
+                      <Moon className="h-4 w-4 text-gray-500 dark:text-[#8b949e]" />
                     ) : (
-                      <Sun className="h-4 w-4 text-[#8b949e]" />
+                      <Sun className="h-4 w-4 text-gray-500 dark:text-[#8b949e]" />
                     )}
                     <div>
-                      <p className="text-sm text-white">Appearance</p>
-                      <p className="text-xs text-[#8b949e] capitalize">
+                      <p className="text-sm font-bold text-black dark:text-white">Appearance</p>
+                      <p className="text-xs text-gray-500 dark:text-[#8b949e] capitalize">
                         {theme} mode
                       </p>
                     </div>
@@ -286,57 +286,57 @@ export default function Navbar({
                   <button
                     onClick={toggleTheme}
                     className={cn(
-                      "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none",
-                      theme === "dark" ? "bg-indigo-600" : "bg-[#30363d]"
+                      "relative inline-flex h-5 w-9 items-center rounded-[3px] border-2 border-black dark:border-white transition-colors focus:outline-none",
+                      theme === "dark" ? "bg-indigo-600" : "bg-gray-200"
                     )}
                   >
                     <span
                       className={cn(
-                        "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform",
+                        "inline-block h-3 w-3 transform rounded-[2px] bg-white border border-black dark:border-white shadow transition-transform",
                         theme === "dark" ? "translate-x-4" : "translate-x-0.5"
                       )}
                     />
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between px-4 py-3 hover:bg-[#21262d] transition-colors">
+                <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">
                   <div className="flex items-center gap-3">
-                    <Bell className="h-4 w-4 text-[#8b949e]" />
+                    <Bell className="h-4 w-4 text-gray-500 dark:text-[#8b949e]" />
                     <div>
-                      <p className="text-sm text-white">Notifications</p>
-                      <p className="text-xs text-[#8b949e]">
+                      <p className="text-sm font-bold text-black dark:text-white">Notifications</p>
+                      <p className="text-xs text-gray-500 dark:text-[#8b949e]">
                         Email &amp; in-app alerts
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] text-[#8b949e] bg-[#30363d] px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-bold text-gray-500 dark:text-[#8b949e] bg-gray-100 dark:bg-[#30363d] border border-black dark:border-[#8b949e] px-1.5 py-0.5 rounded-[3px]">
                     Soon
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between px-4 py-3 hover:bg-[#21262d] transition-colors">
+                <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">
                   <div className="flex items-center gap-3">
-                    <Shield className="h-4 w-4 text-[#8b949e]" />
+                    <Shield className="h-4 w-4 text-gray-500 dark:text-[#8b949e]" />
                     <div>
-                      <p className="text-sm text-white">Privacy</p>
-                      <p className="text-xs text-[#8b949e]">
+                      <p className="text-sm font-bold text-black dark:text-white">Privacy</p>
+                      <p className="text-xs text-gray-500 dark:text-[#8b949e]">
                         Data &amp; visibility controls
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] text-[#8b949e] bg-[#30363d] px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-bold text-gray-500 dark:text-[#8b949e] bg-gray-100 dark:bg-[#30363d] border border-black dark:border-[#8b949e] px-1.5 py-0.5 rounded-[3px]">
                     Soon
                   </span>
                 </div>
 
                 <button
                   onClick={() => navigate("/pricing")}
-                  className="flex w-full items-center gap-3 px-4 py-3 hover:bg-[#21262d] transition-colors"
+                  className="flex w-full items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors"
                 >
-                  <CreditCard className="h-4 w-4 text-[#8b949e]" />
+                  <CreditCard className="h-4 w-4 text-gray-500 dark:text-[#8b949e]" />
                   <div className="text-left">
-                    <p className="text-sm text-white">Billing &amp; Plan</p>
-                    <p className="text-xs text-[#8b949e]">
+                    <p className="text-sm font-bold text-black dark:text-white">Billing &amp; Plan</p>
+                    <p className="text-xs text-gray-500 dark:text-[#8b949e]">
                       Manage your subscription
                     </p>
                   </div>
@@ -368,17 +368,17 @@ function DropdownItem({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-4 py-2 hover:bg-[#21262d] transition-colors"
+      className="flex w-full items-center gap-3 px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors"
     >
-      <span className="text-[#8b949e] shrink-0">{icon}</span>
+      <span className="text-gray-500 dark:text-[#8b949e] shrink-0">{icon}</span>
       <div className="flex-1 text-left min-w-0">
-        <p className={cn("text-sm text-white", labelClass)}>{label}</p>
+        <p className={cn("text-sm font-bold text-black dark:text-white", labelClass)}>{label}</p>
         {description && (
-          <p className="text-xs text-[#8b949e] truncate">{description}</p>
+          <p className="text-xs text-gray-500 dark:text-[#8b949e] truncate">{description}</p>
         )}
       </div>
       {chevron && (
-        <ChevronDown className="h-3.5 w-3.5 text-[#8b949e] -rotate-90 shrink-0" />
+        <ChevronDown className="h-3.5 w-3.5 text-gray-500 dark:text-[#8b949e] -rotate-90 shrink-0" />
       )}
     </button>
   );

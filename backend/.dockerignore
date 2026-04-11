@@ -1,0 +1,27 @@
+# Git history — no use in build context
+.git
+.gitignore
+.gitattributes
+
+# Previous build output — Docker uses its own target/
+target/
+
+# IDE and editor files
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+*.swp
+*.swo
+
+# Maven wrapper jar (downloaded at runtime, not needed in context)
+.mvn/wrapper/maven-wrapper.jar
+
+# Test and coverage reports
+**/surefire-reports/
+**/jacoco/
+
+# Documentation and non-build files
+*.md
+docs/

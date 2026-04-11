@@ -159,9 +159,6 @@
                 <configuration>
                     <jvmArguments>
                         -XX:+UseZGC
-                        -XX:+ZGenerational
-                        -XX:+ZUncommit
-                        -XX:ZUncommitDelay=60
                         -XX:+ExplicitGCInvokesConcurrent
                         -Xms256m
                         -Xmx512m
@@ -177,7 +174,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>
-                        -XX:+UseZGC -XX:+ZGenerational -Xms128m -Xmx512m
+                        -XX:+UseZGC -Xms128m -Xmx512m
                         -XX:+EnableDynamicAgentLoading
                         --add-opens java.base/java.lang=ALL-UNNAMED
                         --add-opens java.base/java.lang.reflect=ALL-UNNAMED

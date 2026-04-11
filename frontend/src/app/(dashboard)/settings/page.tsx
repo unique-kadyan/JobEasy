@@ -37,15 +37,15 @@ export default function SettingsPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500">Manage your profile and preferences</p>
+        <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Settings</h1>
+        <p className="text-sm text-gray-500 dark:text-[#8b949e] font-medium mt-0.5">Manage your profile and preferences</p>
       </div>
 
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-indigo-600" />
-            <h2 className="font-semibold text-gray-900">Profile</h2>
+            <h2 className="font-black text-black dark:text-white uppercase tracking-wide text-sm">Profile</h2>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -83,11 +83,11 @@ export default function SettingsPage() {
             placeholder="e.g., Senior Software Engineer"
           />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-black text-black dark:text-white uppercase tracking-wider mb-1.5">
               Professional Summary
             </label>
             <textarea
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              className="block w-full rounded-[4px] border-2 border-black dark:border-[#30363d] bg-white dark:bg-[#0d1117] text-black dark:text-white px-3 py-2 text-sm font-medium nb-input-focus"
               rows={4}
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
@@ -99,8 +99,8 @@ export default function SettingsPage() {
               <Save className="h-4 w-4" /> Save Changes
             </Button>
             {saved && (
-              <span className="flex items-center gap-1 text-sm text-green-600">
-                <CheckCircle className="h-4 w-4" /> Saved
+              <span className="flex items-center gap-1 text-xs font-black text-green-600 dark:text-green-400 uppercase tracking-wide border border-green-400 rounded-[3px] px-2 py-1 bg-green-50 dark:bg-green-900/20">
+                <CheckCircle className="h-3.5 w-3.5" /> Saved
               </span>
             )}
           </div>

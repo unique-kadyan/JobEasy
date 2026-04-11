@@ -16,17 +16,19 @@ import {
   User,
   CreditCard,
   Crown,
+  TrendingUp,
 } from "lucide-react";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/jobs", label: "Find Jobs", icon: Search },
-  { href: "/applications", label: "Applications", icon: Send },
-  { href: "/resumes", label: "Resumes", icon: FileText },
-  { href: "/smart-resume", label: "Smart Resume", icon: Sparkles },
-  { href: "/cover-letters", label: "Cover Letters", icon: Mail },
-  { href: "/profile", label: "Profile", icon: User },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard",     label: "Dashboard",     icon: LayoutDashboard },
+  { href: "/jobs",          label: "Find Jobs",      icon: Search },
+  { href: "/applications",  label: "Applications",   icon: Send },
+  { href: "/resumes",       label: "Resumes",        icon: FileText },
+  { href: "/smart-resume",  label: "Smart Resume",   icon: Sparkles },
+  { href: "/cover-letters", label: "Cover Letters",  icon: Mail },
+  { href: "/career-path",   label: "Career Path",    icon: TrendingUp },
+  { href: "/profile",       label: "Profile",        icon: User },
+  { href: "/settings",      label: "Settings",       icon: Settings },
 ];
 
 const TIER_CONFIG: Record<string, {
@@ -72,18 +74,18 @@ export default function Sidebar() {
   const cfg = TIER_CONFIG[tier] ?? TIER_CONFIG.FREE;
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-gray-200 bg-white flex flex-col">
-      <div className="flex h-16 items-center gap-2 border-b border-gray-200 px-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r-2 border-black bg-[#f5f2ea] flex flex-col">
+      <div className="flex h-14 items-center gap-2 border-b-2 border-black px-5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-[3px] bg-indigo-600 border-2 border-black" style={{ boxShadow: "2px 2px 0 #000" }}>
           <Zap className="h-4 w-4 text-white" />
         </div>
-        <span className="text-xl font-bold text-gray-900">Kaddy</span>
-        <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium ml-auto">
+        <span className="text-lg font-black text-black tracking-tight">Kaddy</span>
+        <span className="text-[10px] bg-black text-white px-2 py-0.5 rounded-[2px] font-bold ml-auto uppercase tracking-widest">
           AI
         </span>
       </div>
 
-      <nav className="mt-4 px-3 space-y-0.5 flex-1 overflow-y-auto">
+      <nav className="mt-3 px-3 space-y-0.5 flex-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
@@ -93,61 +95,55 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                "flex items-center gap-3 rounded-[3px] px-3 py-2 text-xs font-bold uppercase tracking-wide transition-all duration-100",
                 isActive
-                  ? "bg-indigo-50 text-indigo-700 shadow-sm"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-indigo-600 text-white border-2 border-black"
+                  : "text-gray-700 hover:bg-white hover:text-black border-2 border-transparent hover:border-black"
               )}
+              style={isActive ? { boxShadow: "2px 2px 0 #000" } : undefined}
             >
-              <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-indigo-600" : "text-gray-400")} />
+              <item.icon className="h-3.5 w-3.5 shrink-0" />
               {item.label}
-              {isActive && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-600" />
-              )}
             </Link>
           );
         })}
       </nav>
 
-      <div className="px-3 pb-4 space-y-2 border-t border-gray-100 pt-3">
-        <div className={cn("rounded-xl p-3 bg-gradient-to-br", cfg.gradient)}>
+      <div className="px-3 pb-4 space-y-2 border-t-2 border-black pt-3">
+        <div className="rounded-[4px] border-2 border-black p-3 bg-white" style={{ boxShadow: "3px 3px 0 #000" }}>
           <div className="flex items-center gap-2 mb-2">
             <Crown className={cn("h-4 w-4", cfg.iconColor)} />
-            <span className={cn("text-xs font-semibold", cfg.textColor)}>{cfg.label}</span>
+            <span className="text-xs font-black text-black uppercase tracking-wide">{cfg.label}</span>
           </div>
           {tier !== "PLATINUM" && cfg.upgradeHint && (
             <>
-              <p className="text-xs text-gray-500 mb-2">{cfg.upgradeHint}</p>
+              <p className="text-xs text-gray-600 mb-2 font-medium">{cfg.upgradeHint}</p>
               <Link
                 href="/pricing"
-                className={cn(
-                  "block w-full text-center text-xs font-semibold text-white py-1.5 rounded-lg transition-colors",
-                  cfg.upgradeBtn
-                )}
+                className="block w-full text-center text-xs font-black text-white py-1.5 rounded-[3px] bg-indigo-600 border-2 border-black nb-lift"
+                style={{ boxShadow: "2px 2px 0 #000" }}
               >
                 {cfg.upgradeLabel}
               </Link>
             </>
           )}
           {tier === "PLATINUM" && (
-            <p className={cn("text-xs font-medium", cfg.textColor)}>You have full access!</p>
+            <p className="text-xs font-bold text-gray-700">You have full access!</p>
           )}
         </div>
 
         <Link
           href="/pricing"
           className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
+            "flex items-center gap-3 rounded-[3px] px-3 py-2 text-xs font-bold uppercase tracking-wide transition-all duration-100 border-2",
             pathname === "/pricing"
-              ? "bg-indigo-50 text-indigo-700 shadow-sm"
-              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              ? "bg-indigo-600 text-white border-black"
+              : "text-gray-700 border-transparent hover:bg-white hover:text-black hover:border-black"
           )}
+          style={pathname === "/pricing" ? { boxShadow: "2px 2px 0 #000" } : undefined}
         >
-          <CreditCard className={cn("h-4 w-4 shrink-0", pathname === "/pricing" ? "text-indigo-600" : "text-gray-400")} />
+          <CreditCard className="h-3.5 w-3.5 shrink-0" />
           Pricing
-          {pathname === "/pricing" && (
-            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-600" />
-          )}
         </Link>
       </div>
     </aside>

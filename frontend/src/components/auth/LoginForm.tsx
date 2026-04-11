@@ -29,7 +29,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-[4px] border-2 border-red-500 bg-red-50 dark:bg-red-900/20 p-3 text-sm font-bold text-red-700 dark:text-red-400">
           {error}
         </div>
       )}
@@ -52,7 +52,7 @@ export default function LoginForm() {
       <div className="flex justify-end">
         <Link
           href="/forgot-password"
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+          className="text-xs font-black text-indigo-600 dark:text-indigo-400 hover:underline uppercase tracking-wide"
         >
           Forgot password?
         </Link>
@@ -60,9 +60,9 @@ export default function LoginForm() {
       <Button type="submit" loading={loading} className="w-full" size="lg">
         Sign In
       </Button>
-      <p className="text-center text-sm text-gray-500">
+      <p className="text-center text-sm font-medium text-gray-500 dark:text-[#8b949e]">
         Don&apos;t have an account?{" "}
-        <Link href="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+        <Link href="/signup" className="font-black text-indigo-600 dark:text-indigo-400 hover:underline">
           Sign up
         </Link>
       </p>
