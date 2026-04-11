@@ -10,6 +10,10 @@ export interface TierCapabilities {
   maxCoverLettersPerDay: number;
   maxResumesUploaded: number;
   careerPath: boolean;
+  mockInterview: boolean;
+  resumeTranslator: boolean;
+  resumeOptimizer: boolean;
+  dataExport: boolean;
 }
 
 const TIER_CAPS: Record<SubscriptionTier, TierCapabilities> = {
@@ -23,6 +27,10 @@ const TIER_CAPS: Record<SubscriptionTier, TierCapabilities> = {
     maxCoverLettersPerDay: 3,
     maxResumesUploaded: 2,
     careerPath: false,
+    mockInterview: false,
+    resumeTranslator: false,
+    resumeOptimizer: false,
+    dataExport: false,
   },
   GOLD: {
     maxJobResults: 10,
@@ -34,6 +42,10 @@ const TIER_CAPS: Record<SubscriptionTier, TierCapabilities> = {
     maxCoverLettersPerDay: 25,
     maxResumesUploaded: 10,
     careerPath: true,
+    mockInterview: true,
+    resumeTranslator: true,
+    resumeOptimizer: true,
+    dataExport: false,
   },
   PLATINUM: {
     maxJobResults: Number.MAX_SAFE_INTEGER,
@@ -45,6 +57,10 @@ const TIER_CAPS: Record<SubscriptionTier, TierCapabilities> = {
     maxCoverLettersPerDay: Number.MAX_SAFE_INTEGER,
     maxResumesUploaded: Number.MAX_SAFE_INTEGER,
     careerPath: true,
+    mockInterview: true,
+    resumeTranslator: true,
+    resumeOptimizer: true,
+    dataExport: true,
   },
 };
 

@@ -7,7 +7,8 @@ import { useAuthStore } from "@/store/auth-store";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { User, Save, CheckCircle } from "lucide-react";
+import RefundModal from "@/components/subscription/RefundModal";
+import { User, Save, CheckCircle, ReceiptText } from "lucide-react";
 
 export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
@@ -17,6 +18,9 @@ export default function SettingsPage() {
   const [title, setTitle] = useState(user?.title || "");
   const [summary, setSummary] = useState(user?.summary || "");
   const [saved, setSaved] = useState(false);
+  const [showRefund, setShowRefund] = useState(false);
+
+  const isPaidTier = user?.subscriptionTier === "GOLD" || user?.subscriptionTier === "PLATINUM";
 
   const updateMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
@@ -106,6 +110,39 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+      {isPaidTier && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <ReceiptText className="h-4 w-4 text-indigo-600" />
+              <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Refund Policy</h2>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-[#86868b] dark:text-[#8e8e93]">
+              You can request a refund within <span className="font-medium text-[#1d1d1f] dark:text-white">7 days</span> of subscribing.
+              The refund amount is calculated as your subscription fee minus the cost of features you have already used.
+            </p>
+            <div className="text-xs text-[#86868b] dark:text-[#8e8e93] space-y-1">
+              <p>Feature costs deducted from refund:</p>
+              <ul className="list-disc list-inside space-y-0.5 pl-1">
+                <li>Cover letter generated — ₹15 each</li>
+                <li>Smart resume generated — ₹30 each</li>
+                <li>Career path analysis — ₹50 each</li>
+                <li>Auto-apply submission — ₹8 each</li>
+                <li>Mock interview session — ₹25 each</li>
+                <li>Resume translate / optimize — ₹20 each</li>
+              </ul>
+            </div>
+            <Button variant="outline" onClick={() => setShowRefund(true)}>
+              <ReceiptText className="h-4 w-4" />
+              Check Refund Eligibility
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {showRefund && <RefundModal onClose={() => setShowRefund(false)} />}
     </div>
   );
 }

@@ -17,6 +17,7 @@ import {
   CreditCard,
   Crown,
   TrendingUp,
+  MessageSquare,
 } from "lucide-react";
 
 const navItems = [
@@ -26,8 +27,9 @@ const navItems = [
   { href: "/resumes",       label: "Resumes",        icon: FileText },
   { href: "/smart-resume",  label: "Smart Resume",   icon: Sparkles },
   { href: "/cover-letters", label: "Cover Letters",  icon: Mail },
-  { href: "/career-path",   label: "Career Path",    icon: TrendingUp },
-  { href: "/profile",       label: "Profile",        icon: User },
+  { href: "/career-path",     label: "Career Path",    icon: TrendingUp },
+  { href: "/interview-prep",  label: "Interview Prep", icon: MessageSquare },
+  { href: "/profile",         label: "Profile",        icon: User },
   { href: "/settings",      label: "Settings",       icon: Settings },
 ];
 

@@ -1,5 +1,6 @@
 package com.kaddy.autoapply.controller;
 
+import com.kaddy.autoapply.service.FeatureUsageService;
 import com.kaddy.autoapply.service.SubscriptionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -49,5 +50,15 @@ public class SubscriptionController {
                 body.get("tier")
         );
         return ResponseEntity.ok(Map.of("success", success));
+    }
+
+    @GetMapping("/refund-eligibility")
+    public ResponseEntity<FeatureUsageService.RefundEligibility> getRefundEligibility(Authentication auth) {
+        return ResponseEntity.ok(subscriptionService.getRefundEligibility((String) auth.getPrincipal()));
+    }
+
+    @PostMapping("/request-refund")
+    public ResponseEntity<SubscriptionService.RefundResult> requestRefund(Authentication auth) {
+        return ResponseEntity.ok(subscriptionService.requestRefund((String) auth.getPrincipal()));
     }
 }

@@ -75,7 +75,7 @@ public class JobScoringService {
             return CompletableFuture.completedFuture(scoredJob);
         }
 
-        return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.<JobResponse>supplyAsync(() -> {
             try {
                 String systemPrompt = buildAiSystemPrompt(user);
                 String userPrompt = buildAiUserPrompt(user, scoredJob);
@@ -83,13 +83,17 @@ public class JobScoringService {
                 AiProviderFactory.GenerationResult result = aiProviderFactory.generate(systemPrompt, userPrompt,
                         AiProviderFactory.TaskType.FAST_TEXT);
 
-                List<String> reasoning = parseAiReasoning(result.content());
+                AiEvalResult eval = parseAiEvaluation(result.content());
+
+                double localScore = scoredJob.matchScore();
+                double blended = 0.4 * localScore + 0.6 * eval.score();
+                blended = Math.min(1.0, Math.max(0.0, blended));
 
                 return scoredJob.withScore(
-                        scoredJob.matchScore(),
-                        scoredJob.matchStrength(),
+                        blended,
+                        classify(blended),
                         scoredJob.missingSkills(),
-                        reasoning,
+                        eval.reasoning(),
                         scoredJob.normalizedSalaryUsd());
             } catch (Exception e) {
                 log.warn("AI enrichment failed for job '{}': {}", scoredJob.title(), e.getMessage());
@@ -230,10 +234,13 @@ public class JobScoringService {
     private String buildAiSystemPrompt(User user) {
         return """
                 You are a career advisor evaluating job-candidate fit.
-                Return a JSON array of 3-5 concise reasoning strings explaining the match quality.
-                Be specific about skill alignment, experience level, and growth potential.
-                Format: ["reason 1", "reason 2", ...]
-                Do not include markdown fences or any other text outside the JSON array.
+                Return ONLY this JSON object — no markdown, no extra text:
+                {"score": <integer 0-100>, "reasoning": ["reason 1", "reason 2", "reason 3"]}
+                Rules:
+                - score: 0-100 integer representing overall fit (skills + experience + role alignment)
+                - reasoning: 3-5 concise strings explaining the match quality
+                - Be specific: mention exact skills, years of experience, seniority alignment
+                - Note: Java != JavaScript when evaluating skill matches
                 """;
     }
 
@@ -336,6 +343,48 @@ public class JobScoringService {
         return s.length() <= maxLen ? s : s.substring(0, maxLen) + "…";
     }
 
-    private record SkillMatchResult(double ratio, List<String> missing) {
+    private record SkillMatchResult(double ratio, List<String> missing) {}
+
+    private record AiEvalResult(double score, List<String> reasoning) {
+        static AiEvalResult fallback(double localScore) {
+            return new AiEvalResult(localScore, List.of());
+        }
+    }
+
+    private AiEvalResult parseAiEvaluation(String content) {
+        if (content == null || content.isBlank()) return AiEvalResult.fallback(0);
+        try {
+            String cleaned = content.strip()
+                    .replaceAll("^```json\\s*", "").replaceAll("^```\\s*", "")
+                    .replaceAll("```$", "").strip();
+
+            // Expected: {"score": 72, "reasoning": ["...", "..."]}
+            double aiScore = 0;
+            List<String> reasoning = new ArrayList<>();
+
+            int scoreIdx = cleaned.indexOf("\"score\"");
+            if (scoreIdx >= 0) {
+                int colon = cleaned.indexOf(':', scoreIdx);
+                int comma = cleaned.indexOf(',', colon);
+                int brace = cleaned.indexOf('}', colon);
+                int end = (comma > 0 && comma < brace) ? comma : brace;
+                if (end > colon) {
+                    String num = cleaned.substring(colon + 1, end).trim();
+                    aiScore = Double.parseDouble(num) / 100.0; // normalise to 0-1
+                }
+            }
+
+            int arrStart = cleaned.indexOf('[');
+            int arrEnd   = cleaned.lastIndexOf(']');
+            if (arrStart >= 0 && arrEnd > arrStart) {
+                String arr = cleaned.substring(arrStart, arrEnd + 1);
+                reasoning = parseAiReasoning(arr);
+            }
+
+            return new AiEvalResult(Math.min(1.0, Math.max(0.0, aiScore)), reasoning);
+        } catch (Exception e) {
+            log.warn("Failed to parse AI evaluation response: {}", e.getMessage());
+            return AiEvalResult.fallback(0);
+        }
     }
 }

@@ -22,18 +22,28 @@ public class AiProviderFactory {
     public enum TaskType {
         RESUME_GENERATION(List.of(
                 "CLAUDE", "OPENAI",
+                "GROQ", "SAMBANOVA",
                 "TOGETHER_QWEN3_CODER", "TOGETHER_KIMI_K2",
-                "HYPERBOLIC_QWEN3_CODER", "CEREBRAS_QWEN")),
+                "CEREBRAS", "MISTRAL", "NOVITA")),
+
         REASONING(List.of(
                 "CLAUDE",
-                "GROQ_COMPOUND", "GROQ_COMPOUND_MINI")),
+                "GROQ", "GROQ_COMPOUND", "GROQ_COMPOUND_MINI",
+                "SAMBANOVA", "MISTRAL",
+                "CEREBRAS_LLAMA_8B", "NOVITA")),
+
         COVER_LETTER(List.of(
                 "CLAUDE", "OPENAI",
-                "TOGETHER_MISTRAL_SMALL", "MISTRAL")),
+                "GROQ", "MISTRAL",
+                "SAMBANOVA", "NOVITA",
+                "TOGETHER_MISTRAL_SMALL", "CEREBRAS")),
+
         FAST_TEXT(List.of(
-                "GROQ", "GROQ_LLAMA_4_SCOUT",
-                "CEREBRAS", "CEREBRAS_LLAMA_8B",
-                "TOGETHER", "TOGETHER_LLAMA_8B")),
+                "GROQ", "CEREBRAS_LLAMA_8B",
+                "GROQ_LLAMA_4_SCOUT", "CEREBRAS",
+                "TOGETHER", "TOGETHER_LLAMA_8B",
+                "MISTRAL")),
+
         GENERAL(List.of());
 
         private final List<String> preferredProviders;
@@ -53,7 +63,7 @@ public class AiProviderFactory {
 
     public AiProviderFactory(
             List<AiProvider> providers,
-            @Value("${app.ai.provider-order.free:CEREBRAS,GROQ,TOGETHER,MISTRAL,SAMBANOVA,NOVITA}") String freeOrder,
+            @Value("${app.ai.provider-order.free:GROQ,CEREBRAS_LLAMA_8B,MISTRAL,SAMBANOVA,NOVITA,CEREBRAS,TOGETHER}") String freeOrder,
             @Value("${app.ai.provider-order.premium:GEMINI,OPENAI,CLAUDE}") String premiumOrder) {
         this.providerMap = new HashMap<>();
         providers.forEach(p -> providerMap.put(p.getName().toUpperCase(), p));

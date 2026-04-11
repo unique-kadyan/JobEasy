@@ -54,7 +54,7 @@ app:
 
   ai:
     provider-order:
-      free: DEEPSEEK,TOGETHER_DEEPSEEK_V3,HYPERBOLIC,CEREBRAS_QWEN,GROQ,CEREBRAS,TOGETHER,MISTRAL,SAMBANOVA,NOVITA
+      free: GROQ,CEREBRAS_LLAMA_8B,MISTRAL,SAMBANOVA,NOVITA,CEREBRAS,TOGETHER,TOGETHER_MISTRAL_SMALL,TOGETHER_QWEN3_CODER
       premium: GEMINI,OPENAI,CLAUDE
     cerebras:
       api-key: ${CEREBRAS_API_KEY:}
@@ -73,7 +73,7 @@ app:
       model: Meta-Llama-3.3-70B-Instruct
     novita:
       api-key: ${NOVITA_API_KEY:}
-      model: meta-llama/llama-3.3-70b-instruct
+      model: qwen/qwen-2.5-72b-instruct
     deepseek:
       api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-chat
@@ -85,7 +85,7 @@ app:
       model: gemini-2.0-flash
     openai:
       api-key: ${OPENAI_API_KEY:}
-      model: gpt-4o
+      model: gpt-4o-mini
     claude:
       api-key: ${ANTHROPIC_API_KEY:}
       model: claude-sonnet-4-20250514
@@ -134,10 +134,10 @@ app:
       server-selection-timeout-ms: 5000
 
   webclient:
-    connect-timeout-ms: 5000
-    read-timeout-s: 12
-    write-timeout-s: 5
-    response-timeout-s: 13
+    connect-timeout-ms: 8000
+    read-timeout-s: 45
+    write-timeout-s: 10
+    response-timeout-s: 50
     max-connections: 500
 
 management:

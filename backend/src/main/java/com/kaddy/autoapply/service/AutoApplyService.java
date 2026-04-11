@@ -5,6 +5,7 @@ import com.kaddy.autoapply.exception.BadRequestException;
 import com.kaddy.autoapply.model.AutoApplyJob;
 import com.kaddy.autoapply.model.Job;
 import com.kaddy.autoapply.model.User;
+import com.kaddy.autoapply.model.enums.FeatureType;
 import com.kaddy.autoapply.model.event.AutoApplyJobQueuedEvent;
 import com.kaddy.autoapply.repository.AutoApplyJobRepository;
 import com.kaddy.autoapply.repository.JobRepository;
@@ -33,19 +34,22 @@ public class AutoApplyService {
     private final FeatureConfig          featureConfig;
     private final ApplicationEventPublisher eventPublisher;
     private final Executor               executor;
+    private final FeatureUsageService    featureUsageService;
 
     public AutoApplyService(AutoApplyJobRepository autoApplyJobRepository,
                             UserRepository userRepository,
                             JobRepository jobRepository,
                             FeatureConfig featureConfig,
                             ApplicationEventPublisher eventPublisher,
-                            @Qualifier("virtualThreadExecutor") Executor executor) {
+                            @Qualifier("virtualThreadExecutor") Executor executor,
+                            FeatureUsageService featureUsageService) {
         this.autoApplyJobRepository = autoApplyJobRepository;
         this.userRepository         = userRepository;
         this.jobRepository          = jobRepository;
         this.featureConfig          = featureConfig;
         this.eventPublisher         = eventPublisher;
         this.executor               = executor;
+        this.featureUsageService    = featureUsageService;
     }
 
     public List<AutoApplyJob> queueJobs(String userId, List<String> jobIds) {
@@ -77,6 +81,7 @@ public class AutoApplyService {
             final AutoApplyJobQueuedEvent event =
                     new AutoApplyJobQueuedEvent(userId, aj.getJobId(), aj.getId());
             CompletableFuture.runAsync(() -> eventPublisher.publishEvent(event), executor);
+            featureUsageService.record(userId, FeatureType.AUTO_APPLY_SUBMITTED, aj.getId());
         }
 
         return saved;

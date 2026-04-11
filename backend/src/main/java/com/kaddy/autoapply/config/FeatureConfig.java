@@ -18,18 +18,19 @@ public class FeatureConfig {
             int maxCoverLettersPerDay,
             int maxResumesUploaded,
             boolean careerPath,
+            boolean mockInterview,
             int rateLimitPerMinute
     ) {}
 
     private static final Map<SubscriptionTier, Capabilities> TIER_CAPS = Map.of(
             SubscriptionTier.FREE,
-            new Capabilities(2, false, false, false, false, true, 3, 2, false, 10),
+            new Capabilities(2, false, false, false, false, true, 3, 2, false, false, 10),
 
             SubscriptionTier.GOLD,
-            new Capabilities(10, false, false, true, true, true, 25, 10, true, 30),
+            new Capabilities(10, false, false, true, true, true, 25, 10, true, true, 30),
 
             SubscriptionTier.PLATINUM,
-            new Capabilities(Integer.MAX_VALUE, true, true, true, true, true, Integer.MAX_VALUE, Integer.MAX_VALUE, true, 60)
+            new Capabilities(Integer.MAX_VALUE, true, true, true, true, true, Integer.MAX_VALUE, Integer.MAX_VALUE, true, true, 60)
     );
 
     public Capabilities of(SubscriptionTier tier) {
@@ -45,6 +46,7 @@ public class FeatureConfig {
     public boolean canSummarize(SubscriptionTier tier)        { return of(tier).coverLetterAi(); }
     public int maxCoverLettersPerDay(SubscriptionTier tier)   { return of(tier).maxCoverLettersPerDay(); }
     public int maxResumesUploaded(SubscriptionTier tier)      { return of(tier).maxResumesUploaded(); }
-    public boolean canAccessCareerPath(SubscriptionTier tier) { return of(tier).careerPath(); }
-    public int rateLimitPerMinute(SubscriptionTier tier)      { return of(tier).rateLimitPerMinute(); }
+    public boolean canAccessCareerPath(SubscriptionTier tier)   { return of(tier).careerPath(); }
+    public boolean canAccessMockInterview(SubscriptionTier tier){ return of(tier).mockInterview(); }
+    public int rateLimitPerMinute(SubscriptionTier tier)        { return of(tier).rateLimitPerMinute(); }
 }

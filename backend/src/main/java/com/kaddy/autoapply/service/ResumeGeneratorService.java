@@ -9,6 +9,7 @@ import com.kaddy.autoapply.security.SecurityUtils;
 import com.kaddy.autoapply.model.GeneratedResume;
 import com.kaddy.autoapply.model.Resume;
 import com.kaddy.autoapply.model.User;
+import com.kaddy.autoapply.model.enums.FeatureType;
 import com.kaddy.autoapply.repository.GeneratedResumeRepository;
 import com.kaddy.autoapply.repository.ResumeRepository;
 import com.kaddy.autoapply.repository.UserRepository;
@@ -80,17 +81,20 @@ public class ResumeGeneratorService {
     private final ResumeRepository resumeRepository;
     private final GeneratedResumeRepository generatedResumeRepository;
     private final AiProviderFactory aiProviderFactory;
+    private final FeatureUsageService featureUsageService;
     private final ObjectMapper objectMapper;
 
     public ResumeGeneratorService(UserRepository userRepository,
             ResumeRepository resumeRepository,
             GeneratedResumeRepository generatedResumeRepository,
             AiProviderFactory aiProviderFactory,
+            FeatureUsageService featureUsageService,
             ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.resumeRepository = resumeRepository;
         this.generatedResumeRepository = generatedResumeRepository;
         this.aiProviderFactory = aiProviderFactory;
+        this.featureUsageService = featureUsageService;
         this.objectMapper = objectMapper;
     }
 
@@ -130,6 +134,7 @@ public class ResumeGeneratorService {
         if (SecurityUtils.isAdmin())
             entity.setPaid(true);
         GeneratedResume saved = generatedResumeRepository.save(entity);
+        featureUsageService.record(userId, FeatureType.SMART_RESUME_GENERATED, saved.getId());
 
         return toResponse(saved, SecurityUtils.isAdmin());
     }

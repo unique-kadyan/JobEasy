@@ -3,6 +3,7 @@ package com.kaddy.autoapply.service;
 import com.kaddy.autoapply.config.FeatureConfig;
 import com.kaddy.autoapply.dto.request.CoverLetterRequest;
 import com.kaddy.autoapply.dto.response.CoverLetterResponse;
+import com.kaddy.autoapply.model.enums.FeatureType;
 import com.kaddy.autoapply.exception.BadRequestException;
 import com.kaddy.autoapply.exception.ResourceNotFoundException;
 import com.kaddy.autoapply.model.event.AutoApplyJobQueuedEvent;
@@ -65,6 +66,7 @@ public class CoverLetterService {
     private final AutoApplyJobRepository autoApplyJobRepository;
     private final FeatureConfig featureConfig;
     private final StringRedisTemplate redis;
+    private final FeatureUsageService featureUsageService;
 
     public CoverLetterService(CoverLetterRepository coverLetterRepository,
             UserRepository userRepository,
@@ -74,7 +76,8 @@ public class CoverLetterService {
             @Qualifier("virtualThreadExecutor") Executor executor,
             AutoApplyJobRepository autoApplyJobRepository,
             FeatureConfig featureConfig,
-            StringRedisTemplate redis) {
+            StringRedisTemplate redis,
+            FeatureUsageService featureUsageService) {
         this.coverLetterRepository = coverLetterRepository;
         this.userRepository = userRepository;
         this.templateRepository = templateRepository;
@@ -84,6 +87,7 @@ public class CoverLetterService {
         this.autoApplyJobRepository = autoApplyJobRepository;
         this.featureConfig = featureConfig;
         this.redis = redis;
+        this.featureUsageService = featureUsageService;
     }
 
     @Async
@@ -181,6 +185,8 @@ public class CoverLetterService {
                 .aiModel(request.provider())
                 .promptUsed(prompt.toString())
                 .build());
+
+        featureUsageService.record(userId, FeatureType.COVER_LETTER_GENERATED, cl.getId());
 
         return toResponse(cl, job);
     }

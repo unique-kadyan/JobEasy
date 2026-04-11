@@ -54,6 +54,9 @@ public class User {
     private LocalDateTime autoSearchLastRun;
 
     private SubscriptionTier subscriptionTier;
+    private LocalDateTime subscriptionStartDate;
+    private long subscriptionAmountPaise;
+    private String subscriptionBillingCycle;
 
     private Set<Role> roles;
 
@@ -102,6 +105,13 @@ public class User {
         return subscriptionTier != null ? subscriptionTier : SubscriptionTier.FREE;
     }
     public void setSubscriptionTier(SubscriptionTier subscriptionTier) { this.subscriptionTier = subscriptionTier; }
+
+    public LocalDateTime getSubscriptionStartDate()                        { return subscriptionStartDate; }
+    public void setSubscriptionStartDate(LocalDateTime d)                  { this.subscriptionStartDate = d; }
+    public long getSubscriptionAmountPaise()                               { return subscriptionAmountPaise; }
+    public void setSubscriptionAmountPaise(long paise)                     { this.subscriptionAmountPaise = paise; }
+    public String getSubscriptionBillingCycle()                            { return subscriptionBillingCycle; }
+    public void setSubscriptionBillingCycle(String cycle)                  { this.subscriptionBillingCycle = cycle; }
 
     public Set<Role> getRoles() {
         return roles != null ? roles : EnumSet.of(Role.ROLE_USER);

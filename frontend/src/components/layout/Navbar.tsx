@@ -27,6 +27,7 @@ import {
   Sparkles,
   TrendingUp,
   Send,
+  MessageSquare,
 } from "lucide-react";
 import type { ServerStatus } from "@/hooks/useKeepAlive";
 
@@ -38,6 +39,7 @@ const NAV_LINKS = [
   { href: "/smart-resume", label: "Smart Resume", icon: Sparkles },
   { href: "/cover-letters", label: "Cover Letters", icon: Mail },
   { href: "/career-path", label: "Career Path", icon: TrendingUp },
+  { href: "/interview-prep", label: "Interview Prep", icon: MessageSquare },
 ];
 
 const TIER_BADGE: Record<string, { label: string; className: string }> = {

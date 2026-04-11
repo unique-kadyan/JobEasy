@@ -138,6 +138,51 @@ export interface CoverLetter {
   createdAt: string;
 }
 
+export interface MockInterviewQA {
+  index: number;
+  question: string;
+  category: "BEHAVIORAL" | "TECHNICAL" | "SITUATIONAL" | "CULTURE_FIT";
+  idealAnswer?: string;
+  userAnswer?: string;
+  score: number;
+  feedback?: string;
+}
+
+export interface MockInterviewSession {
+  id: string;
+  userId: string;
+  jobTitle: string;
+  company?: string;
+  jobDescription?: string;
+  difficultyLevel: "ENTRY" | "MID" | "SENIOR" | "LEAD";
+  questionsAndAnswers: MockInterviewQA[];
+  overallScore: number;
+  overallFeedback?: string;
+  strengths?: string;
+  improvements?: string;
+  status: "IN_PROGRESS" | "COMPLETED";
+  startedAt: string;
+  completedAt?: string;
+}
+
+export interface FeatureUsageSummary {
+  featureType: string;
+  count: number;
+  unitCostPaise: number;
+  totalCostPaise: number;
+}
+
+export interface RefundEligibility {
+  eligible: boolean;
+  reason: string;
+  subscriptionAmountPaise: number;
+  usedValuePaise: number;
+  refundAmountPaise: number;
+  subscriptionStartDate?: string;
+  refundWindowEndsAt?: string;
+  usageSummary: FeatureUsageSummary[];
+}
+
 export interface Application {
   id: string;
   job: Job;

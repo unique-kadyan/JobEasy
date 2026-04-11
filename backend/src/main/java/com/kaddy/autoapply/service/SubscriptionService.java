@@ -36,25 +36,28 @@ public class SubscriptionService {
     private static final long GOLD_MONTHLY_PAISE     = 32500L;
     private static final long PLATINUM_MONTHLY_PAISE = 50000L;
 
-    private final UserRepository    userRepository;
-    private final PaymentRepository paymentRepository;
-    private final WebClient         razorpayClient;
-    private final String            keyId;
-    private final String            keySecret;
-    private final ObjectMapper      objectMapper;
+    private final UserRepository      userRepository;
+    private final PaymentRepository   paymentRepository;
+    private final FeatureUsageService featureUsageService;
+    private final WebClient           razorpayClient;
+    private final String              keyId;
+    private final String              keySecret;
+    private final ObjectMapper        objectMapper;
 
     public SubscriptionService(UserRepository userRepository,
                                PaymentRepository paymentRepository,
+                               FeatureUsageService featureUsageService,
                                WebClient.Builder webClientBuilder,
                                @Value("${app.payment.razorpay.key-id:}") String keyId,
                                @Value("${app.payment.razorpay.key-secret:}") String keySecret,
                                ObjectMapper objectMapper) {
-        this.userRepository    = userRepository;
-        this.paymentRepository = paymentRepository;
-        this.keyId             = keyId;
-        this.keySecret         = keySecret;
-        this.objectMapper      = objectMapper;
-        this.razorpayClient    = webClientBuilder
+        this.userRepository      = userRepository;
+        this.paymentRepository   = paymentRepository;
+        this.featureUsageService = featureUsageService;
+        this.keyId               = keyId;
+        this.keySecret           = keySecret;
+        this.objectMapper        = objectMapper;
+        this.razorpayClient      = webClientBuilder
                 .baseUrl("https://api.razorpay.com/v1")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
@@ -114,7 +117,7 @@ public class SubscriptionService {
                                      String signature, String tierName) {
 
         if (orderId.startsWith("admin_bypass_sub_") || SecurityUtils.isAdmin()) {
-            activateTier(userId, parseTier(tierName));
+            activateTier(userId, parseTier(tierName), "ANNUAL", 0L);
             return true;
         }
 
@@ -133,14 +136,40 @@ public class SubscriptionService {
         payment.setStatus("PAID");
         paymentRepository.save(payment);
 
-        activateTier(userId, parseTier(tierName));
+        // Extract billing cycle from receipt ref "subscription:TIER:CYCLE"
+        String billingCycle = "ANNUAL";
+        String ref = payment.getGeneratedResumeId();
+        if (ref != null && ref.startsWith("subscription:")) {
+            String[] parts = ref.split(":");
+            if (parts.length >= 3) billingCycle = parts[2];
+        }
+
+        activateTier(userId, parseTier(tierName), billingCycle, payment.getAmount());
         log.info("Subscription {} activated for user {}", tierName, userId);
         return true;
     }
 
-    private void activateTier(String userId, SubscriptionTier tier) {
+    public FeatureUsageService.RefundEligibility getRefundEligibility(String userId) {
+        return featureUsageService.getRefundEligibility(userId);
+    }
+
+    public record RefundResult(boolean success, long refundAmountPaise, String message) {}
+
+    public RefundResult requestRefund(String userId) {
+        long paise = featureUsageService.requestRefund(userId);
+        String msg = "Refund of ₹" + (paise / 100) + " approved. "
+                + "Your subscription has been cancelled. "
+                + "Amount will be credited within 5-7 business days.";
+        log.info("Refund processed for user {}: {}p", userId, paise);
+        return new RefundResult(true, paise, msg);
+    }
+
+    private void activateTier(String userId, SubscriptionTier tier, String billingCycle, long amountPaise) {
         User user = findUser(userId);
         user.setSubscriptionTier(tier);
+        user.setSubscriptionStartDate(LocalDateTime.now());
+        user.setSubscriptionAmountPaise(amountPaise);
+        user.setSubscriptionBillingCycle(billingCycle);
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
     }

@@ -9,6 +9,7 @@ import com.kaddy.autoapply.exception.BadRequestException;
 import com.kaddy.autoapply.exception.ResourceNotFoundException;
 import com.kaddy.autoapply.model.ResumeProfile;
 import com.kaddy.autoapply.model.User;
+import com.kaddy.autoapply.model.enums.FeatureType;
 import com.kaddy.autoapply.repository.ResumeProfileRepository;
 import com.kaddy.autoapply.repository.UserRepository;
 import com.kaddy.autoapply.security.SecurityUtils;
@@ -59,17 +60,20 @@ public class CareerPathService {
     private final ResumeProfileRepository resumeProfileRepository;
     private final FeatureConfig featureConfig;
     private final AiProviderFactory aiProviderFactory;
+    private final FeatureUsageService featureUsageService;
     private final ObjectMapper objectMapper;
 
     public CareerPathService(UserRepository userRepository,
                               ResumeProfileRepository resumeProfileRepository,
                               FeatureConfig featureConfig,
                               AiProviderFactory aiProviderFactory,
+                              FeatureUsageService featureUsageService,
                               ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.resumeProfileRepository = resumeProfileRepository;
         this.featureConfig = featureConfig;
         this.aiProviderFactory = aiProviderFactory;
+        this.featureUsageService = featureUsageService;
         this.objectMapper = objectMapper;
     }
 
@@ -87,7 +91,9 @@ public class CareerPathService {
         AiProviderFactory.GenerationResult result =
                 aiProviderFactory.generate(SYSTEM_PROMPT, profileContext, AiProviderFactory.TaskType.REASONING);
 
-        return parseResponse(result.content());
+        CareerPathResponse response = parseResponse(result.content());
+        featureUsageService.record(userId, FeatureType.CAREER_PATH_ANALYZED, userId);
+        return response;
     }
 
     private String buildProfileContext(User user) {

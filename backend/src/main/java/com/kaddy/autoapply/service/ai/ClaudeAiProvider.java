@@ -7,10 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.List;
 import java.util.Map;
@@ -51,7 +53,7 @@ public non-sealed class ClaudeAiProvider implements AiProvider {
         try {
             Map<String, Object> requestBody = Map.of(
                     "model", model,
-                    "max_tokens", 2048,
+                    "max_tokens", 4096,
                     "system", systemPrompt,
                     "messages", List.of(Map.of("role", "user", "content", userPrompt))
             );
@@ -63,6 +65,12 @@ public non-sealed class ClaudeAiProvider implements AiProvider {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(requestBody)
                     .retrieve()
+                    .onStatus(HttpStatusCode::isError, clientResponse ->
+                            clientResponse.bodyToMono(String.class)
+                                    .map(body -> new AiServiceException(
+                                            "Claude HTTP " + clientResponse.statusCode().value()
+                                            + ": " + body))
+                    )
                     .bodyToMono(MAP_TYPE)
                     .block();
 
@@ -78,6 +86,9 @@ public non-sealed class ClaudeAiProvider implements AiProvider {
                     .orElseThrow(() -> new AiServiceException("No text in Claude response"));
         } catch (AiServiceException e) {
             throw e;
+        } catch (WebClientResponseException e) {
+            throw new AiServiceException("Claude HTTP " + e.getStatusCode().value()
+                    + ": " + e.getResponseBodyAsString(), e);
         } catch (RuntimeException e) {
             throw new AiServiceException("Claude API call failed: " + e.getMessage(), e);
         }

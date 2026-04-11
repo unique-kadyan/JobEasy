@@ -2,9 +2,11 @@ package com.kaddy.autoapply.service.ai;
 
 import com.kaddy.autoapply.exception.AiServiceException;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.List;
 import java.util.Map;
@@ -37,7 +39,7 @@ public non-sealed abstract class OpenAiCompatibleProvider implements AiProvider 
         try {
             Map<String, Object> requestBody = Map.of(
                     "model", model,
-                    "max_tokens", 2048,
+                    "max_tokens", 4096,
                     "messages", List.of(
                             Map.of("role", "system", "content", systemPrompt),
                             Map.of("role", "user", "content", userPrompt)
@@ -50,6 +52,12 @@ public non-sealed abstract class OpenAiCompatibleProvider implements AiProvider 
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(requestBody)
                     .retrieve()
+                    .onStatus(HttpStatusCode::isError, clientResponse ->
+                            clientResponse.bodyToMono(String.class)
+                                    .map(body -> new AiServiceException(
+                                            getName() + " HTTP " + clientResponse.statusCode().value()
+                                            + ": " + body))
+                    )
                     .bodyToMono(MAP_TYPE)
                     .block();
 
@@ -62,6 +70,9 @@ public non-sealed abstract class OpenAiCompatibleProvider implements AiProvider 
             return (String) message.get("content");
         } catch (AiServiceException e) {
             throw e;
+        } catch (WebClientResponseException e) {
+            throw new AiServiceException(getName() + " HTTP " + e.getStatusCode().value()
+                    + ": " + e.getResponseBodyAsString(), e);
         } catch (RuntimeException e) {
             throw new AiServiceException(getName() + " API call failed: " + e.getMessage(), e);
         }

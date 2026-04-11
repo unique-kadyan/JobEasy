@@ -2,6 +2,7 @@ package com.kaddy.autoapply.service;
 
 import com.kaddy.autoapply.exception.BadRequestException;
 import com.kaddy.autoapply.exception.ResourceNotFoundException;
+import com.kaddy.autoapply.model.enums.FeatureType;
 import com.kaddy.autoapply.security.SecurityUtils;
 import com.kaddy.autoapply.model.Resume;
 import com.kaddy.autoapply.model.User;
@@ -26,16 +27,19 @@ public class ResumeOptimizationService {
 
     private static final int MAX_JD_CHARS = 2_000;
 
-    private final ResumeRepository  resumeRepository;
-    private final UserRepository    userRepository;
-    private final AiProviderFactory aiProviderFactory;
+    private final ResumeRepository   resumeRepository;
+    private final UserRepository     userRepository;
+    private final AiProviderFactory  aiProviderFactory;
+    private final FeatureUsageService featureUsageService;
 
     public ResumeOptimizationService(ResumeRepository resumeRepository,
                                      UserRepository userRepository,
-                                     AiProviderFactory aiProviderFactory) {
-        this.resumeRepository = resumeRepository;
-        this.userRepository   = userRepository;
-        this.aiProviderFactory = aiProviderFactory;
+                                     AiProviderFactory aiProviderFactory,
+                                     FeatureUsageService featureUsageService) {
+        this.resumeRepository     = resumeRepository;
+        this.userRepository       = userRepository;
+        this.aiProviderFactory    = aiProviderFactory;
+        this.featureUsageService  = featureUsageService;
     }
 
     @CircuitBreaker(name = CB_NAME, fallbackMethod = "optimizeFallback")
@@ -71,6 +75,7 @@ public class ResumeOptimizationService {
                 aiProviderFactory.generate(systemPrompt, userPrompt, preferredAi);
 
         log.info("Resume optimisation complete: user={}, provider={}", userId, result.providerName());
+        featureUsageService.record(userId, FeatureType.RESUME_OPTIMIZED, resumeId);
 
         return new OptimizationResult(result.content(), result.providerName());
     }
