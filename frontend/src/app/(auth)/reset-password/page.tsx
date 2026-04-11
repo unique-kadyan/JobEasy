@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import api from "@/lib/api";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { Zap, CheckCircle, XCircle, Loader2, KeyRound } from "lucide-react";
+import { Zap, CheckCircle, XCircle, Loader2, KeyRound } from "@/components/ui/icons";
 import Link from "next/link";
 
 function ResetPasswordContent() {

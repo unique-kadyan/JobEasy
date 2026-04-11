@@ -12,6 +12,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public class UserService {
         this.gitHubImportService = gitHubImportService;
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "users", key = "#userId")
     public UserResponse getProfile(String userId) {
         return AuthService.toUserResponse(findUser(userId));
@@ -120,6 +122,7 @@ public class UserService {
         return AuthService.toUserResponse(userRepository.save(user));
     }
 
+    @Transactional(readOnly = true)
     public AutoSearchScheduleResponse getAutoSearchSchedule(String userId) {
         User user = findUser(userId);
         return toScheduleResponse(user);

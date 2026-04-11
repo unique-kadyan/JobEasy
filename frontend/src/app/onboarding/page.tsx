@@ -6,7 +6,7 @@ import { useAuthStore } from "@/store/auth-store";
 import api from "@/lib/api";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { CheckCircle, Upload, Target, Rocket, Loader2 } from "lucide-react";
+import { CheckCircle, Upload, Target, Rocket, Loader2 } from "@/components/ui/icons";
 
 const STEPS = ["Upload Resume", "Your Goals", "All Set!"];
 

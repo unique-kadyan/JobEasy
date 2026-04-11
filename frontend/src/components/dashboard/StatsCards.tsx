@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SkeletonStatCard } from "@/components/ui/Skeleton";
-import { Send, MessageSquare, Trophy, XCircle, TrendingUp } from "lucide-react";
+import { Send, MessageSquare, Trophy, XCircle, TrendingUp } from "@/components/ui/icons";
 import type { Analytics } from "@/types";
 
 interface StatsCardsProps {

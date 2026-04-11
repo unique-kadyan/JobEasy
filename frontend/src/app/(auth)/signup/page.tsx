@@ -1,7 +1,7 @@
 "use client";
 
 import SignupForm from "@/components/auth/SignupForm";
-import { Zap, CheckCircle } from "lucide-react";
+import { Zap, CheckCircle } from "@/components/ui/icons";
 
 export default function SignupPage() {
   return (

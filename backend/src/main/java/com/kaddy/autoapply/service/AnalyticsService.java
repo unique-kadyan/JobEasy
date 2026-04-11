@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -33,6 +34,7 @@ public class AnalyticsService {
         this.executor = executor;
     }
 
+    @Transactional(readOnly = true)
     @PreAuthorize("isAuthenticated()")
     public AnalyticsResponse getSummary(String userId) {
 

@@ -22,7 +22,7 @@ import {
   Trophy,
   ArrowLeft,
   Send,
-} from "lucide-react";
+} from "@/components/ui/icons";
 
 type Phase = "list" | "setup" | "interview" | "results";
 

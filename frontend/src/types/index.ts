@@ -352,6 +352,7 @@ export interface CareerRolePath {
   estimatedYears: number;
   description: string;
   mandatorySkills: string[];
+  skillGaps: string[];
   checkpoints: CareerCheckpoint[];
 }
 

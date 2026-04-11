@@ -4,7 +4,7 @@ import { useState } from "react";
 import api from "@/lib/api";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { Zap, Mail, ArrowLeft, Send } from "lucide-react";
+import { Zap, Mail, ArrowLeft, Send } from "@/components/ui/icons";
 import Link from "next/link";
 
 export default function ForgotPasswordPage() {

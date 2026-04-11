@@ -16,6 +16,7 @@ import com.kaddy.autoapply.repository.VerificationTokenRepository;
 import com.kaddy.autoapply.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Optional;
@@ -111,6 +112,7 @@ public class AuthService {
         }
     }
 
+    @Transactional(readOnly = true)
     public UserResponse getCurrentUser(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));

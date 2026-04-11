@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class TemplateService {
         this.sanitizer = sanitizer;
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "templates", key = "#userId")
     public List<Template> getTemplatesForUser(String userId) {
         return templateRepository.findAllForUser(userId);

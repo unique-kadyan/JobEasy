@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
-import { Mail, Loader2, Eye, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Mail, Loader2, Eye, Trash2, ChevronLeft, ChevronRight } from "@/components/ui/icons";
 import { formatDate } from "@/lib/utils";
 import type { CoverLetter } from "@/types";
 import Link from "next/link";

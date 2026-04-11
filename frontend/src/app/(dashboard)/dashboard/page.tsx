@@ -30,7 +30,7 @@ import {
   Sparkles,
   ArrowRight,
   ChevronRight,
-} from "lucide-react";
+} from "@/components/ui/icons";
 
 // ─── Colour maps ──────────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Zap, Search, Mail, Send, BarChart3, ArrowRight } from "lucide-react";
+import { Zap, Search, Mail, Send, BarChart3, ArrowRight } from "@/components/ui/icons";
 import Button from "@/components/ui/Button";
 
 export default function LandingPage() {

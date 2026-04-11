@@ -28,7 +28,7 @@ import {
   FileText,
   Target,
   Clock,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import type { Job } from "@/types";
 import { AI_PROVIDERS } from "@/lib/constants";
 import { useAuthStore } from "@/store/auth-store";

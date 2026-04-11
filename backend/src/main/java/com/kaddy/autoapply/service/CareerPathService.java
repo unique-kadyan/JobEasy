@@ -41,6 +41,7 @@ public class CareerPathService {
                   "estimatedYears": <integer>,
                   "description": "<one sentence describing the role>",
                   "mandatorySkills": ["<skill1>", "<skill2>", "<skill3>"],
+                  "skillGaps": ["<skill the candidate currently lacks but needs for this role>"],
                   "checkpoints": [
                     {
                       "milestone": "<short milestone title>",
@@ -52,6 +53,7 @@ public class CareerPathService {
                 }
               }
             }
+            Rules for skillGaps: compare the candidate's current skills against mandatorySkills and list only the ones they are missing or weak in. If the candidate already has all mandatory skills, return an empty array.
             Provide 3 to 5 suggested roles. For each role include 3 to 5 checkpoints ordered by timeline.
             Base all analysis on actual market demand and realistic progression timelines.
             Return only the raw JSON object — no markdown fences, no explanatory text.""";

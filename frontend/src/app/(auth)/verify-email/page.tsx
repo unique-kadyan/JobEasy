@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import api from "@/lib/api";
 import Button from "@/components/ui/Button";
-import { Zap, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Zap, CheckCircle, XCircle, Loader2 } from "@/components/ui/icons";
 import Link from "next/link";
 
 function VerifyEmailContent() {

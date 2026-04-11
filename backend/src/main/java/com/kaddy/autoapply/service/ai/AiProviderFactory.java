@@ -27,10 +27,9 @@ public class AiProviderFactory {
                 "CEREBRAS", "MISTRAL", "NOVITA")),
 
         REASONING(List.of(
-                "CLAUDE",
-                "GROQ", "GROQ_COMPOUND", "GROQ_COMPOUND_MINI",
                 "SAMBANOVA", "MISTRAL",
-                "CEREBRAS_LLAMA_8B", "NOVITA")),
+                "CEREBRAS_LLAMA_8B", "NOVITA",
+                "GROQ", "CLAUDE")),
 
         COVER_LETTER(List.of(
                 "CLAUDE", "OPENAI",
@@ -63,7 +62,7 @@ public class AiProviderFactory {
 
     public AiProviderFactory(
             List<AiProvider> providers,
-            @Value("${app.ai.provider-order.free:GROQ,CEREBRAS_LLAMA_8B,MISTRAL,SAMBANOVA,NOVITA,CEREBRAS,TOGETHER}") String freeOrder,
+            @Value("${app.ai.provider-order.free:SAMBANOVA,MISTRAL,CEREBRAS_LLAMA_8B,NOVITA,GROQ,CEREBRAS,TOGETHER}") String freeOrder,
             @Value("${app.ai.provider-order.premium:GEMINI,OPENAI,CLAUDE}") String premiumOrder) {
         this.providerMap = new HashMap<>();
         providers.forEach(p -> providerMap.put(p.getName().toUpperCase(), p));

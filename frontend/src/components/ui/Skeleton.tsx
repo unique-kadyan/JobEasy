@@ -1,33 +1,35 @@
+import MuiSkeleton from "@mui/material/Skeleton";
 import { cn } from "@/lib/utils";
 
 interface SkeletonProps {
   className?: string;
+  variant?: "text" | "rectangular" | "rounded" | "circular";
 }
 
-export function Skeleton({ className }: SkeletonProps) {
+export function Skeleton({ className, variant = "rounded" }: SkeletonProps) {
   return (
-    <div
-      className={cn(
-        "animate-pulse rounded-md bg-gray-200",
-        className
-      )}
+    <MuiSkeleton
+      variant={variant}
+      animation="wave"
+      className={cn("bg-gray-200 dark:bg-gray-700", className)}
+      sx={{ bgcolor: "transparent" }}
     />
   );
 }
 
 export function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] p-4 space-y-3">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 space-y-2">
-          <Skeleton className="h-5 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-5/6" />
+          <MuiSkeleton variant="rounded" animation="wave" width="75%" height={20} />
+          <MuiSkeleton variant="rounded" animation="wave" width="50%" height={16} />
+          <MuiSkeleton variant="rounded" animation="wave" width="100%" height={12} />
+          <MuiSkeleton variant="rounded" animation="wave" width="83%" height={12} />
         </div>
         <div className="space-y-2 shrink-0">
-          <Skeleton className="h-8 w-24" />
-          <Skeleton className="h-8 w-24" />
+          <MuiSkeleton variant="rounded" animation="wave" width={96} height={32} />
+          <MuiSkeleton variant="rounded" animation="wave" width={96} height={32} />
         </div>
       </div>
     </div>
@@ -36,11 +38,11 @@ export function SkeletonCard() {
 
 export function SkeletonStatCard() {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 flex items-center gap-4">
-      <Skeleton className="h-10 w-10 rounded-lg" />
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] p-5 flex items-center gap-4">
+      <MuiSkeleton variant="rounded" animation="wave" width={40} height={40} />
       <div className="space-y-2">
-        <Skeleton className="h-7 w-16" />
-        <Skeleton className="h-3 w-24" />
+        <MuiSkeleton variant="rounded" animation="wave" width={64} height={28} />
+        <MuiSkeleton variant="rounded" animation="wave" width={96} height={12} />
       </div>
     </div>
   );
@@ -50,10 +52,10 @@ export function SkeletonRow() {
   return (
     <div className="flex items-center justify-between py-3 gap-4">
       <div className="flex-1 space-y-1.5">
-        <Skeleton className="h-4 w-2/3" />
-        <Skeleton className="h-3 w-1/3" />
+        <MuiSkeleton variant="rounded" animation="wave" width="66%" height={16} />
+        <MuiSkeleton variant="rounded" animation="wave" width="33%" height={12} />
       </div>
-      <Skeleton className="h-6 w-20 rounded-full" />
+      <MuiSkeleton variant="rounded" animation="wave" width={80} height={24} sx={{ borderRadius: 9999 }} />
     </div>
   );
 }

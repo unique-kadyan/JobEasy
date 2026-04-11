@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import RefundModal from "@/components/subscription/RefundModal";
-import { User, Save, CheckCircle, ReceiptText } from "lucide-react";
+import { User, Save, CheckCircle, ReceiptText } from "@/components/ui/icons";
 
 export default function SettingsPage() {
   const { user, setUser } = useAuthStore();

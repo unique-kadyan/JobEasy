@@ -8,7 +8,7 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
-import { FileText, Plus, Edit2, Trash2, Loader2 } from "lucide-react";
+import { FileText, Plus, Edit2, Trash2, Loader2 } from "@/components/ui/icons";
 import type { Template } from "@/types";
 
 export default function TemplatesPage() {

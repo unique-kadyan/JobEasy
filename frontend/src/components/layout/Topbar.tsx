@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/auth-store";
-import { LogOut, User, Search, Crown } from "lucide-react";
+import { LogOut, User, Search, Crown } from "@/components/ui/icons";
 import Button from "@/components/ui/Button";
 import CommandPalette from "@/components/ui/CommandPalette";
 import Link from "next/link";

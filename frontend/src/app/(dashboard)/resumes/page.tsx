@@ -7,7 +7,7 @@ import api from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
-import { FileText, Upload, Star, Trash2, Loader2 } from "lucide-react";
+import { FileText, Upload, Star, Trash2, Loader2 } from "@/components/ui/icons";
 import { formatDate } from "@/lib/utils";
 import type { Resume } from "@/types";
 

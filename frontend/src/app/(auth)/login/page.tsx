@@ -1,7 +1,7 @@
 "use client";
 
 import LoginForm from "@/components/auth/LoginForm";
-import { Zap, Sparkles, Send, TrendingUp } from "lucide-react";
+import { Zap, Sparkles, Send, TrendingUp } from "@/components/ui/icons";
 
 export default function LoginPage() {
   return (

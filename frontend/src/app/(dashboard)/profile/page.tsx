@@ -23,7 +23,7 @@ import {
   ExternalLink,
   Edit2,
   Star,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { formatDate } from "@/lib/utils";
 import type { Resume, User as UserType } from "@/types";
 

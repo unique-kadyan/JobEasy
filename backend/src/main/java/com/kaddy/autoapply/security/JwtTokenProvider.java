@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class JwtTokenProvider {
@@ -20,6 +21,7 @@ public class JwtTokenProvider {
     private static final String CLAIM_ROLES    = "roles";
     private static final String ISSUER         = "kaddy-autoapply";
     private static final String AUDIENCE       = "kaddy-autoapply-api";
+    private static final int    MIN_SECRET_LEN = 32;
 
     private final SecretKey key;
     private final long accessTokenExpiry;
@@ -29,6 +31,11 @@ public class JwtTokenProvider {
             @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.access-token-expiry}") long accessTokenExpiry,
             @Value("${app.jwt.refresh-token-expiry}") long refreshTokenExpiry) {
+        if (secret == null || secret.length() < MIN_SECRET_LEN) {
+            throw new IllegalStateException(
+                "JWT secret must be at least 256 bits (" + MIN_SECRET_LEN + " characters). " +
+                "Generate a secure secret with: openssl rand -base64 64");
+        }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpiry  = accessTokenExpiry;
         this.refreshTokenExpiry = refreshTokenExpiry;
@@ -51,6 +58,7 @@ public class JwtTokenProvider {
                 : List.of(Role.ROLE_USER.name());
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(userId)
                 .issuer(ISSUER)
                 .audience().add(AUDIENCE).and()
@@ -69,6 +77,10 @@ public class JwtTokenProvider {
 
     public String getEmailFromToken(String token) {
         return parseClaims(token).get(CLAIM_EMAIL, String.class);
+    }
+
+    public String getJtiFromToken(String token) {
+        return parseClaims(token).getId();
     }
 
     public List<String> getRolesFromToken(String token) {

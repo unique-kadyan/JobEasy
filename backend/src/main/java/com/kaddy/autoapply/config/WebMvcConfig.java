@@ -20,6 +20,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addPathPatterns(
                         "/api/auth/login",
                         "/api/auth/signup",
+                        "/api/auth/refresh",
                         "/api/auth/forgot-password",
                         "/api/auth/reset-password",
                         "/api/jobs/search",
@@ -28,7 +29,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/resumes/upload",
                         "/api/smart-resume/**",
                         "/api/applications/bulk-apply",
-                        "/api/career-path/**"
+                        "/api/career-path/**",
+                        "/api/interview-prep/**",
+                        "/api/subscriptions/**"
                 );
     }
 }

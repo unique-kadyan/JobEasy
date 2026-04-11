@@ -6,7 +6,8 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { SOURCE_COLORS } from "@/lib/constants";
 import { timeAgo } from "@/lib/utils";
-import { MapPin, Building2, Clock, DollarSign, ExternalLink, Bookmark, BookmarkCheck, CheckCircle2, Zap } from "lucide-react";
+import Tooltip from "@mui/material/Tooltip";
+import { MapPin, Building2, Clock, DollarSign, ExternalLink, Bookmark, BookmarkCheck, CheckCircle2, Zap } from "@/components/ui/icons";
 import type { Job } from "@/types";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -157,22 +158,23 @@ export default function JobCard({ job, onApply, applied, selected, onSelect, sho
                 <ExternalLink className="h-3 w-3" /> View
               </Button>
             </a>
-            <button
-              onClick={() => setBookmarked((v) => !v)}
-              className={cn(
-                "w-full flex items-center justify-center py-1 rounded-xl border text-xs transition-all",
-                bookmarked
-                  ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border-indigo-400"
-                  : "text-gray-400 dark:text-[#8b949e] border-black/10 dark:border-white/10 hover:text-gray-600 dark:hover:text-[#c9d1d9] hover:bg-gray-50 dark:hover:bg-[#21262d]"
-              )}
-              title={bookmarked ? "Remove bookmark" : "Save for later"}
-            >
-              {bookmarked ? (
-                <BookmarkCheck className="h-4 w-4" />
-              ) : (
-                <Bookmark className="h-4 w-4" />
-              )}
-            </button>
+            <Tooltip title={bookmarked ? "Remove bookmark" : "Save for later"}>
+              <button
+                onClick={() => setBookmarked((v) => !v)}
+                className={cn(
+                  "w-full flex items-center justify-center py-1 rounded-xl border text-xs transition-all",
+                  bookmarked
+                    ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border-indigo-400"
+                    : "text-gray-400 dark:text-[#8b949e] border-black/10 dark:border-white/10 hover:text-gray-600 dark:hover:text-[#c9d1d9] hover:bg-gray-50 dark:hover:bg-[#21262d]"
+                )}
+              >
+                {bookmarked ? (
+                  <BookmarkCheck className="h-4 w-4" />
+                ) : (
+                  <Bookmark className="h-4 w-4" />
+                )}
+              </button>
+            </Tooltip>
           </div>
         </div>
       </CardContent>

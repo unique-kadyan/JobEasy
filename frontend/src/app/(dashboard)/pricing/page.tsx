@@ -4,7 +4,7 @@ import { useState } from "react";
 import UpgradeModal from "@/components/subscription/UpgradeModal";
 import Button from "@/components/ui/Button";
 import { useAuthStore } from "@/store/auth-store";
-import { CheckCircle, Search, Crown, Zap } from "lucide-react";
+import { CheckCircle, Search, Crown, Zap } from "@/components/ui/icons";
 
 type BillingCycle = "ANNUAL" | "SEMI_ANNUAL";
 type PaidTier = "GOLD" | "PLATINUM";

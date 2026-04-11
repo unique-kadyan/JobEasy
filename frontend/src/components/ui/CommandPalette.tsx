@@ -14,7 +14,7 @@ import {
   CreditCard,
   Sparkles,
   X,
-} from "lucide-react";
+} from "@/components/ui/icons";
 
 const COMMANDS = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },

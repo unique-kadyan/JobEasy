@@ -22,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,6 +47,7 @@ public class ApplicationService {
         this.resumeRepository = resumeRepository;
     }
 
+    @Transactional
     public ApplicationResponse apply(String userId, ApplyRequest request) {
         if (applicationRepository.existsByUserIdAndJobId(userId, request.jobId())) {
             throw new BadRequestException("Already applied to this job");
@@ -69,6 +71,7 @@ public class ApplicationService {
 
     private static final int BULK_APPLY_LIMIT = 100;
 
+    @Transactional
     public List<ApplicationResponse> bulkApply(String userId, List<ApplyRequest> requests) {
         if (requests.size() > BULK_APPLY_LIMIT) {
             throw new BadRequestException("Bulk apply is limited to " + BULK_APPLY_LIMIT + " jobs per request");
@@ -86,6 +89,7 @@ public class ApplicationService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public Page<ApplicationResponse> getUserApplications(String userId, String status,
             int page, int size) {
         Page<Application> apps = (status != null && !status.isBlank())
@@ -115,6 +119,7 @@ public class ApplicationService {
         }
     }
 
+    @Transactional
     public ApplicationResponse updateStatus(String id, String userId, String newStatus) {
         Application app = findOwned(id, userId);
 
@@ -133,6 +138,7 @@ public class ApplicationService {
         return toResponse(applicationRepository.save(app), safeGetJob(app.getJobId()));
     }
 
+    @Transactional
     public ApplicationResponse updateInterviewDetails(String id, String userId,
             InterviewDetailsRequest request) {
         Application app = findOwned(id, userId);
@@ -145,6 +151,7 @@ public class ApplicationService {
         return toResponse(app, safeGetJob(app.getJobId()));
     }
 
+    @Transactional
     public ApplicationResponse updateOfferDetails(String id, String userId,
             OfferDetailsRequest request) {
         Application app = findOwned(id, userId);
@@ -157,6 +164,7 @@ public class ApplicationService {
         return toResponse(app, safeGetJob(app.getJobId()));
     }
 
+    @Transactional
     public void delete(String id, String userId) {
         findOwned(id, userId);
         applicationRepository.deleteById(id);

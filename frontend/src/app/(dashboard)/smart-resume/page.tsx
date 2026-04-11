@@ -18,7 +18,7 @@ import {
   Download,
   RefreshCw,
   ChevronRight,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import type { ResumeAnalysis, GeneratedResume, ResumeData } from "@/types";
 
 export default function SmartResumePage() {

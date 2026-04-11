@@ -1,40 +1,77 @@
 "use client";
 
-import { X } from "lucide-react";
-import { useEffect } from "react";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import IconButton from "@mui/material/IconButton";
+import { X } from "@/components/ui/icons";
+import { useThemeStore } from "@/store/theme-store";
 
 interface ModalProps {
   open: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  maxWidth?: "xs" | "sm" | "md" | "lg" | "xl";
 }
 
-export default function Modal({ open, onClose, title, children }: ModalProps) {
-  useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [open]);
-
-  if (!open) return null;
+export default function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  maxWidth = "sm",
+}: ModalProps) {
+  const { theme } = useThemeStore();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-2xl bg-white dark:bg-[#1c1c1e] shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6 mx-4">
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-base font-semibold text-[#1d1d1f] dark:text-white">
-            {title}
-          </h3>
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center w-7 h-7 rounded-full text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.08] transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth={maxWidth}
+      fullWidth
+      slotProps={{
+        backdrop: { sx: { backdropFilter: "blur(4px)", backgroundColor: "rgba(0,0,0,0.4)" } },
+        paper: {
+          sx: {
+            backgroundColor: theme === "dark" ? "#1c1c1e" : "#ffffff",
+            backgroundImage: "none",
+            boxShadow:
+              theme === "dark"
+                ? "0 20px 60px rgba(0,0,0,0.5)"
+                : "0 20px 60px rgba(0,0,0,0.15)",
+          },
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          pb: 1,
+          fontSize: "0.9375rem",
+          fontWeight: 600,
+          color: theme === "dark" ? "#ffffff" : "#1d1d1f",
+        }}
+      >
+        {title}
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{
+            color: theme === "dark" ? "#8e8e93" : "#86868b",
+            "&:hover": {
+              color: theme === "dark" ? "#ffffff" : "#1d1d1f",
+              backgroundColor: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+            },
+          }}
+        >
+          <X className="h-4 w-4" />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent sx={{ pt: "8px !important" }}>{children}</DialogContent>
+    </Dialog>
   );
 }

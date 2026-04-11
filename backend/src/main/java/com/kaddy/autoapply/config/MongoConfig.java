@@ -7,10 +7,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.mongodb.autoconfigure.MongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.concurrent.TimeUnit;
 
 @Configuration
+@EnableTransactionManagement
 public class MongoConfig {
 
     @Value("${app.mongodb.pool.max-size:100}")
@@ -33,6 +37,11 @@ public class MongoConfig {
 
     @Value("${app.mongodb.cluster.server-selection-timeout-ms:5000}")
     private int serverSelectionTimeoutMs;
+
+    @Bean
+    MongoTransactionManager mongoTransactionManager(MongoDatabaseFactory dbFactory) {
+        return new MongoTransactionManager(dbFactory);
+    }
 
     @Bean
     MongoClientSettingsBuilderCustomizer mongoPoolCustomizer() {

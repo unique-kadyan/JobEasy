@@ -12,7 +12,7 @@ import Select from "@/components/ui/Select";
 import { SOURCE_COLORS, AI_PROVIDERS } from "@/lib/constants";
 import {
   MapPin, Building2, DollarSign, ExternalLink, Clock, Loader2, CheckCircle,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { formatDate } from "@/lib/utils";
 import type { CoverLetter } from "@/types";
 

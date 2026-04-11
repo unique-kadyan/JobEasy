@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { Toaster } from "sonner";
+import Providers from "@/components/providers";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -29,8 +31,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        <Toaster position="top-right" richColors closeButton />
+        <AppRouterCacheProvider>
+          <Providers>
+            {children}
+            <Toaster position="top-right" richColors closeButton />
+          </Providers>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );

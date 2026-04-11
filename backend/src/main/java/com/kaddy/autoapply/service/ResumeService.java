@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kaddy.autoapply.config.FeatureConfig;
@@ -200,10 +201,12 @@ public class ResumeService {
         return "";
     }
 
+    @Transactional(readOnly = true)
     public Page<Resume> getUserResumes(String userId, int page, int size) {
         return resumeRepository.findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size));
     }
 
+    @Transactional(readOnly = true)
     public Resume getResume(String userId, String id) {
         Resume resume = resumeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Resume not found"));

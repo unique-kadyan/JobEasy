@@ -12,6 +12,7 @@ public record CareerPathResponse(
             int estimatedYears,
             String description,
             List<String> mandatorySkills,
+            List<String> skillGaps,
             List<Checkpoint> checkpoints
     ) {}
 

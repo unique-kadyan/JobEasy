@@ -18,7 +18,7 @@ import {
   Crown,
   TrendingUp,
   MessageSquare,
-} from "lucide-react";
+} from "@/components/ui/icons";
 
 const navItems = [
   { href: "/dashboard",     label: "Dashboard",     icon: LayoutDashboard },

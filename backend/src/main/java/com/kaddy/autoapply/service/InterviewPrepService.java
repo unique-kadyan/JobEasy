@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -195,10 +196,12 @@ public class InterviewPrepService {
     // Listing and retrieval
     // -----------------------------------------------------------------------
 
+    @Transactional(readOnly = true)
     public Page<MockInterviewSession> getSessions(String userId, int page, int size) {
         return mockInterviewRepository.findByUserIdOrderByStartedAtDesc(userId, PageRequest.of(page, size));
     }
 
+    @Transactional(readOnly = true)
     public MockInterviewSession getSession(String userId, String sessionId) {
         return findOwned(userId, sessionId);
     }

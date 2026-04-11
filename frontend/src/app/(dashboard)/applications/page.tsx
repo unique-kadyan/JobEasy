@@ -14,7 +14,7 @@ import {
   Send,
   ChevronLeft,
   ChevronRight,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import type { ApplicationStatus } from "@/types";
 import Link from "next/link";
 

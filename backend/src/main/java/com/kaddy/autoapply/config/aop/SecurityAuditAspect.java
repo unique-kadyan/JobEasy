@@ -42,50 +42,71 @@ public class SecurityAuditAspect {
 
     @AfterReturning("authOperations()")
     public void auditAuth(JoinPoint joinPoint) {
-        log.info("AUDIT: Auth operation '{}' by user '{}'",
-                joinPoint.getSignature().getName(), currentUser());
+        log.info("AUDIT: Auth '{}' user='{}' resource='{}'",
+                s(joinPoint.getSignature().getName()), s(currentUser()), s(firstArg(joinPoint)));
     }
 
     @AfterReturning("applicationOperations()")
     public void auditApplication(JoinPoint joinPoint) {
-        log.info("AUDIT: Application operation '{}' by user '{}'",
-                joinPoint.getSignature().getName(), currentUser());
+        log.info("AUDIT: Application '{}' user='{}' resource='{}'",
+                s(joinPoint.getSignature().getName()), s(currentUser()), s(firstArg(joinPoint)));
     }
 
     @AfterReturning("paymentOperations()")
     public void auditPayment(JoinPoint joinPoint) {
-        log.info("AUDIT: Payment operation '{}' by user '{}'",
-                joinPoint.getSignature().getName(), currentUser());
+        log.info("AUDIT: Payment '{}' user='{}' resource='{}'",
+                s(joinPoint.getSignature().getName()), s(currentUser()), s(firstArg(joinPoint)));
     }
 
     @AfterThrowing(pointcut = "paymentOperations()", throwing = "ex")
     public void auditPaymentFailure(JoinPoint joinPoint, Throwable ex) {
-        log.warn("AUDIT: Payment operation '{}' failed for user '{}': {}",
-                joinPoint.getSignature().getName(), currentUser(), ex.getMessage());
+        log.warn("AUDIT: Payment '{}' FAILED user='{}' resource='{}' reason='{}'",
+                s(joinPoint.getSignature().getName()), s(currentUser()),
+                s(firstArg(joinPoint)), s(ex.getMessage()));
     }
 
     @AfterReturning("subscriptionOperations()")
     public void auditSubscription(JoinPoint joinPoint) {
-        log.info("AUDIT: Subscription operation '{}' by user '{}'",
-                joinPoint.getSignature().getName(), currentUser());
+        log.info("AUDIT: Subscription '{}' user='{}' resource='{}'",
+                s(joinPoint.getSignature().getName()), s(currentUser()), s(firstArg(joinPoint)));
     }
 
     @AfterReturning("resumeOperations()")
     public void auditResume(JoinPoint joinPoint) {
-        log.info("AUDIT: Resume operation '{}' by user '{}'",
-                joinPoint.getSignature().getName(), currentUser());
+        log.info("AUDIT: Resume '{}' user='{}' resource='{}'",
+                s(joinPoint.getSignature().getName()), s(currentUser()), s(firstArg(joinPoint)));
     }
 
     @AfterReturning("profileOperations()")
     public void auditProfile(JoinPoint joinPoint) {
-        log.info("AUDIT: Profile operation '{}' by user '{}'",
-                joinPoint.getSignature().getName(), currentUser());
+        log.info("AUDIT: Profile '{}' user='{}' resource='{}'",
+                s(joinPoint.getSignature().getName()), s(currentUser()), s(firstArg(joinPoint)));
     }
 
     @AfterThrowing(pointcut = "authOperations()", throwing = "ex")
     public void auditAuthFailure(JoinPoint joinPoint, Throwable ex) {
-        log.warn("AUDIT: Auth operation '{}' failed: {}",
-                joinPoint.getSignature().getName(), ex.getMessage());
+        log.warn("AUDIT: Auth '{}' FAILED user='{}' reason='{}'",
+                s(joinPoint.getSignature().getName()), s(currentUser()), s(ex.getMessage()));
+    }
+
+    /** Extracts the first String argument (usually userId or resourceId) from the join point. */
+    private String firstArg(JoinPoint joinPoint) {
+        Object[] args = joinPoint.getArgs();
+        if (args != null) {
+            for (Object arg : args) {
+                if (arg instanceof String str && !str.isBlank()) return str;
+            }
+        }
+        return "n/a";
+    }
+
+    /** Sanitizes a value for safe logging — strips newlines and non-printable characters
+     *  to prevent log injection attacks. */
+    private String s(String value) {
+        if (value == null) return "null";
+        return value
+                .replaceAll("[\r\n\t]", "_")
+                .replaceAll("[^\\x20-\\x7E]", "?");
     }
 
     private String currentUser() {

@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
-import { Shield, CreditCard, Lock, CheckCircle } from "lucide-react";
+import { Shield, CreditCard, Lock, CheckCircle } from "@/components/ui/icons";
 import type { PaymentOrder } from "@/types";
 
 interface RazorpayInstance {

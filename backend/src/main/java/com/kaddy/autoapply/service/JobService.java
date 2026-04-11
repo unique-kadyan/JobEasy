@@ -20,6 +20,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -70,23 +71,27 @@ public class JobService {
         this.executor                = executor;
     }
 
+    @Transactional(readOnly = true)
     public PagedResponse<JobResponse> searchJobs(String query, String location,
                                                  String source, int page, int size) {
         return searchJobs(query, location, source, page, size, null, null, null, 30);
     }
 
+    @Transactional(readOnly = true)
     public PagedResponse<JobResponse> searchJobs(String query, String location,
                                                  String source, int page, int size,
                                                  String userId) {
         return searchJobs(query, location, source, page, size, userId, null, null, 30);
     }
 
+    @Transactional(readOnly = true)
     public PagedResponse<JobResponse> searchJobs(String query, String location,
                                                  String source, int page, int size,
                                                  String userId, Long minSalary, Long maxSalary) {
         return searchJobs(query, location, source, page, size, userId, minSalary, maxSalary, 30);
     }
 
+    @Transactional(readOnly = true)
     public PagedResponse<JobResponse> searchJobs(String query, String location,
                                                  String source, int page, int size,
                                                  String userId, Long minSalary, Long maxSalary,
@@ -187,6 +192,7 @@ public class JobService {
         return new PagedResponse<>(candidates, totalElements, totalPages, page, size, generatedQuery);
     }
 
+    @Transactional(readOnly = true)
     public Map<String, Long> getSourceCounts(String query, String location) {
         List<JobResponse> scraped = scraperOrchestrator.searchJobs(query, location, 0);
         return scraped.stream()
@@ -194,6 +200,7 @@ public class JobService {
                 .collect(Collectors.groupingBy(JobResponse::source, Collectors.counting()));
     }
 
+    @Transactional(readOnly = true)
     public JobResponse getJob(String id) {
         return toJobResponse(getJobEntity(id));
     }
@@ -227,6 +234,7 @@ public class JobService {
         return toJobResponse(job);
     }
 
+    @Transactional(readOnly = true)
     public JobResponse matchJob(String userId, String jobId) {
         Job job = getJobEntity(jobId);
         JobResponse base = toJobResponse(job);
@@ -236,6 +244,7 @@ public class JobService {
         return scored.isEmpty() ? base : scored.get(0);
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "jobs", key = "#id")
     public Job getJobEntity(String id) {
         return jobRepository.findById(id)

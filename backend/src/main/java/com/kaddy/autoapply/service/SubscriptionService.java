@@ -16,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.crypto.Mac;
@@ -70,6 +71,7 @@ public class SubscriptionService {
     public record SubscriptionStatus(
             SubscriptionTier tier, boolean isActive) {}
 
+    @Transactional(readOnly = true)
     public SubscriptionStatus getStatus(String userId) {
         User user = findUser(userId);
         SubscriptionTier tier = user.getSubscriptionTier();
@@ -149,6 +151,7 @@ public class SubscriptionService {
         return true;
     }
 
+    @Transactional(readOnly = true)
     public FeatureUsageService.RefundEligibility getRefundEligibility(String userId) {
         return featureUsageService.getRefundEligibility(userId);
     }

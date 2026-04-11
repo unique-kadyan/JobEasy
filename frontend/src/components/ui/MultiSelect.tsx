@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { X, ChevronDown, Search } from "lucide-react";
+import { X, ChevronDown, Search } from "@/components/ui/icons";
 
 interface MultiSelectProps {
   label?: string;

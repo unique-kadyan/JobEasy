@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
 import type { RefundEligibility } from "@/types";
-import { X, AlertCircle, CheckCircle, Clock, Loader2, ReceiptText } from "lucide-react";
+import { X, AlertCircle, CheckCircle, Clock, Loader2, ReceiptText } from "@/components/ui/icons";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 

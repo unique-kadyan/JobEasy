@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/auth-store";
 import { useThemeStore } from "@/store/theme-store";
 import { cn } from "@/lib/utils";
+import Tooltip from "@mui/material/Tooltip";
 import {
   Zap,
   Crown,
@@ -28,7 +29,7 @@ import {
   TrendingUp,
   Send,
   MessageSquare,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import type { ServerStatus } from "@/hooks/useKeepAlive";
 
 const NAV_LINKS = [
@@ -427,16 +428,18 @@ function ServerDot({ status }: { status: ServerStatus }) {
   };
   const { color, label } = cfg[status];
   return (
-    <div className="relative flex items-center" title={label}>
-      <span className={cn("h-2 w-2 rounded-full", color)} />
-      {status !== "up" && (
-        <span
-          className={cn(
-            "absolute inline-flex h-2 w-2 rounded-full opacity-75 animate-ping",
-            color,
-          )}
-        />
-      )}
-    </div>
+    <Tooltip title={label}>
+      <div className="relative flex items-center cursor-default">
+        <span className={cn("h-2 w-2 rounded-full", color)} />
+        {status !== "up" && (
+          <span
+            className={cn(
+              "absolute inline-flex h-2 w-2 rounded-full opacity-75 animate-ping",
+              color,
+            )}
+          />
+        )}
+      </div>
+    </Tooltip>
   );
 }

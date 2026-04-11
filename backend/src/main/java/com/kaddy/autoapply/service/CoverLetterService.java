@@ -28,6 +28,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -162,11 +163,13 @@ public class CoverLetterService {
         Optional.ofNullable(user.getSummary()).ifPresent(v -> prompt.append("Summary: ").append(v).append("\n"));
         Optional.ofNullable(user.getSkills()).ifPresent(v -> prompt.append("Skills: ").append(v).append("\n"));
         prompt.append("\nJOB DETAILS:\nTitle: ")
-                .append(Optional.ofNullable(job.getTitle()).orElse("")).append("\n");
+                .append(sanitizeForPrompt(job.getTitle(), 120)).append("\n");
         prompt.append("Company: ")
-                .append(Optional.ofNullable(job.getCompany()).orElse("")).append("\n");
-        Optional.ofNullable(job.getLocation()).ifPresent(v -> prompt.append("Location: ").append(v).append("\n"));
-        Optional.ofNullable(job.getDescription()).ifPresent(v -> prompt.append("Description: ").append(v).append("\n"));
+                .append(sanitizeForPrompt(job.getCompany(), 120)).append("\n");
+        Optional.ofNullable(job.getLocation()).ifPresent(v ->
+                prompt.append("Location: ").append(sanitizeForPrompt(v, 120)).append("\n"));
+        Optional.ofNullable(job.getDescription()).ifPresent(v ->
+                prompt.append("Description: ").append(sanitizeForPrompt(v, 4000)).append("\n"));
 
         Optional<Template> templateOpt = Optional.ofNullable(request.templateId())
                 .flatMap(templateRepository::findById);
@@ -191,6 +194,7 @@ public class CoverLetterService {
         return toResponse(cl, job);
     }
 
+    @Transactional(readOnly = true)
     @PreAuthorize("isAuthenticated()")
     public Page<CoverLetterResponse> getUserCoverLetters(String userId, int page, int size) {
         return coverLetterRepository
@@ -199,6 +203,7 @@ public class CoverLetterService {
                         .flatMap(id -> Optional.ofNullable(safeGetJob(id))).orElse(null)));
     }
 
+    @Transactional(readOnly = true)
     @PreAuthorize("isAuthenticated()")
     public CoverLetterResponse getCoverLetter(String userId, String id) {
         CoverLetter cl = findOwned(userId, id);
@@ -219,6 +224,22 @@ public class CoverLetterService {
     public void delete(String userId, String id) {
         findOwned(userId, id);
         coverLetterRepository.deleteById(id);
+    }
+
+    /**
+     * Strips prompt-injection payloads from externally-sourced strings (job titles,
+     * descriptions, company names) before embedding them in AI prompts.
+     * Removes role-switch keywords, control characters, and code-fence sequences,
+     * then truncates to the given character limit.
+     */
+    private String sanitizeForPrompt(String value, int maxChars) {
+        if (value == null) return "";
+        return value
+                .replaceAll("(?i)\\b(SYSTEM|HUMAN|ASSISTANT|USER)\\s*:", "")
+                .replaceAll("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]", "")
+                .replace("```", "'''")
+                .stripLeading()
+                .substring(0, Math.min(value.length(), maxChars));
     }
 
     private CoverLetter findOwned(String userId, String id) {

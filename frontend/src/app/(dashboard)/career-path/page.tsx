@@ -18,7 +18,9 @@ import {
   ChevronUp,
   BookOpen,
   Target,
-} from "lucide-react";
+  AlertCircle,
+  CheckCheck,
+} from "@/components/ui/icons";
 import type { CareerPathAnalysis, CareerRolePath } from "@/types";
 
 const LEVEL_LABELS: Record<string, string> = {
@@ -124,21 +126,49 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
 
         {expanded && (
           <div className="mt-4 space-y-4 border-t border-black/[0.06] dark:border-white/[0.08] pt-4">
-            {path.mandatorySkills.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-2">
-                  Mandatory Skills
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {path.mandatorySkills.map((skill) => (
-                    <Badge
-                      key={skill}
-                      className="bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400"
-                    >
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
+            {(path.mandatorySkills.length > 0 || (path.skillGaps && path.skillGaps.length > 0)) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {path.mandatorySkills.length > 0 && (
+                  <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 p-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <CheckCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                        Required Skills
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {path.mandatorySkills.map((skill) => (
+                        <Badge
+                          key={skill}
+                          className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+                        >
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {path.skillGaps && path.skillGaps.length > 0 && (
+                  <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 p-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                      <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                        Skills to Develop
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {path.skillGaps.map((skill) => (
+                        <Badge
+                          key={skill}
+                          className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
+                        >
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

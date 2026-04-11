@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Modal from "@/components/ui/Modal";
-import { Crown, Zap, CheckCircle, Lock, AlertCircle } from "lucide-react";
+import { Crown, Zap, CheckCircle, Lock, AlertCircle } from "@/components/ui/icons";
 import { useAuthStore } from "@/store/auth-store";
 
 interface RazorpayInstance {

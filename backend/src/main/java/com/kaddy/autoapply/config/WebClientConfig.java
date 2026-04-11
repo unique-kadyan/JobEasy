@@ -41,14 +41,14 @@ public class WebClientConfig {
     @Bean
     WebClient.Builder webClientBuilder() {
         HttpClient httpClient = buildHttpClient(readTimeoutS)
-                .protocol(HttpProtocol.HTTP11);
+                .protocol(HttpProtocol.HTTP11)
+                .compress(true);
 
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .defaultHeader(HttpHeaders.USER_AGENT, BROWSER_UA)
                 .defaultHeader(HttpHeaders.ACCEPT, "application/json, text/html, */*")
                 .defaultHeader(HttpHeaders.ACCEPT_LANGUAGE, "en-US,en;q=0.9")
-                .defaultHeader(HttpHeaders.ACCEPT_ENCODING, "gzip, deflate, br")
                 .defaultHeader("Connection", "keep-alive")
                 .defaultHeader("Cache-Control", "no-cache");
     }
