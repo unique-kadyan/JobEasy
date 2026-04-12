@@ -33,7 +33,8 @@ import type { ServerStatus } from "@/hooks/useKeepAlive";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/jobs", label: "Jobs", icon: Search },
+  { href: "/search", label: "Search", icon: Search },
+  { href: "/jobs", label: "Jobs", icon: Briefcase },
   { href: "/applications", label: "Applications", icon: Send },
   { href: "/smart-resume", label: "Smart Resume", icon: Sparkles },
   { href: "/cover-letters", label: "Cover Letters", icon: Mail },
@@ -82,6 +83,7 @@ export default function Navbar({
       .join("")
       .slice(0, 2)
       .toUpperCase() ?? "?";
+  const avatarUrl = storeUser?.avatarUrl ?? user?.avatarUrl;
 
   useEffect(() => {
     function handleOutsideClick(e: MouseEvent) {
@@ -172,8 +174,15 @@ export default function Navbar({
             }}
             className="flex items-center gap-2 rounded-xl px-2 py-1 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors"
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-600 text-white text-xs font-semibold shrink-0">
-              {initials}
+            <div className="h-7 w-7 rounded-xl overflow-hidden shrink-0 ring-1 ring-black/10 dark:ring-white/10">
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt={user?.name ?? "Avatar"} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-indigo-600 text-white text-xs font-semibold">
+                  {initials}
+                </div>
+              )}
             </div>
             <span className="text-sm font-medium text-[#1d1d1f] dark:text-[#c9d1d9] hidden lg:block max-w-[120px] truncate">
               {user?.name}
@@ -190,8 +199,15 @@ export default function Navbar({
             <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1c1c1e] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)]">
               <div className="px-4 py-3 border-b border-black/[0.06] dark:border-white/[0.08] bg-[#f9f9f9] dark:bg-[#0d1117]/50">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white text-sm font-semibold shrink-0">
-                    {initials}
+                  <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 ring-1 ring-black/10 dark:ring-white/10">
+                    {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={avatarUrl} alt={user?.name ?? "Avatar"} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-indigo-600 text-white text-sm font-semibold">
+                        {initials}
+                      </div>
+                    )}
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-[#1d1d1f] dark:text-white truncate">

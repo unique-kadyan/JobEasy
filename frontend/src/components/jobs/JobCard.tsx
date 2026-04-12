@@ -7,7 +7,10 @@ import Button from "@/components/ui/Button";
 import { SOURCE_COLORS } from "@/lib/constants";
 import { timeAgo, toCamelCase } from "@/lib/utils";
 import Tooltip from "@mui/material/Tooltip";
-import { MapPin, Building2, Clock, DollarSign, ExternalLink, Bookmark, BookmarkCheck, CheckCircle2, Zap } from "@/components/ui/icons";
+import {
+  MapPin, Building2, Clock, DollarSign, ExternalLink,
+  CheckCircle2, Zap, XCircle, FileText,
+} from "@/components/ui/icons";
 import type { Job } from "@/types";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -16,14 +19,21 @@ interface JobCardProps {
   job: Job;
   onApply?: (job: Job) => void;
   applied?: boolean;
+  skipped?: boolean;
   selected?: boolean;
   onSelect?: (job: Job) => void;
   showCheckbox?: boolean;
 }
 
-export default function JobCard({ job, onApply, applied, selected, onSelect, showCheckbox }: JobCardProps) {
-  const [bookmarked, setBookmarked] = useState(false);
-
+export default function JobCard({
+  job,
+  onApply,
+  applied,
+  skipped,
+  selected,
+  onSelect,
+  showCheckbox,
+}: JobCardProps) {
   const score = job.matchScore;
   const scoreStyle =
     score != null
@@ -45,7 +55,7 @@ export default function JobCard({ job, onApply, applied, selected, onSelect, sho
   return (
     <Card
       className={cn(
-        applied && "opacity-75",
+        (applied || skipped) && "opacity-75",
         selected && "ring-2 ring-indigo-500"
       )}
     >
@@ -77,10 +87,17 @@ export default function JobCard({ job, onApply, applied, selected, onSelect, sho
               >
                 {job.title}
               </Link>
-              <Badge className={SOURCE_COLORS[job.source] ?? "bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 border-gray-400"}>{job.source}</Badge>
+              <Badge className={SOURCE_COLORS[job.source] ?? "bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 border-gray-400"}>
+                {job.source}
+              </Badge>
               {applied && (
                 <span className="flex items-center gap-1 text-[10px] font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-400 px-2 py-0.5 rounded-full">
                   <CheckCircle2 className="h-3 w-3" /> Applied
+                </span>
+              )}
+              {skipped && !applied && (
+                <span className="flex items-center gap-1 text-[10px] font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-400 px-2 py-0.5 rounded-full">
+                  <XCircle className="h-3 w-3" /> Skipped
                 </span>
               )}
               {score != null && (
@@ -144,37 +161,24 @@ export default function JobCard({ job, onApply, applied, selected, onSelect, sho
           </div>
 
           <div className="flex flex-col gap-2 shrink-0">
-            <Button
-              size="sm"
-              onClick={() => onApply?.(job)}
-              disabled={applied}
-              className={applied ? "opacity-50 cursor-not-allowed" : ""}
-            >
-              <Zap className="h-3.5 w-3.5" />
-              {applied ? "Applied" : "Quick Apply"}
-            </Button>
+            <Tooltip title={applied ? "Already applied" : skipped ? "Already skipped" : "Quick apply with generated cover letter"}>
+              <span>
+                <Button
+                  size="sm"
+                  onClick={() => onApply?.(job)}
+                  disabled={applied || skipped}
+                  className={applied || skipped ? "opacity-50 cursor-not-allowed" : ""}
+                >
+                  <Zap className="h-3.5 w-3.5" />
+                  {applied ? "Applied" : "Quick Apply"}
+                </Button>
+              </span>
+            </Tooltip>
             <a href={job.url} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm" className="w-full">
                 <ExternalLink className="h-3 w-3" /> Apply
               </Button>
             </a>
-            <Tooltip title={bookmarked ? "Remove bookmark" : "Save for later"}>
-              <button
-                onClick={() => setBookmarked((v) => !v)}
-                className={cn(
-                  "w-full flex items-center justify-center py-1 rounded-xl border text-xs transition-all",
-                  bookmarked
-                    ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border-indigo-400"
-                    : "text-gray-400 dark:text-[#8b949e] border-black/10 dark:border-white/10 hover:text-gray-600 dark:hover:text-[#c9d1d9] hover:bg-gray-50 dark:hover:bg-[#21262d]"
-                )}
-              >
-                {bookmarked ? (
-                  <BookmarkCheck className="h-4 w-4" />
-                ) : (
-                  <Bookmark className="h-4 w-4" />
-                )}
-              </button>
-            </Tooltip>
           </div>
         </div>
       </CardContent>

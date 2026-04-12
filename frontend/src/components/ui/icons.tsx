@@ -83,6 +83,9 @@ import VideocamOffIcon from "@mui/icons-material/VideocamOff";
 import KeyboardIcon from "@mui/icons-material/Keyboard";
 import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import InboxRoundedIcon from "@mui/icons-material/InboxRounded";
+import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 
 // ─── Icon wrapper ───────────────────────────────────────────────────────────
 type WrappedIconProps = Omit<SvgIconProps, "fontSize"> & {
@@ -179,6 +182,9 @@ export const VideoOff      = wrap(VideocamOffIcon);
 export const Keyboard      = wrap(KeyboardIcon);
 export const ListChecks    = wrap(PlaylistAddCheckIcon);
 export const AlertTriangle = wrap(WarningAmberIcon);
+export const Copy          = wrap(ContentCopyRoundedIcon);
+export const Inbox         = wrap(InboxRoundedIcon);
+export const RotateCcw     = wrap(RotateLeftIcon);
 
 // ─── LucideIcon type compat — used as prop type in EmptyState etc. ─────────
 export type LucideIcon = React.ComponentType<WrappedIconProps>;

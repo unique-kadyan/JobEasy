@@ -1,27 +1,28 @@
 package com.kaddy.autoapply.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kaddy.autoapply.model.ResumeProfile;
-import com.kaddy.autoapply.model.ResumeProfile.ContactTag;
-import com.kaddy.autoapply.model.ResumeProfile.CertificationTag;
-import com.kaddy.autoapply.model.ResumeProfile.EducationTag;
-import com.kaddy.autoapply.model.ResumeProfile.ExperienceTag;
-import com.kaddy.autoapply.model.ResumeProfile.PreferencesTag;
-import com.kaddy.autoapply.model.ResumeProfile.ProjectTag;
-import com.kaddy.autoapply.model.User;
-import com.kaddy.autoapply.repository.ResumeProfileRepository;
-import com.kaddy.autoapply.repository.UserRepository;
-import com.kaddy.autoapply.service.ai.AiTextGenerator;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kaddy.autoapply.model.ResumeProfile;
+import com.kaddy.autoapply.model.ResumeProfile.AchievementTag;
+import com.kaddy.autoapply.model.ResumeProfile.CertificationTag;
+import com.kaddy.autoapply.model.ResumeProfile.ContactTag;
+import com.kaddy.autoapply.model.ResumeProfile.EducationTag;
+import com.kaddy.autoapply.model.ResumeProfile.ExperienceTag;
+import com.kaddy.autoapply.model.ResumeProfile.PreferencesTag;
+import com.kaddy.autoapply.model.ResumeProfile.ProjectTag;
+import com.kaddy.autoapply.repository.ResumeProfileRepository;
+import com.kaddy.autoapply.repository.UserRepository;
+import com.kaddy.autoapply.service.ai.AiTextGenerator;
 
 @Service
 @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -29,8 +30,7 @@ public class ResumeProfileService {
 
     private static final Logger log = LoggerFactory.getLogger(ResumeProfileService.class);
 
-    private static final String SYSTEM_PROMPT =
-            "You are a resume parser. Extract structured data from resume text and return ONLY valid JSON — no markdown, no explanation, no code fences.";
+    private static final String SYSTEM_PROMPT = "You are a resume parser. Extract structured data from resume text and return ONLY valid JSON — no markdown, no explanation, no code fences.";
 
     private static final String USER_PROMPT_TEMPLATE = """
             Parse this resume into JSON with exactly this schema:
@@ -45,6 +45,7 @@ public class ResumeProfileService {
               "skills": { "category_name": [string] },
               "projects": [ { "name": string, "description": string, "technologies": [string], "url": string|null } ],
               "certifications": [ { "name": string, "issuer": string, "date": string } ],
+              "achievements": [ { "title": string, "description": string|null, "date": string|null } ],
               "targetRoles": [string],
               "preferences": { "noticePeriod": string|null, "salaryMin": number|null, "salaryMax": number|null, "currency": string|null, "workType": string|null }
             }
@@ -59,13 +60,13 @@ public class ResumeProfileService {
     private final ObjectMapper objectMapper;
 
     public ResumeProfileService(ResumeProfileRepository repo,
-                                UserRepository userRepository,
-                                AiTextGenerator aiGenerator,
-                                ObjectMapper objectMapper) {
-        this.repo           = repo;
+            UserRepository userRepository,
+            AiTextGenerator aiGenerator,
+            ObjectMapper objectMapper) {
+        this.repo = repo;
         this.userRepository = userRepository;
-        this.aiGenerator    = aiGenerator;
-        this.objectMapper   = objectMapper;
+        this.aiGenerator = aiGenerator;
+        this.objectMapper = objectMapper;
     }
 
     public ResumeProfile getOrCreate(String userId) {
@@ -87,7 +88,8 @@ public class ResumeProfileService {
             String truncated = resumeText.substring(0, Math.min(resumeText.length(), 12000));
             String json = aiGenerator.generate(SYSTEM_PROMPT, String.format(USER_PROMPT_TEMPLATE, truncated));
             String cleaned = stripCodeFences(json);
-            Map<String, Object> parsed = objectMapper.readValue(cleaned, new TypeReference<>() {});
+            Map<String, Object> parsed = objectMapper.readValue(cleaned, new TypeReference<>() {
+            });
             applyParsedTags(profile, parsed);
         } catch (Exception e) {
             log.warn("AI resume parse failed for user {}: {} — falling back to basic parse", userId, e.getMessage());
@@ -179,11 +181,16 @@ public class ResumeProfileService {
                 str(c, "name"), str(c, "email"), str(c, "phone"),
                 str(c, "location"), str(c, "linkedin"), str(c, "github"), str(c, "portfolio"))));
 
-        if (m.containsKey("headline"))          p.setHeadline(str(m, "headline"));
-        if (m.containsKey("summary"))           p.setSummary(str(m, "summary"));
-        if (m.containsKey("yearsOfExperience")) p.setYearsOfExperience(toDouble(m.get("yearsOfExperience")));
-        if (m.containsKey("experienceLevel"))   p.setExperienceLevel(str(m, "experienceLevel"));
-        if (m.containsKey("targetRoles"))       p.setTargetRoles(toStringList(m.get("targetRoles")));
+        if (m.containsKey("headline"))
+            p.setHeadline(str(m, "headline"));
+        if (m.containsKey("summary"))
+            p.setSummary(str(m, "summary"));
+        if (m.containsKey("yearsOfExperience"))
+            p.setYearsOfExperience(toDouble(m.get("yearsOfExperience")));
+        if (m.containsKey("experienceLevel"))
+            p.setExperienceLevel(str(m, "experienceLevel"));
+        if (m.containsKey("targetRoles"))
+            p.setTargetRoles(toStringList(m.get("targetRoles")));
 
         if (m.containsKey("experience")) {
             List<Map<String, Object>> list = (List<Map<String, Object>>) m.get("experience");
@@ -228,6 +235,14 @@ public class ResumeProfileService {
             }
         }
 
+        if (m.containsKey("achievements")) {
+            List<Map<String, Object>> list = (List<Map<String, Object>>) m.get("achievements");
+            if (list != null) {
+                p.setAchievements(list.stream().map(e -> new AchievementTag(
+                        str(e, "title"), str(e, "description"), str(e, "date"))).toList());
+            }
+        }
+
         safeMap(m, "preferences").ifPresent(pref -> p.setPreferences(new PreferencesTag(
                 str(pref, "noticePeriod"),
                 toLong(pref.get("salaryMin")), toLong(pref.get("salaryMax")),
@@ -246,19 +261,21 @@ public class ResumeProfileService {
     }
 
     private String stripCodeFences(String s) {
-        if (s == null) return "{}";
+        if (s == null)
+            return "{}";
         s = s.strip();
         if (s.startsWith("```")) {
             s = s.replaceFirst("```[a-zA-Z]*", "").replaceAll("```$", "").strip();
         }
         int start = s.indexOf('{');
-        int end   = s.lastIndexOf('}');
+        int end = s.lastIndexOf('}');
         return (start >= 0 && end > start) ? s.substring(start, end + 1) : "{}";
     }
 
     @SuppressWarnings("unchecked")
     private java.util.Optional<Map<String, Object>> safeMap(Map<String, Object> m, String key) {
-        if (m == null) return java.util.Optional.empty();
+        if (m == null)
+            return java.util.Optional.empty();
         Object v = m.get(key);
         if (v instanceof Map<?, ?> raw) {
             return java.util.Optional.of((Map<String, Object>) raw);
@@ -273,18 +290,26 @@ public class ResumeProfileService {
 
     @SuppressWarnings("unchecked")
     private List<String> toStringList(Object v) {
-        if (v instanceof List<?> list) return list.stream().filter(i -> i instanceof String).map(Object::toString).toList();
+        if (v instanceof List<?> list)
+            return list.stream().filter(i -> i instanceof String).map(Object::toString).toList();
         return List.of();
     }
 
     private Double toDouble(Object v) {
-        if (v instanceof Number n) return n.doubleValue();
-        if (v instanceof String s) { try { return Double.parseDouble(s); } catch (NumberFormatException ignored) {} }
+        if (v instanceof Number n)
+            return n.doubleValue();
+        if (v instanceof String s) {
+            try {
+                return Double.parseDouble(s);
+            } catch (NumberFormatException ignored) {
+            }
+        }
         return null;
     }
 
     private Long toLong(Object v) {
-        if (v instanceof Number n) return n.longValue();
+        if (v instanceof Number n)
+            return n.longValue();
         return null;
     }
 }

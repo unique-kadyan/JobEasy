@@ -1,9 +1,5 @@
 package com.kaddy.autoapply.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kaddy.autoapply.service.ai.AiProviderFactory;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Year;
@@ -24,6 +20,10 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kaddy.autoapply.service.ai.AiProviderFactory;
 
 @Service
 public class ResumeParserService {
@@ -76,8 +76,10 @@ public class ResumeParserService {
                 "languages": []
               },
               "projects": [{"name":"","description":"","technologies":[],"url":null}],
-              "certifications": [{"name":"","issuer":"","date":""}]
+              "certifications": [{"name":"","issuer":"","date":""}],
+              "achievements": [{"title":"","description":"","date":null}]
             }
+            Note on achievements: capture standalone awards, honors, hackathon wins, publications, patents, scholarships, leadership recognition, or any notable accomplishment that is NOT part of a regular job bullet point. Leave the array empty if none found.
             """;
 
     private final AiProviderFactory aiProviderFactory;
@@ -197,15 +199,18 @@ public class ResumeParserService {
             if (raw.startsWith("```")) {
                 int start = raw.indexOf('{');
                 int end = raw.lastIndexOf('}');
-                if (start >= 0 && end > start) raw = raw.substring(start, end + 1);
+                if (start >= 0 && end > start)
+                    raw = raw.substring(start, end + 1);
             }
-            Map<String, Object> aiData = objectMapper.readValue(raw, new TypeReference<>() {});
+            Map<String, Object> aiData = objectMapper.readValue(raw, new TypeReference<>() {
+            });
             // Supplement AI skills with keyword-set matching — catches acronyms AI may miss
             String lower = text.toLowerCase();
             Map<String, List<String>> localSkills = categorizeSkills(lower);
             if (aiData.get("skills") instanceof Map<?, ?> aiSkills) {
                 Map<String, Object> merged = new LinkedHashMap<>(
-                        objectMapper.convertValue(aiSkills, new TypeReference<>() {}));
+                        objectMapper.convertValue(aiSkills, new TypeReference<>() {
+                        }));
                 for (Map.Entry<String, List<String>> entry : localSkills.entrySet()) {
                     merged.merge(entry.getKey(), entry.getValue(), (existing, local) -> {
                         if (existing instanceof List<?> eList) {
@@ -231,7 +236,10 @@ public class ResumeParserService {
         }
     }
 
-    /** Regex-based fallback parser — used only when all AI providers are unavailable. */
+    /**
+     * Regex-based fallback parser — used only when all AI providers are
+     * unavailable.
+     */
     private Map<String, Object> parseWithRegex(String text) {
         Map<String, Object> data = new LinkedHashMap<>();
         String lower = text.toLowerCase();
@@ -245,6 +253,7 @@ public class ResumeParserService {
         data.put("skills", categorizeSkills(lower));
         data.put("projects", new ArrayList<>());
         data.put("certifications", new ArrayList<>());
+        data.put("achievements", new ArrayList<>());
 
         return data;
     }
@@ -317,19 +326,20 @@ public class ResumeParserService {
         return Optional.empty();
     }
 
-    // All known section header keywords — used as stop-boundaries when extracting a section.
+    // All known section header keywords — used as stop-boundaries when extracting a
+    // section.
     private static final Pattern ANY_SECTION_HEADER = Pattern.compile(
             "^(?:experience|work\\s*experience|employment(?:\\s*history)?|professional\\s*experience|" +
-            "work\\s*history|education|academic\\s*(?:background|history|qualifications)|qualifications|" +
-            "skills?|technical\\s*skills|core\\s*competencies|key\\s*skills|" +
-            "projects?|personal\\s*projects|open\\s*source|notable\\s*projects|" +
-            "certifications?|certificates?|licen[sc]es?|" +
-            "summary|objective|professional\\s*(?:summary|profile)|about\\s*me|profile|" +
-            "awards?|honors?|achievements?|accomplishments?|" +
-            "publications?|research|" +
-            "volunteering?|extracurricular|activities|" +
-            "languages?|" +
-            "references?|contact(?:\\s*info(?:rmation)?)?|interests?|hobbies?):?$",
+                    "work\\s*history|education|academic\\s*(?:background|history|qualifications)|qualifications|" +
+                    "skills?|technical\\s*skills|core\\s*competencies|key\\s*skills|" +
+                    "projects?|personal\\s*projects|open\\s*source|notable\\s*projects|" +
+                    "certifications?|certificates?|licen[sc]es?|" +
+                    "summary|objective|professional\\s*(?:summary|profile)|about\\s*me|profile|" +
+                    "awards?|honors?|achievements?|accomplishments?|" +
+                    "publications?|research|" +
+                    "volunteering?|extracurricular|activities|" +
+                    "languages?|" +
+                    "references?|contact(?:\\s*info(?:rmation)?)?|interests?|hobbies?):?$",
             Pattern.CASE_INSENSITIVE);
 
     /**
@@ -349,7 +359,8 @@ public class ResumeParserService {
         for (String line : lines) {
             String trimmed = line.trim();
             if (targetHeader.matcher(trimmed).matches()) {
-                if (inSection) break; // same header seen again — stop
+                if (inSection)
+                    break; // same header seen again — stop
                 inSection = true;
                 continue;
             }
@@ -390,27 +401,29 @@ public class ResumeParserService {
 
     private static final Pattern DATE_RANGE_INLINE = Pattern.compile(
             "\\b((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.?\\s*)?(20\\d{2}|19\\d{2})" +
-            "\\s*(?:–|—|-|to)\\s*" +
-            "((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.?\\s*)?(20\\d{2}|19\\d{2}|present|current|now)\\b",
+                    "\\s*(?:–|—|-|to)\\s*" +
+                    "((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.?\\s*)?(20\\d{2}|19\\d{2}|present|current|now)\\b",
             Pattern.CASE_INSENSITIVE);
 
     private static final Pattern BULLET_START = Pattern.compile("^[•\\-\\*▪▸►→✓◦◆]\\s*");
 
     private static final Pattern DEGREE_PAT = Pattern.compile(
             "(?i)\\b(bachelor|master|phd|ph\\.d|doctorate|associate|diploma|" +
-            "b\\.?s\\.?|m\\.?s\\.?|b\\.?a\\.?|m\\.?a\\.?|mba|b\\.?tech|m\\.?tech|" +
-            "b\\.?e\\.?|m\\.?e\\.?|b\\.?sc\\.?|m\\.?sc\\.?|bcom|mcom|b\\.?com|m\\.?com)\\b");
+                    "b\\.?s\\.?|m\\.?s\\.?|b\\.?a\\.?|m\\.?a\\.?|mba|b\\.?tech|m\\.?tech|" +
+                    "b\\.?e\\.?|m\\.?e\\.?|b\\.?sc\\.?|m\\.?sc\\.?|bcom|mcom|b\\.?com|m\\.?com)\\b");
 
     private static final Pattern SINGLE_YEAR = Pattern.compile("\\b(20\\d{2}|19\\d{2})\\b");
 
     private List<Map<String, Object>> extractExperience(String text) {
         String section = extractSectionText(text,
                 "experience|work experience|employment|professional experience|work history|employment history");
-        if (section == null || section.isBlank()) return new ArrayList<>();
+        if (section == null || section.isBlank())
+            return new ArrayList<>();
         List<Map<String, Object>> entries = new ArrayList<>();
         for (String[] block : splitBlocks(section)) {
             Map<String, Object> entry = parseExperienceBlock(block);
-            if (entry != null) entries.add(entry);
+            if (entry != null)
+                entries.add(entry);
         }
         return entries;
     }
@@ -418,16 +431,20 @@ public class ResumeParserService {
     private List<Map<String, Object>> extractEducation(String text) {
         String section = extractSectionText(text,
                 "education|academic background|academic history|qualifications|academic qualifications");
-        if (section == null || section.isBlank()) return new ArrayList<>();
+        if (section == null || section.isBlank())
+            return new ArrayList<>();
         List<Map<String, Object>> entries = new ArrayList<>();
         for (String[] block : splitBlocks(section)) {
             Map<String, Object> entry = parseEducationBlock(block);
-            if (entry != null) entries.add(entry);
+            if (entry != null)
+                entries.add(entry);
         }
         return entries;
     }
 
-    /** Split section text into blocks of non-blank lines separated by blank lines. */
+    /**
+     * Split section text into blocks of non-blank lines separated by blank lines.
+     */
     private List<String[]> splitBlocks(String section) {
         String[] paragraphs = section.split("\\r?\\n(\\s*\\r?\\n)+");
         List<String[]> blocks = new ArrayList<>();
@@ -436,14 +453,15 @@ public class ResumeParserService {
                     .map(String::trim)
                     .filter(l -> !l.isBlank())
                     .toArray(String[]::new);
-            if (lines.length > 0) blocks.add(lines);
+            if (lines.length > 0)
+                blocks.add(lines);
         }
         return blocks;
     }
 
     private Map<String, Object> parseExperienceBlock(String[] lines) {
         String headerLine = null;
-        String dateLine   = null;
+        String dateLine = null;
         List<String> bullets = new ArrayList<>();
 
         for (String line : lines) {
@@ -453,7 +471,8 @@ public class ResumeParserService {
                     Matcher dm = DATE_RANGE_INLINE.matcher(line);
                     dm.find();
                     String before = line.substring(0, dm.start()).trim();
-                    if (!before.isEmpty() && headerLine == null) headerLine = before;
+                    if (!before.isEmpty() && headerLine == null)
+                        headerLine = before;
                     dateLine = line;
                 }
             } else if (BULLET_START.matcher(line).find()) {
@@ -463,7 +482,8 @@ public class ResumeParserService {
             }
         }
 
-        if (headerLine == null && dateLine == null) return null;
+        if (headerLine == null && dateLine == null)
+            return null;
 
         Map<String, Object> entry = new LinkedHashMap<>();
 
@@ -475,7 +495,8 @@ public class ResumeParserService {
                 // Might be "Company, Location" — split off location
                 String[] sub = parts[1].split(",\\s*", 2);
                 entry.put("company", sub[0].trim());
-                if (sub.length > 1) entry.put("location", sub[1].trim());
+                if (sub.length > 1)
+                    entry.put("location", sub[1].trim());
             }
         }
 
@@ -484,27 +505,30 @@ public class ResumeParserService {
             Matcher m = DATE_RANGE_INLINE.matcher(dateLine);
             if (m.find()) {
                 String startMonth = m.group(1) != null ? m.group(1).trim() + " " : "";
-                String startYear  = m.group(2);
-                String endMonth   = m.group(3) != null ? m.group(3).trim() + " " : "";
-                String endStr     = m.group(4);
-                boolean current   = endStr.toLowerCase().matches("present|current|now");
+                String startYear = m.group(2);
+                String endMonth = m.group(3) != null ? m.group(3).trim() + " " : "";
+                String endStr = m.group(4);
+                boolean current = endStr.toLowerCase().matches("present|current|now");
                 entry.put("startDate", (startMonth + startYear).trim());
-                entry.put("endDate",   current ? "Present" : (endMonth + endStr).trim());
-                entry.put("current",   current);
+                entry.put("endDate", current ? "Present" : (endMonth + endStr).trim());
+                entry.put("current", current);
             }
         }
 
-        if (!bullets.isEmpty()) entry.put("bullets", bullets);
+        if (!bullets.isEmpty())
+            entry.put("bullets", bullets);
         return (entry.containsKey("title") || entry.containsKey("company")) ? entry : null;
     }
 
     private Map<String, Object> parseEducationBlock(String[] lines) {
-        if (lines.length == 0) return null;
+        if (lines.length == 0)
+            return null;
         Map<String, Object> entry = new LinkedHashMap<>();
 
         for (String rawLine : lines) {
             String line = rawLine.trim();
-            if (line.isEmpty()) continue;
+            if (line.isEmpty())
+                continue;
 
             // --- GPA: extract and strip from line, then keep processing remainder ---
             Matcher gpaM = Pattern.compile(
@@ -512,7 +536,8 @@ public class ResumeParserService {
             if (gpaM.find() && !entry.containsKey("gpa")) {
                 entry.put("gpa", gpaM.group(1).trim());
                 line = gpaM.replaceAll("").replaceAll("[,|·\\-]+\\s*$", "").trim();
-                if (line.isEmpty()) continue;
+                if (line.isEmpty())
+                    continue;
             }
 
             // --- Date range: extract end year as graduationDate, strip from line ---
@@ -521,15 +546,18 @@ public class ResumeParserService {
                 String endStr = rangeM.group(4);
                 entry.put("graduationDate",
                         endStr.toLowerCase().matches("present|current|now")
-                                ? rangeM.group(2) : endStr);
+                                ? rangeM.group(2)
+                                : endStr);
                 line = rangeM.replaceAll("").replaceAll("\\s*[–\\-|·,]+\\s*$|^\\s*[–\\-|·,]+\\s*", "").trim();
-                if (line.isEmpty()) continue;
+                if (line.isEmpty())
+                    continue;
             } else if (!entry.containsKey("graduationDate")) {
                 Matcher ym = SINGLE_YEAR.matcher(line);
                 if (ym.find()) {
                     entry.put("graduationDate", ym.group(1));
                     line = ym.replaceAll("").replaceAll("\\s*[–\\-|·,]+\\s*$|^\\s*[–\\-|·,]+\\s*", "").trim();
-                    if (line.isEmpty()) continue;
+                    if (line.isEmpty())
+                        continue;
                 }
             }
 
@@ -541,7 +569,8 @@ public class ResumeParserService {
                 if (inSplit.length > 1) {
                     // Field may have trailing location like "Computer Science, Delhi" — strip it
                     String field = inSplit[1].split("[,|·]")[0].trim();
-                    if (!field.isEmpty()) entry.put("field", field);
+                    if (!field.isEmpty())
+                        entry.put("field", field);
                 }
                 continue;
             }

@@ -98,6 +98,7 @@ interface LayoutBar {
   startMs: number;
   endMs: number;
   row: number;
+  originalIndex: number;
 }
 
 function assignRows(items: Omit<LayoutBar, "row">[]): LayoutBar[] {
@@ -119,7 +120,7 @@ type ExpEntry = {
   endDate?: string; current?: boolean; location?: string; bullets?: string[];
 };
 
-function ExperienceTimeline({ experiences }: { experiences: ExpEntry[] }) {
+function ExperienceTimeline({ experiences, onBarClick }: { experiences: ExpEntry[]; onBarClick?: (originalIndex: number) => void }) {
   const { theme } = useThemeStore();
   const isDark = theme === "dark";
   const containerRef = useRef<HTMLDivElement>(null);
@@ -139,7 +140,7 @@ function ExperienceTimeline({ experiences }: { experiences: ExpEntry[] }) {
 
   const bars = useMemo(() => {
     const raw = experiences
-      .map((exp) => {
+      .map((exp, i) => {
         const start = parseResumeDate(exp.startDate);
         if (!start) return null;
         const end = exp.current ? new Date() : (parseResumeDate(exp.endDate) ?? new Date());
@@ -153,6 +154,7 @@ function ExperienceTimeline({ experiences }: { experiences: ExpEntry[] }) {
           bullets: exp.bullets,
           startMs: start.getTime(),
           endMs: end.getTime(),
+          originalIndex: i,
         };
       })
       .filter(Boolean) as Omit<LayoutBar, "row">[];
@@ -263,12 +265,13 @@ function ExperienceTimeline({ experiences }: { experiences: ExpEntry[] }) {
                   paddingLeft: 8,
                   paddingRight: 4,
                   overflow: "hidden",
-                  cursor: "default",
+                  cursor: "pointer",
                   minWidth: 6,
                   zIndex: 5,
-                  transition: "opacity 0.15s ease",
+                  transition: "opacity 0.15s ease, transform 0.1s ease",
                 }}
-                className="hover:opacity-75"
+                className="hover:opacity-80 active:scale-95"
+                onClick={() => onBarClick?.(bar.originalIndex)}
               >
                 {width > 5 && (
                   <span
@@ -296,7 +299,7 @@ function ExperienceTimeline({ experiences }: { experiences: ExpEntry[] }) {
 
 // ─── ExperienceCard ────────────────────────────────────────────────────────────
 
-function ExperienceCard({ exp }: { exp: ExpEntry }) {
+function ExperienceCard({ exp, highlighted }: { exp: ExpEntry; highlighted?: boolean }) {
   const { theme } = useThemeStore();
   const isDark = theme === "dark";
   const colors = companyColors(exp.company ?? "", isDark);
@@ -311,7 +314,11 @@ function ExperienceCard({ exp }: { exp: ExpEntry }) {
 
   return (
     <div
-      className="rounded-xl border border-black/[0.06] dark:border-white/[0.07] bg-white dark:bg-[#1c1c1e] overflow-hidden"
+      className={`rounded-xl border bg-white dark:bg-[#1c1c1e] overflow-hidden transition-shadow duration-300 ${
+        highlighted
+          ? "border-indigo-500 dark:border-indigo-400 shadow-[0_0_0_3px_rgba(99,102,241,0.25)]"
+          : "border-black/[0.06] dark:border-white/[0.07]"
+      }`}
       style={{ borderLeftWidth: 3, borderLeftColor: colors.border }}
     >
       <div className="px-4 pt-3.5 pb-2.5">
@@ -437,12 +444,35 @@ interface GitHubRepo {
 
 // ─── ProfilePage ──────────────────────────────────────────────────────────────
 
+function compressImage(file: File, maxPx = 256): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      const size = Math.min(img.width, img.height, maxPx);
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { reject(new Error("Canvas not supported")); return; }
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+      URL.revokeObjectURL(objectUrl);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Image load failed")); };
+    img.src = objectUrl;
+  });
+}
+
 export default function ProfilePage() {
   const { user, setUser } = useAuthStore();
   const { theme } = useThemeStore();
   const isDark = theme === "dark";
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     name: user?.name ?? "",
@@ -481,6 +511,31 @@ export default function ProfilePage() {
     },
     onError: () => toast.error("Failed to save profile. Please try again."),
   });
+
+  const avatarMutation = useMutation({
+    mutationFn: async (avatar: string) => {
+      const res = await api.post("/users/avatar", { avatar });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      setUser(data);
+      toast.success("Profile picture updated!");
+    },
+    onError: () => toast.error("Failed to upload picture. Try a smaller image."),
+  });
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please select an image file."); return; }
+    try {
+      const base64 = await compressImage(file);
+      avatarMutation.mutate(base64);
+    } catch {
+      toast.error("Could not process the image.");
+    }
+    e.target.value = "";
+  };
 
   const handleSave = () => {
     const payload: Record<string, unknown> = { ...form };
@@ -567,7 +622,17 @@ export default function ProfilePage() {
 
   const experiences = primaryResume?.parsedData?.experience ?? [];
   const certifications = primaryResume?.parsedData?.certifications ?? [];
+  const achievements = primaryResume?.parsedData?.achievements ?? [];
   const projects = primaryResume?.parsedData?.projects ?? [];
+
+  const [highlightedExp, setHighlightedExp] = useState<number | null>(null);
+
+  const handleBarClick = (originalIndex: number) => {
+    setHighlightedExp(originalIndex);
+    const el = document.getElementById(`exp-card-${originalIndex}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    setTimeout(() => setHighlightedExp(null), 1800);
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -611,6 +676,52 @@ export default function ProfilePage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Avatar upload */}
+          <div className="flex items-center gap-4 pb-2 border-b border-black/[0.05] dark:border-white/[0.05]">
+            <div className="relative group">
+              <button
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarMutation.isPending}
+                className="relative flex h-16 w-16 items-center justify-center rounded-2xl overflow-hidden ring-2 ring-black/[0.06] dark:ring-white/[0.08] hover:ring-indigo-500 dark:hover:ring-indigo-400 transition-all focus:outline-none"
+              >
+                {user?.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={user.avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-indigo-600 text-white text-xl font-bold">
+                    {(user?.name ?? "?").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {avatarMutation.isPending ? (
+                    <svg className="h-5 w-5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                  ) : (
+                    <Edit2 className="h-4 w-4 text-white" />
+                  )}
+                </div>
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">{user?.name}</p>
+              <p className="text-xs text-[#86868b] dark:text-[#8e8e93]">{user?.title || "Add a job title"}</p>
+              <button
+                onClick={() => avatarInputRef.current?.click()}
+                className="mt-1 text-[10px] font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                {user?.avatarUrl ? "Change photo" : "Upload photo"}
+              </button>
+            </div>
+          </div>
           {editing ? (
             <>
               <div className="grid grid-cols-2 gap-4">
@@ -881,6 +992,9 @@ export default function ProfilePage() {
                   {(primaryResume.parsedData?.certifications?.length ?? 0) > 0 && (
                     <span className="text-[10px] font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-full px-2 py-0.5">✓ Certifications</span>
                   )}
+                  {(primaryResume.parsedData?.achievements?.length ?? 0) > 0 && (
+                    <span className="text-[10px] font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-full px-2 py-0.5">✓ Achievements</span>
+                  )}
                   {primaryResume.parsedData?.wordCount && (
                     <span className="text-[10px] font-bold text-gray-500 dark:text-[#8b949e]">{primaryResume.parsedData.wordCount} words</span>
                   )}
@@ -913,14 +1027,16 @@ export default function ProfilePage() {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#86868b] dark:text-[#8e8e93] mb-3">
                   Career Timeline
                 </p>
-                <ExperienceTimeline experiences={experiences} />
+                <ExperienceTimeline experiences={experiences} onBarClick={handleBarClick} />
               </div>
 
               {/* Cards grid */}
               <div className="border-t border-black/[0.06] dark:border-white/[0.07] pt-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {experiences.map((exp, i) => (
-                    <ExperienceCard key={i} exp={exp} />
+                    <div key={i} id={`exp-card-${i}`}>
+                      <ExperienceCard exp={exp} highlighted={highlightedExp === i} />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -986,29 +1102,34 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Certifications & Achievements */}
+      {/* Certifications */}
       {certifications.length > 0 && (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-amber-500" />
-              <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
-                Certifications & Achievements
-              </h2>
+              <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Certifications</h2>
               <span className="text-xs text-[#86868b] dark:text-[#8e8e93] bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full px-2 py-0.5">
                 {certifications.length}
               </span>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-3">
               {certifications.map((cert, i) => (
                 <div
                   key={i}
-                  className="flex items-start gap-3 p-3.5 rounded-xl border border-black/[0.06] dark:border-white/[0.07] bg-[#f9f9fb] dark:bg-[#1c1c1e]"
+                  className="flex items-center gap-4 p-4 rounded-2xl border border-black/[0.06] dark:border-white/[0.07] bg-white dark:bg-[#1c1c1e]"
+                  style={{ borderLeftWidth: 3, borderLeftColor: `hsl(${(i * 67 + 38) % 360}, 60%, ${isDark ? '42%' : '60%'})` }}
                 >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20">
-                    <Trophy className="h-4 w-4 text-amber-500" />
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                    style={{ background: `hsl(${(i * 67 + 38) % 360}, 60%, ${isDark ? '18%' : '93%'})` }}
+                  >
+                    <Trophy
+                      className="h-5 w-5"
+                      style={{ color: `hsl(${(i * 67 + 38) % 360}, 60%, ${isDark ? '62%' : '42%'})` }}
+                    />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white leading-snug">
@@ -1019,12 +1140,63 @@ export default function ProfilePage() {
                         {cert.issuer}
                       </p>
                     )}
-                    {cert.date && (
-                      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 bg-[#f2f2f7] dark:bg-[#2c2c2e] inline-block rounded-full px-2 py-0.5">
-                        {cert.date}
+                  </div>
+                  {cert.date && (
+                    <span className="shrink-0 text-[10px] font-semibold text-gray-500 dark:text-gray-400 bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full px-2.5 py-1">
+                      {cert.date}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Achievements */}
+      {achievements.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <StarRoundedIcon sx={{ fontSize: 20, color: '#f59e0b' }} />
+              <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Achievements</h2>
+              <span className="text-xs text-[#86868b] dark:text-[#8e8e93] bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full px-2 py-0.5">
+                {achievements.length}
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {achievements.map((ach, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-4 p-4 rounded-2xl border border-black/[0.06] dark:border-white/[0.07] bg-white dark:bg-[#1c1c1e]"
+                  style={{ borderLeftWidth: 3, borderLeftColor: `hsl(${(i * 97 + 280) % 360}, 60%, ${isDark ? '42%' : '60%'})` }}
+                >
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl mt-0.5"
+                    style={{ background: `hsl(${(i * 97 + 280) % 360}, 60%, ${isDark ? '18%' : '93%'})` }}
+                  >
+                    <StarRoundedIcon
+                      sx={{ fontSize: 20 }}
+                      style={{ color: `hsl(${(i * 97 + 280) % 360}, 60%, ${isDark ? '62%' : '42%'})` }}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white leading-snug">
+                      {ach.title}
+                    </p>
+                    {ach.description && (
+                      <p className="text-xs text-[#86868b] dark:text-[#8e8e93] mt-1 leading-relaxed">
+                        {ach.description}
                       </p>
                     )}
                   </div>
+                  {ach.date && (
+                    <span className="shrink-0 text-[10px] font-semibold text-gray-500 dark:text-gray-400 bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full px-2.5 py-1">
+                      {ach.date}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>

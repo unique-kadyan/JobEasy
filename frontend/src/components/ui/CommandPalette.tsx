@@ -20,14 +20,20 @@ import {
   User,
   CreditCard,
   Sparkles,
+  Briefcase,
+  TrendingUp,
+  MessageSquare,
 } from "@/components/ui/icons";
 
 const COMMANDS = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-  { label: "Find Jobs", icon: Search, href: "/jobs" },
+  { label: "Search Jobs", icon: Search, href: "/search" },
+  { label: "My Jobs", icon: Briefcase, href: "/jobs" },
   { label: "Applications", icon: Send, href: "/applications" },
   { label: "Smart Resume", icon: Sparkles, href: "/smart-resume" },
   { label: "Cover Letters", icon: Mail, href: "/cover-letters" },
+  { label: "Career Path", icon: TrendingUp, href: "/career-path" },
+  { label: "Interview Prep", icon: MessageSquare, href: "/interview-prep" },
   { label: "Profile", icon: User, href: "/profile" },
   { label: "Upgrade Plan", icon: CreditCard, href: "/pricing" },
   { label: "Settings", icon: Settings, href: "/settings" },

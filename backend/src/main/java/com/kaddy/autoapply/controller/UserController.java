@@ -35,6 +35,13 @@ public class UserController {
         return ResponseEntity.ok(userService.updateProfile((String) auth.getPrincipal(), request));
     }
 
+    @PostMapping("/avatar")
+    public ResponseEntity<UserResponse> updateAvatar(Authentication auth,
+                                                      @RequestBody Map<String, String> body) {
+        String avatar = body.get("avatar");
+        return ResponseEntity.ok(userService.updateAvatar((String) auth.getPrincipal(), avatar));
+    }
+
     @PostMapping("/github-import")
     public ResponseEntity<UserResponse> importFromGitHub(Authentication auth,
                                                           @RequestBody Map<String, String> body) {

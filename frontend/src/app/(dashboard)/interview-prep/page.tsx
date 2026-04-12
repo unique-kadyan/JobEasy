@@ -296,12 +296,23 @@ export default function InterviewPrepPage() {
       <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%", py: 4, px: 2 }}>
         {/* Header */}
         <Stack alignItems="center" spacing={1} mb={5}>
-          <Typography variant="h4" fontWeight={800} letterSpacing={-0.5} textAlign="center">
+          <Typography
+            variant="h4"
+            fontWeight={800}
+            letterSpacing={-0.5}
+            textAlign="center"
+            sx={{ color: "text.primary" }}
+          >
             Choose Your Practice Mode
           </Typography>
-          <Typography variant="body1" color="text.secondary" textAlign="center" maxWidth={480}>
-            Select how you want to simulate your interview. All modes use AI-generated questions
-            across technical, behavioral, and role-specific categories.
+          <Typography
+            variant="body1"
+            textAlign="center"
+            maxWidth={480}
+            sx={{ color: "text.primary", opacity: 0.72 }}
+          >
+            Real questions. Real pressure. Real confidence — pick your arena and
+            walk into your next interview like you already own the room.
           </Typography>
         </Stack>
 

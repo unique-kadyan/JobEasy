@@ -72,6 +72,12 @@ export interface ResumeCertification {
   date: string;
 }
 
+export interface ResumeAchievement {
+  title: string;
+  description?: string;
+  date?: string;
+}
+
 export interface ResumeData {
   name?: string;
   contact?: ResumeContact;
@@ -81,6 +87,7 @@ export interface ResumeData {
   skills?: ResumeSkills;
   projects?: ResumeProject[];
   certifications?: ResumeCertification[];
+  achievements?: ResumeAchievement[];
 }
 
 export interface GeneratedResume {
@@ -279,6 +286,11 @@ export interface Resume {
       issuer?: string;
       date?: string;
     }>;
+    achievements?: Array<{
+      title: string;
+      description?: string;
+      date?: string;
+    }>;
     wordCount?: number;
     experienceYears?: number;
   };
@@ -327,6 +339,12 @@ export interface ResumeProfileCertification {
   date: string;
 }
 
+export interface ResumeProfileAchievement {
+  title: string;
+  description?: string;
+  date?: string;
+}
+
 export interface ResumeProfilePreferences {
   noticePeriod?: string;
   salaryMin?: number;
@@ -349,6 +367,7 @@ export interface ResumeProfile {
   skills?: Record<string, string[]>;
   projects?: ResumeProfileProject[];
   certifications?: ResumeProfileCertification[];
+  achievements?: ResumeProfileAchievement[];
   targetRoles?: string[];
   preferences?: ResumeProfilePreferences;
   customTags?: Record<string, unknown>;

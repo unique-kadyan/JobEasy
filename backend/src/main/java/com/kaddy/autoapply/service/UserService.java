@@ -27,10 +27,10 @@ public class UserService {
     private final GitHubImportService gitHubImportService;
 
     public UserService(UserRepository userRepository,
-                       InputSanitizer sanitizer,
-                       GitHubImportService gitHubImportService) {
-        this.userRepository      = userRepository;
-        this.sanitizer           = sanitizer;
+            InputSanitizer sanitizer,
+            GitHubImportService gitHubImportService) {
+        this.userRepository = userRepository;
+        this.sanitizer = sanitizer;
         this.gitHubImportService = gitHubImportService;
     }
 
@@ -41,20 +41,49 @@ public class UserService {
     }
 
     @CacheEvict(value = "users", key = "#userId")
+    public UserResponse updateAvatar(String userId, String avatarBase64) {
+        if (avatarBase64 == null || !avatarBase64.startsWith("data:image/")) {
+            throw new com.kaddy.autoapply.exception.BadRequestException("Invalid image format");
+        }
+        // Rough size check: base64 data portion should not exceed ~2MB
+        int commaIdx = avatarBase64.indexOf(',');
+        String data = commaIdx >= 0 ? avatarBase64.substring(commaIdx + 1) : avatarBase64;
+        if (data.length() > 2_800_000) {
+            throw new com.kaddy.autoapply.exception.BadRequestException("Image too large — maximum 2 MB");
+        }
+        User user = findUser(userId);
+        user.setAvatarUrl(avatarBase64);
+        user.setUpdatedAt(LocalDateTime.now());
+        return AuthService.toUserResponse(userRepository.save(user));
+    }
+
+    @CacheEvict(value = "users", key = "#userId")
     public UserResponse updateProfile(String userId, ProfileUpdateRequest request) {
         User user = findUser(userId);
-        if (request.name() != null)           user.setName(sanitizer.sanitize(request.name()));
-        if (request.phone() != null)          user.setPhone(sanitizer.sanitize(request.phone()));
-        if (request.location() != null)       user.setLocation(sanitizer.sanitize(request.location()));
-        if (request.title() != null)          user.setTitle(sanitizer.sanitize(request.title()));
-        if (request.summary() != null)        user.setSummary(sanitizer.sanitizeAllowFormatting(request.summary()));
-        if (request.skills() != null)         user.setSkills(request.skills());
-        if (request.preferences() != null)    user.setPreferences(request.preferences());
-        if (request.linkedinUrl() != null)    user.setLinkedinUrl(sanitizer.sanitize(request.linkedinUrl()));
-        if (request.githubUrl() != null)      user.setGithubUrl(sanitizer.sanitize(request.githubUrl()));
-        if (request.portfolioUrl() != null)   user.setPortfolioUrl(sanitizer.sanitize(request.portfolioUrl()));
-        if (request.experienceYears() != null) user.setExperienceYears(request.experienceYears());
-        if (request.targetRoles() != null)    user.setTargetRoles(request.targetRoles());
+        if (request.name() != null)
+            user.setName(sanitizer.sanitize(request.name()));
+        if (request.phone() != null)
+            user.setPhone(sanitizer.sanitize(request.phone()));
+        if (request.location() != null)
+            user.setLocation(sanitizer.sanitize(request.location()));
+        if (request.title() != null)
+            user.setTitle(sanitizer.sanitize(request.title()));
+        if (request.summary() != null)
+            user.setSummary(sanitizer.sanitizeAllowFormatting(request.summary()));
+        if (request.skills() != null)
+            user.setSkills(request.skills());
+        if (request.preferences() != null)
+            user.setPreferences(request.preferences());
+        if (request.linkedinUrl() != null)
+            user.setLinkedinUrl(sanitizer.sanitize(request.linkedinUrl()));
+        if (request.githubUrl() != null)
+            user.setGithubUrl(sanitizer.sanitize(request.githubUrl()));
+        if (request.portfolioUrl() != null)
+            user.setPortfolioUrl(sanitizer.sanitize(request.portfolioUrl()));
+        if (request.experienceYears() != null)
+            user.setExperienceYears(request.experienceYears());
+        if (request.targetRoles() != null)
+            user.setTargetRoles(request.targetRoles());
         user.setUpdatedAt(LocalDateTime.now());
         return AuthService.toUserResponse(userRepository.save(user));
     }
@@ -68,7 +97,8 @@ public class UserService {
     public UserResponse addSkipKeyword(String userId, String keyword) {
         User user = findUser(userId);
         String clean = sanitizer.sanitize(keyword).toLowerCase().strip();
-        if (clean.isBlank()) return AuthService.toUserResponse(user);
+        if (clean.isBlank())
+            return AuthService.toUserResponse(user);
 
         List<String> keywords = new ArrayList<>(
                 user.getSkipKeywords() != null ? user.getSkipKeywords() : List.of());
@@ -84,7 +114,8 @@ public class UserService {
     @CacheEvict(value = "users", key = "#userId")
     public UserResponse removeSkipKeyword(String userId, String keyword) {
         User user = findUser(userId);
-        if (user.getSkipKeywords() == null) return AuthService.toUserResponse(user);
+        if (user.getSkipKeywords() == null)
+            return AuthService.toUserResponse(user);
 
         List<String> keywords = new ArrayList<>(user.getSkipKeywords());
         keywords.remove(keyword.toLowerCase().strip());
@@ -97,7 +128,8 @@ public class UserService {
     public UserResponse addNotInterestedReason(String userId, String reason) {
         User user = findUser(userId);
         String clean = sanitizer.sanitize(reason).strip();
-        if (clean.isBlank()) return AuthService.toUserResponse(user);
+        if (clean.isBlank())
+            return AuthService.toUserResponse(user);
 
         List<String> reasons = new ArrayList<>(
                 user.getNotInterestedReasons() != null ? user.getNotInterestedReasons() : List.of());
@@ -113,7 +145,8 @@ public class UserService {
     @CacheEvict(value = "users", key = "#userId")
     public UserResponse removeNotInterestedReason(String userId, String reason) {
         User user = findUser(userId);
-        if (user.getNotInterestedReasons() == null) return AuthService.toUserResponse(user);
+        if (user.getNotInterestedReasons() == null)
+            return AuthService.toUserResponse(user);
 
         List<String> reasons = new ArrayList<>(user.getNotInterestedReasons());
         reasons.remove(reason.strip());
@@ -130,13 +163,15 @@ public class UserService {
 
     @CacheEvict(value = "users", key = "#userId")
     public AutoSearchScheduleResponse updateAutoSearchSchedule(String userId,
-                                                                AutoSearchScheduleRequest request) {
+            AutoSearchScheduleRequest request) {
         User user = findUser(userId);
-        if (request.enabled() != null) user.setAutoSearchEnabled(request.enabled());
+        if (request.enabled() != null)
+            user.setAutoSearchEnabled(request.enabled());
         if (request.intervalHours() != null) {
             user.setAutoSearchIntervalHours(Integer.parseInt(request.intervalHours()));
         }
-        if (request.searchParams() != null) user.setAutoSearchParams(request.searchParams());
+        if (request.searchParams() != null)
+            user.setAutoSearchParams(request.searchParams());
         user.setUpdatedAt(LocalDateTime.now());
         User saved = userRepository.save(user);
         return toScheduleResponse(saved);
@@ -170,7 +205,6 @@ public class UserService {
                 user.getAutoSearchIntervalHours(),
                 user.getAutoSearchParams(),
                 user.getAutoSearchLastRun(),
-                nextRun
-        );
+                nextRun);
     }
 }
