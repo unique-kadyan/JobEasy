@@ -20,6 +20,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -33,8 +35,10 @@ public class ResumeGeneratorService {
 
     private static final Logger log = LoggerFactory.getLogger(ResumeGeneratorService.class);
 
-    private static final int MAX_REFINEMENT_PASSES = 3;
-    private static final int TARGET_ATS_SCORE = 95;
+    private static final int MAX_REFINEMENT_PASSES = 5;
+    private static final int TARGET_ATS_SCORE = 100;
+    /** Max wall-clock time the entire generate() call (including refinement) may take. */
+    private static final Duration MAX_GENERATION_TIME = Duration.ofSeconds(120);
 
     private static final String ATS_SCORING_SYSTEM = """
             You are a strict ATS (Applicant Tracking System) evaluation engine.
@@ -58,19 +62,30 @@ public class ResumeGeneratorService {
             """;
 
     private static final String REFINEMENT_SYSTEM = """
-            You are an expert ATS resume optimizer. You will receive a resume JSON and a scored list of specific
-            weaknesses from an ATS engine. Fix EVERY weakness to push the resume to 100/100.
+            You are an expert ATS resume optimizer targeting a perfect 100/100 score.
+            You will receive a resume JSON and the specific weaknesses an ATS engine identified.
+            Fix EVERY weakness. The final resume MUST satisfy every criterion below completely.
 
-            Rules — apply ALL without exception:
-            - Every experience bullet MUST start with a strong action verb (Led, Built, Designed, Reduced, Improved…)
-            - Every experience bullet MUST contain at least one quantified metric (%, $, x, number of users/systems/team members)
-            - If a metric cannot be derived from context, use a plausible range (e.g. "~30%" or "3-5x")
-            - Summary MUST be 2-4 sentences: state years of experience, specialization, and 3+ industry keywords
-            - Skills MUST cover all categories: technical, frameworks, databases, cloud, tools, soft, languages — fill missing ones from context
-            - Contact MUST include email, phone, location, linkedin, github — keep existing values, do NOT blank them out
-            - Education MUST have institution, degree, field, graduationDate — infer from context if partial
-            - Preserve ALL existing factual data — only enhance phrasing and add quantification
-            - Return ONLY valid JSON in the exact same structure as the input resume JSON, no markdown, no explanation
+            Scoring rubric — every point must be earned:
+            1. contactInfo (10 pts): email, phone, location, linkedin, github — ALL 5 present and non-blank (2 pts each).
+            2. summary (15 pts): exactly 2–4 sentences. MUST state years of experience as a number, state the specialization,
+               and include ≥5 distinct industry keywords (e.g. "distributed systems", "microservices", "99.9% uptime").
+            3. experience (30 pts): each role needs ≥4 bullets. EVERY bullet MUST:
+               a) Start with a strong action verb (Led, Built, Designed, Reduced, Implemented, Scaled, Delivered…)
+               b) Contain at least one concrete metric (%, $, multiplier like 3x, count of users/systems/requests,
+                  or a time measure). If the exact number is unknown, use a plausible estimate ("~40%", "3–5x").
+               No bullet scores points without BOTH (a) and (b). Cap at 30 pts total across all roles.
+            4. skills (20 pts): all 7 categories non-empty — technical, frameworks, databases, cloud, tools, soft, languages.
+               3 pts per non-empty category, cap 20. Extract every technology from the resume context; do NOT leave any empty.
+            5. education (10 pts): institution + degree + field + graduationDate all present and non-blank.
+               Infer missing fields from context if needed.
+            6. formatting (5 pts): contact, summary, experience, skills, education all present in the JSON.
+            7. keywords (10 pts): ≥8 distinct industry keywords (word length >4) spread across summary + experience bullets.
+
+            Additional rules:
+            - Preserve ALL existing factual data — only enhance phrasing and add quantification.
+            - Do NOT blank out or remove any existing contact field.
+            - Return ONLY valid JSON in the exact same structure as the input. No markdown, no explanation.
             """;
 
     private static final String SYSTEM_PROMPT = """
@@ -126,25 +141,36 @@ public class ResumeGeneratorService {
         log.info("Resume generated for user {} using {}", userId, result.providerName());
 
         Map<String, Object> resumeData = parseResumeJson(result.content());
+        // Fix #2: fail fast on unparseable AI output instead of saving corrupt data
+        if (Boolean.TRUE.equals(resumeData.get("parseError"))) {
+            log.error("AI resume generation returned unparseable JSON for user {} — aborting", userId);
+            throw new BadRequestException("AI returned malformed JSON. Please retry.");
+        }
 
-        // Multi-pass refinement loop: keep improving until score >= TARGET_ATS_SCORE or max passes reached
+        // Multi-pass refinement loop: keep improving until score >= TARGET_ATS_SCORE or budget exhausted
+        Instant deadline = Instant.now().plus(MAX_GENERATION_TIME);
         AtsEvaluation evaluation = scoreResume(resumeData);
         log.info("Initial ATS score {} for user {}", evaluation.score(), userId);
 
         int pass = 0;
         while (evaluation.score() < TARGET_ATS_SCORE
                 && !evaluation.weaknesses().isEmpty()
-                && pass < MAX_REFINEMENT_PASSES) {
+                && pass < MAX_REFINEMENT_PASSES
+                && Instant.now().isBefore(deadline)) {
             pass++;
             log.info("ATS score {} (pass {}/{}) for user {} — refining weaknesses: {}",
                     evaluation.score(), pass, MAX_REFINEMENT_PASSES, userId, evaluation.weaknesses());
-            Map<String, Object> refined = refineResume(resumeData, evaluation.weaknesses());
+            Map<String, Object> refined = refineResume(resumeData, evaluation.weaknesses(), pass);
             if (refined.isEmpty()) {
-                log.warn("Refinement pass {} returned empty — keeping best result so far", pass);
+                log.warn("Refinement pass {} returned empty — keeping best result so far (score={})", pass, evaluation.score());
                 break;
             }
             resumeData = refined;
             evaluation = scoreResume(resumeData);
+        }
+        if (!Instant.now().isBefore(deadline)) {
+            log.warn("Generation time budget exhausted for user {} after {} passes — returning best result (score={})",
+                    userId, pass, evaluation.score());
         }
 
         int atsScore = evaluation.score();
@@ -255,13 +281,18 @@ public class ResumeGeneratorService {
                     raw = raw.substring(start, end + 1);
             }
             Map<String, Object> scored = objectMapper.readValue(raw, new TypeReference<>() {});
-            int score = computeLocalScore(resumeData); // use structural score as baseline
-            if (scored.get("score") instanceof Number n)
-                score = Math.min(100, Math.max(0, n.intValue()));
+            // AI score is authoritative — local scorer is used ONLY when the AI response
+            // omits the "score" field entirely (parse succeeded but field missing).
+            int score = (scored.get("score") instanceof Number n)
+                    ? Math.min(100, Math.max(0, n.intValue()))
+                    : computeLocalScore(resumeData);
             @SuppressWarnings("unchecked")
-            List<String> weaknesses = scored.get("weaknesses") instanceof List<?> w
-                    ? (List<String>) w
-                    : List.of();
+            List<String> aiWeaknesses = scored.get("weaknesses") instanceof List<?> w
+                    ? (List<String>) w : List.of();
+            // If the AI returned no weaknesses but score is below target, fall back to
+            // structural weakness detection so the refinement loop has something to work with.
+            List<String> weaknesses = aiWeaknesses.isEmpty() && score < TARGET_ATS_SCORE
+                    ? deriveWeaknesses(resumeData, score) : aiWeaknesses;
             return new AtsEvaluation(score, weaknesses);
         } catch (Exception e) {
             log.warn("ATS scoring AI call failed — falling back to structural score: {}", e.getMessage());
@@ -273,18 +304,16 @@ public class ResumeGeneratorService {
     }
 
     /**
-     * Deterministic structural ATS score computed directly from the resume JSON.
-     * Mirrors the same criteria as ATS_SCORING_SYSTEM — no hardcoded values.
+     * Structural ATS score used ONLY as fallback when all AI providers are unavailable.
+     * Checks field presence and counts — content quality is assessed by the AI scorer.
      *
-     * <pre>
-     * contactInfo  0-10  (email/phone/location/linkedin/github = 2 pts each)
-     * summary      0-15  (2-4 sentences with keywords = 15, 1 sentence = 8, absent = 0)
-     * experience   0-30  (per role: +6 if has 4+ bullets, +3 if any bullets, cap 30)
-     * skills       0-20  (3 pts per non-empty category, cap 20)
-     * education    0-10  (all 4 fields present = 10, partial = 5, absent = 0)
-     * formatting   0-5   (5 if all core sections present)
-     * keywords     0-10  (distinct word count in summary+bullets proxy)
-     * </pre>
+     * contactInfo  0-10  (2 pts per present field)
+     * summary      0-15  (15 if 2+ sentences, 8 if 1 sentence)
+     * experience   0-30  (6 per role with ≥4 bullets, 3 with any bullets; cap 30)
+     * skills       0-20  (3 per non-empty category; cap 20)
+     * education    0-10  (10 all 4 fields, 5 partial)
+     * formatting   0-5   (1 per core section present)
+     * keywords     0-10  (distinct word count proxy)
      */
     private int computeLocalScore(Map<String, Object> data) {
         if (data == null) return 0;
@@ -303,13 +332,12 @@ public class ResumeGeneratorService {
             score += sentences >= 2 ? 15 : 8;
         }
 
-        // 3. experience (0-30)
+        // 3. experience (0-30): bullet count only — quality is for AI to judge
         if (data.get("experience") instanceof List<?> exp) {
             int expScore = 0;
             for (Object roleObj : exp) {
-                if (roleObj instanceof Map<?, ?> role) {
-                    boolean hasBullets = role.get("bullets") instanceof List<?> b && b.size() >= 4;
-                    expScore += hasBullets ? 6 : (role.get("bullets") instanceof List<?> b2 && !b2.isEmpty() ? 3 : 0);
+                if (roleObj instanceof Map<?, ?> role && role.get("bullets") instanceof List<?> b) {
+                    expScore += b.size() >= 4 ? 6 : !b.isEmpty() ? 3 : 0;
                 }
             }
             score += Math.min(30, expScore);
@@ -330,19 +358,18 @@ public class ResumeGeneratorService {
             score += allFields ? 10 : 5;
         }
 
-        // 6. formatting (0-5): all core sections present in the JSON
+        // 6. formatting (0-5)
         long coreSections = Stream.of("contact", "summary", "experience", "skills", "education")
                 .filter(k -> data.get(k) != null).count();
         score += (int) Math.min(5, coreSections);
 
-        // 7. keywords (0-10): distinct non-trivial words in summary + experience bullets
+        // 7. keywords (0-10): distinct word proxy
         StringBuilder allText = new StringBuilder();
         if (data.get("summary") instanceof String s) allText.append(s).append(" ");
         if (data.get("experience") instanceof List<?> exp) {
             exp.stream().filter(Map.class::isInstance).map(Map.class::cast).forEach(role -> {
-                if (role.get("bullets") instanceof List<?> bullets) {
+                if (role.get("bullets") instanceof List<?> bullets)
                     bullets.forEach(b -> allText.append(b).append(" "));
-                }
             });
         }
         long distinctWords = Arrays.stream(allText.toString().toLowerCase().split("\\W+"))
@@ -353,42 +380,78 @@ public class ResumeGeneratorService {
     }
 
     /**
-     * Derives actionable weaknesses from the structural score — used when the AI scorer is unavailable.
+     * Derives structural weaknesses when the AI scorer is unavailable.
+     * Only checks presence and counts — content quality is for the AI scorer.
      */
     private List<String> deriveWeaknesses(Map<String, Object> data, int score) {
         if (score >= TARGET_ATS_SCORE) return List.of();
         List<String> w = new java.util.ArrayList<>();
-        if (!(data.get("contact") instanceof Map<?, ?> contact)
-                || List.of("email", "phone", "location", "linkedin", "github").stream()
-                    .anyMatch(f -> !(contact.get(f) instanceof String s) || s.isBlank())) {
-            w.add("Contact section is missing one or more fields: email, phone, location, linkedin, github");
+
+        // 1. Contact — list each missing field individually
+        if (data.get("contact") instanceof Map<?, ?> contact) {
+            List.of("email", "phone", "location", "linkedin", "github").stream()
+                    .filter(f -> !(contact.get(f) instanceof String s) || s.isBlank())
+                    .forEach(f -> w.add("contact." + f + " is missing or blank"));
+        } else {
+            w.add("Contact section is missing entirely");
         }
+
+        // 2. Summary
         if (!(data.get("summary") instanceof String s) || s.isBlank()) {
-            w.add("Professional summary is missing — add 2-4 sentences with years of experience and industry keywords");
+            w.add("Professional summary is missing — add 2-4 sentences with years of experience and keywords");
         } else if (Arrays.stream(s.split("[.!?]+")).filter(p -> !p.isBlank()).count() < 2) {
-            w.add("Summary is too short — expand to 2-4 sentences with specialization and industry keywords");
+            w.add("Summary is too short — expand to at least 2 sentences");
         }
+
+        // 3. Experience — bullet count per role
         if (data.get("experience") instanceof List<?> exp) {
             for (Object roleObj : exp) {
                 if (roleObj instanceof Map<?, ?> role) {
-                    List<?> bullets = role.get("bullets") instanceof List<?> b ? b : List.of();
-                    if (bullets.size() < 4) w.add("Role '" + role.get("title") + "' needs 4+ action-verb bullets with quantified achievements");
+                    String title = role.get("title") instanceof String t ? t : "unnamed role";
+                    int count = role.get("bullets") instanceof List<?> b ? b.size() : 0;
+                    if (count < 4)
+                        w.add("'" + title + "': needs ≥4 action-verb bullets with quantified metrics (has " + count + ")");
                 }
             }
         } else {
             w.add("Work experience section is missing");
         }
-        if (!(data.get("skills") instanceof Map<?, ?> skills)
-                || skills.values().stream().noneMatch(v -> v instanceof List<?> l && !l.isEmpty())) {
-            w.add("Skills section is missing or empty — add technical, frameworks, databases, cloud, tools, soft, languages categories");
+
+        // 4. Skills — flag each empty category
+        if (data.get("skills") instanceof Map<?, ?> skills) {
+            List.of("technical", "frameworks", "databases", "cloud", "tools", "soft", "languages").stream()
+                    .filter(cat -> !(skills.get(cat) instanceof List<?> l && !l.isEmpty()))
+                    .forEach(cat -> w.add("skills." + cat + " category is empty"));
+        } else {
+            w.add("Skills section is missing");
         }
-        if (!(data.get("education") instanceof List<?> edu) || edu.isEmpty()) {
+
+        // 5. Education
+        if (data.get("education") instanceof List<?> edu && !edu.isEmpty()
+                && edu.get(0) instanceof Map<?, ?> first) {
+            Stream.of("institution", "degree", "field", "graduationDate")
+                    .filter(f -> !(first.get(f) instanceof String s) || s.isBlank())
+                    .forEach(f -> w.add("education." + f + " is missing"));
+        } else {
             w.add("Education section is missing");
         }
+
+        // If structure is complete but score is still below target, the gap is content quality.
+        // Add explicit quality hints so the refinement loop has actionable direction.
+        if (w.isEmpty() && score < TARGET_ATS_SCORE) {
+            w.add("Every experience bullet MUST start with a strong action verb (Led, Built, Reduced, Implemented, Scaled…)");
+            w.add("Add at least one concrete metric (%, $, multiplier like 3×, user/request count, or time saved) to every bullet");
+            w.add("Summary must state years of experience as a number and include ≥5 distinct industry keywords");
+            w.add("Spread ≥8 distinct industry keywords (length >4) across summary and experience bullets to maximise keyword score");
+            if (score < 80) {
+                w.add("Ensure all 7 skills categories are non-empty: technical, frameworks, databases, cloud, tools, soft, languages");
+            }
+        }
+
         return w;
     }
 
-    private Map<String, Object> refineResume(Map<String, Object> resumeData, List<String> weaknesses) {
+    private Map<String, Object> refineResume(Map<String, Object> resumeData, List<String> weaknesses, int pass) {
         try {
             String resumeJson = objectMapper.writeValueAsString(resumeData);
             String userPrompt = "Resume JSON:\n" + resumeJson
@@ -396,9 +459,16 @@ public class ResumeGeneratorService {
                     + "\n\nReturn the improved resume JSON with all weaknesses fixed.";
             AiProviderFactory.GenerationResult result = aiProviderFactory.generate(REFINEMENT_SYSTEM, userPrompt,
                     AiProviderFactory.TaskType.RESUME_GENERATION);
-            return parseResumeJson(result.content());
+            Map<String, Object> refined = parseResumeJson(result.content());
+            if (Boolean.TRUE.equals(refined.get("parseError"))) {
+                log.warn("Refinement pass {} returned unparseable JSON — keeping prior result; weaknesses were: {}",
+                        pass, weaknesses);
+                return Map.of();
+            }
+            return refined;
         } catch (Exception e) {
-            log.warn("Resume refinement failed, using original: {}", e.getMessage());
+            log.warn("Refinement pass {} failed ({}): {} — weaknesses were: {}",
+                    pass, e.getClass().getSimpleName(), e.getMessage(), weaknesses);
             return Map.of();
         }
     }

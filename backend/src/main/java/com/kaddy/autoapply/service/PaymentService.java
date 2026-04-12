@@ -87,7 +87,8 @@ public class PaymentService {
 
         if (resume.isPaid()) throw new BadRequestException("This resume is already unlocked.");
 
-        boolean isIndia = "IN".equalsIgnoreCase(countryCode) || countryCode == null;
+        // Null/unknown country code → international pricing; never silently downgrade to India rate
+        boolean isIndia = "IN".equalsIgnoreCase(countryCode);
         long amountPaise = isIndia ? PRICE_INDIA_PAISE : PRICE_OTHERS_PAISE;
 
         String receipt = "kaddy_" + userId.substring(0, Math.min(8, userId.length())) + "_" + System.currentTimeMillis();

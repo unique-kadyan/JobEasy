@@ -449,19 +449,26 @@ function ResumePreview({
       <div className="text-center border-b border-gray-300 pb-4">
         <h1 className="text-2xl font-bold text-gray-900">{d.name}</h1>
         {d.contact && (
-          <p className="text-xs text-gray-500 mt-1 space-x-2">
+          <div className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 mt-1 text-xs text-gray-500">
             {[
               d.contact.email,
               d.contact.phone,
               d.contact.location,
               d.contact.linkedin &&
-                `linkedin.com/in/${d.contact.linkedin.split("/").pop()}`,
+                `linkedin.com/in/${d.contact.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/(in\/)?/, "").replace(/\/$/, "")}`,
               d.contact.github &&
-                `github.com/${d.contact.github.split("/").pop()}`,
+                `github.com/${d.contact.github.replace(/^https?:\/\/(www\.)?github\.com\//, "").replace(/\/$/, "")}`,
             ]
               .filter(Boolean)
-              .join("  ·  ")}
-          </p>
+              .map((item, i, arr) => (
+                <span key={i} className="whitespace-nowrap">
+                  {item}
+                  {i < arr.length - 1 && (
+                    <span className="ml-3 text-gray-300">·</span>
+                  )}
+                </span>
+              ))}
+          </div>
         )}
       </div>
 
@@ -500,18 +507,24 @@ function ResumePreview({
       {d.skills && (
         <Section title="Skills">
           <div className="space-y-1">
-            {d.skills.technical && d.skills.technical.length > 0 && (
-              <p>
-                <span className="font-medium">Technical:</span>{" "}
-                {d.skills.technical.join(", ")}
-              </p>
-            )}
-            {d.skills.soft && d.skills.soft.length > 0 && (
-              <p>
-                <span className="font-medium">Soft Skills:</span>{" "}
-                {d.skills.soft.join(", ")}
-              </p>
-            )}
+            {(
+              [
+                ["Technical", d.skills.technical],
+                ["Frameworks", d.skills.frameworks],
+                ["Databases", d.skills.databases],
+                ["Cloud", d.skills.cloud],
+                ["Tools", d.skills.tools],
+                ["Languages", d.skills.languages],
+                ["Soft Skills", d.skills.soft],
+              ] as [string, string[] | undefined][]
+            )
+              .filter(([, v]) => v && v.length > 0)
+              .map(([label, v]) => (
+                <p key={label}>
+                  <span className="font-medium">{label}:</span>{" "}
+                  {v!.join(", ")}
+                </p>
+              ))}
           </div>
         </Section>
       )}

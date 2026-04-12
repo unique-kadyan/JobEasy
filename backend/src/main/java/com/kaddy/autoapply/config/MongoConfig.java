@@ -38,6 +38,9 @@ public class MongoConfig {
     @Value("${app.mongodb.cluster.server-selection-timeout-ms:5000}")
     private int serverSelectionTimeoutMs;
 
+    @Value("${app.mongodb.operation-timeout-ms:30000}")
+    private int operationTimeoutMs;
+
     @Bean
     MongoTransactionManager mongoTransactionManager(MongoDatabaseFactory dbFactory) {
         return new MongoTransactionManager(dbFactory);
@@ -55,6 +58,9 @@ public class MongoConfig {
                         .maxConnectionIdleTime(maxIdleMs, TimeUnit.MILLISECONDS))
                 .applyToSocketSettings((SocketSettings.Builder socket) -> socket
                         .connectTimeout(connectTimeoutMs, TimeUnit.MILLISECONDS)
-                        .readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS));
+                        .readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS))
+                // Global timeout for any single MongoDB operation — prevents hung queries
+                // from blocking virtual threads during AI refinement loops.
+                .timeout(operationTimeoutMs, TimeUnit.MILLISECONDS);
     }
 }

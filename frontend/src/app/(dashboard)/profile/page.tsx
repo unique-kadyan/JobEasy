@@ -246,7 +246,7 @@ export default function ProfilePage() {
   });
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       <ProfileCompletion user={user} />
 
       <div className="flex items-center justify-between">
@@ -517,8 +517,8 @@ export default function ProfilePage() {
                           </div>
 
                           {/* Right: all tech badges */}
-                          {allTechs.length > 0 && (
-                            <div className="flex flex-wrap justify-end gap-1 max-w-[54%] shrink-0">
+                          {allTechs.length > 0 ? (
+                            <div className="flex flex-wrap justify-end gap-1 shrink-0 max-w-[58%]">
                               {allTechs.map((t) => (
                                 <span
                                   key={t}
@@ -529,6 +529,10 @@ export default function ProfilePage() {
                                 </span>
                               ))}
                             </div>
+                          ) : (
+                            <span className="text-[10px] text-[#86868b] dark:text-[#8e8e93] italic shrink-0">
+                              no topics set
+                            </span>
                           )}
                         </div>
                       </div>
@@ -579,7 +583,8 @@ export default function ProfilePage() {
                       {skills.map((skill) => (
                         <span
                           key={skill}
-                          className={`rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${tagColor(skill)}`}
+                          style={repoTagStyle(skill.toLowerCase())}
+                          className="rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap"
                         >
                           {skill}
                         </span>
@@ -629,18 +634,20 @@ export default function ProfilePage() {
         </Card>
       )}
 
-      {(primaryResume?.parsedData?.experience?.length ?? 0) > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Briefcase className="h-5 w-5 text-indigo-600" />
-              <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Work Experience</h2>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Briefcase className="h-5 w-5 text-indigo-600" />
+            <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Work Experience</h2>
+            {(primaryResume?.parsedData?.experience?.length ?? 0) > 0 && (
               <span className="text-xs text-[#86868b] dark:text-[#8e8e93] bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full px-2 py-0.5">
                 {primaryResume!.parsedData!.experience!.length}
               </span>
-            </div>
-          </CardHeader>
-          <CardContent>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {(primaryResume?.parsedData?.experience?.length ?? 0) > 0 ? (
             <div className="divide-y divide-black/[0.04] dark:divide-white/[0.05]">
               {primaryResume!.parsedData!.experience!.map((exp, i) => (
                 <div key={i} className="py-4 first:pt-0 last:pb-0">
@@ -673,9 +680,13 @@ export default function ProfilePage() {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="text-sm font-medium text-gray-400 dark:text-[#8b949e]">
+              Upload a resume to auto-detect your work experience.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

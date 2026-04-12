@@ -69,6 +69,8 @@ public class ApplicationController {
                         @PathVariable String id,
                         @RequestBody Map<String, String> body) {
                 String status = Optional.ofNullable(body.get("status"))
+                                .map(String::trim)
+                                .filter(s -> !s.isEmpty())
                                 .orElseThrow(() -> new BadRequestException("status is required"));
                 return ResponseEntity.ok(applicationService.updateStatus(id, (String) auth.getPrincipal(), status));
         }

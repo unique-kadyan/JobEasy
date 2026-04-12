@@ -1,5 +1,9 @@
 package com.kaddy.autoapply.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kaddy.autoapply.service.ai.AiProviderFactory;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Year;
@@ -25,6 +29,64 @@ import org.springframework.stereotype.Service;
 public class ResumeParserService {
 
     private static final Logger log = LoggerFactory.getLogger(ResumeParserService.class);
+
+    private static final String RESUME_PARSE_SYSTEM = """
+            You are a precise resume data extractor. Extract every detail from the resume text into structured JSON.
+            Be thorough — capture all jobs, degrees, skills, and projects present in the text.
+
+            Return ONLY this JSON (no markdown, no explanation):
+            {
+              "name": "Full Name",
+              "contact": {
+                "email": "email or null",
+                "phone": "phone or null",
+                "location": "City, Country or null",
+                "linkedin": "full linkedin URL or null",
+                "github": "full github URL or null",
+                "portfolio": "portfolio URL or null"
+              },
+              "summary": "professional summary or null",
+              "experience": [
+                {
+                  "title": "Job Title",
+                  "company": "Company Name",
+                  "location": "City or null",
+                  "startDate": "Month Year or Year",
+                  "endDate": "Month Year or Year or Present",
+                  "current": false,
+                  "bullets": ["achievement 1", "achievement 2"]
+                }
+              ],
+              "education": [
+                {
+                  "institution": "University Name",
+                  "degree": "Bachelor/Master/PhD/etc",
+                  "field": "Field of Study",
+                  "graduationDate": "Year",
+                  "gpa": "GPA or null"
+                }
+              ],
+              "skills": {
+                "technical": [],
+                "frameworks": [],
+                "databases": [],
+                "cloud": [],
+                "tools": [],
+                "soft": [],
+                "languages": []
+              },
+              "projects": [{"name":"","description":"","technologies":[],"url":null}],
+              "certifications": [{"name":"","issuer":"","date":""}]
+            }
+            """;
+
+    private final AiProviderFactory aiProviderFactory;
+    private final ObjectMapper objectMapper;
+
+    public ResumeParserService(AiProviderFactory aiProviderFactory, ObjectMapper objectMapper) {
+        this.aiProviderFactory = aiProviderFactory;
+        this.objectMapper = objectMapper;
+    }
 
     private static final Set<String> TECHNICAL_SKILLS = Set.of(
             "java", "python", "javascript", "typescript", "c++", "c#", "go", "golang", "rust",
@@ -69,7 +131,7 @@ public class ResumeParserService {
             "\\+?[0-9]{0,3}[\\s.\\-]?\\(?[0-9]{3}\\)?[\\s.\\-]?[0-9]{3}[\\s.\\-]?[0-9]{4}");
 
     private static final Pattern LINKEDIN_PATTERN = Pattern.compile(
-            "linkedin\\.com/in/([\\w\\-]+)", Pattern.CASE_INSENSITIVE);
+            "(?:https?://)?(?:www\\.)?linkedin\\.com/(?:in/)?([\\w\\-]{3,100})", Pattern.CASE_INSENSITIVE);
 
     private static final Pattern GITHUB_PATTERN = Pattern.compile(
             "github\\.com/([\\w\\-]+)", Pattern.CASE_INSENSITIVE);
@@ -108,7 +170,69 @@ public class ResumeParserService {
         }
     }
 
+    /**
+     * Parses resume text into structured data.
+     * AI is tried first — far more accurate for natural language.
+     * Falls back to regex parsing if all AI providers fail.
+     */
     public Map<String, Object> parseStructuredData(String text) {
+        Map<String, Object> parsed = parseWithAi(text);
+        if (parsed == null) {
+            log.info("All AI providers unavailable — using regex parser as fallback");
+            parsed = parseWithRegex(text);
+        }
+        // These two fields are always computed structurally regardless of parse path
+        parsed.put("wordCount", text.split("\\s+").length);
+        parsed.put("experienceYears", estimateExperienceYears(text));
+        return parsed;
+    }
+
+    /** AI-driven structured extraction — primary parse path. */
+    private Map<String, Object> parseWithAi(String text) {
+        try {
+            String userPrompt = "Extract structured data from this resume text:\n\n" + text;
+            AiProviderFactory.GenerationResult result = aiProviderFactory.generate(
+                    RESUME_PARSE_SYSTEM, userPrompt, AiProviderFactory.TaskType.RESUME_PARSING);
+            String raw = result.content().trim();
+            if (raw.startsWith("```")) {
+                int start = raw.indexOf('{');
+                int end = raw.lastIndexOf('}');
+                if (start >= 0 && end > start) raw = raw.substring(start, end + 1);
+            }
+            Map<String, Object> aiData = objectMapper.readValue(raw, new TypeReference<>() {});
+            // Supplement AI skills with keyword-set matching — catches acronyms AI may miss
+            String lower = text.toLowerCase();
+            Map<String, List<String>> localSkills = categorizeSkills(lower);
+            if (aiData.get("skills") instanceof Map<?, ?> aiSkills) {
+                Map<String, Object> merged = new LinkedHashMap<>(
+                        objectMapper.convertValue(aiSkills, new TypeReference<>() {}));
+                for (Map.Entry<String, List<String>> entry : localSkills.entrySet()) {
+                    merged.merge(entry.getKey(), entry.getValue(), (existing, local) -> {
+                        if (existing instanceof List<?> eList) {
+                            java.util.Set<String> combined = new java.util.LinkedHashSet<>();
+                            eList.stream().filter(String.class::isInstance)
+                                    .map(String.class::cast).forEach(combined::add);
+                            ((List<?>) local).stream().filter(String.class::isInstance)
+                                    .map(String.class::cast).forEach(combined::add);
+                            return new ArrayList<>(combined);
+                        }
+                        return existing;
+                    });
+                }
+                aiData.put("skills", merged);
+            } else {
+                aiData.put("skills", localSkills);
+            }
+            log.info("AI resume parsing succeeded via {}", result.providerName());
+            return aiData;
+        } catch (Exception e) {
+            log.warn("AI resume parsing failed — falling back to regex: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /** Regex-based fallback parser — used only when all AI providers are unavailable. */
+    private Map<String, Object> parseWithRegex(String text) {
         Map<String, Object> data = new LinkedHashMap<>();
         String lower = text.toLowerCase();
         String[] lines = text.split("\\r?\\n");
@@ -121,8 +245,6 @@ public class ResumeParserService {
         data.put("skills", categorizeSkills(lower));
         data.put("projects", new ArrayList<>());
         data.put("certifications", new ArrayList<>());
-        data.put("wordCount", text.split("\\s+").length);
-        data.put("experienceYears", estimateExperienceYears(text));
 
         return data;
     }
@@ -163,8 +285,13 @@ public class ResumeParserService {
             contact.put("phone", phone.group().trim());
 
         Matcher linkedin = LINKEDIN_PATTERN.matcher(text);
-        if (linkedin.find())
-            contact.put("linkedin", "https://linkedin.com/in/" + linkedin.group(1));
+        if (linkedin.find()) {
+            String handle = linkedin.group(1);
+            // Skip generic slugs that aren't real profile handles
+            if (!handle.equalsIgnoreCase("company") && !handle.equalsIgnoreCase("pub")) {
+                contact.put("linkedin", "https://linkedin.com/in/" + handle);
+            }
+        }
 
         Matcher github = GITHUB_PATTERN.matcher(text);
         if (github.find())
@@ -190,16 +317,54 @@ public class ResumeParserService {
         return Optional.empty();
     }
 
+    // All known section header keywords — used as stop-boundaries when extracting a section.
+    private static final Pattern ANY_SECTION_HEADER = Pattern.compile(
+            "^(?:experience|work\\s*experience|employment(?:\\s*history)?|professional\\s*experience|" +
+            "work\\s*history|education|academic\\s*(?:background|history|qualifications)|qualifications|" +
+            "skills?|technical\\s*skills|core\\s*competencies|key\\s*skills|" +
+            "projects?|personal\\s*projects|open\\s*source|notable\\s*projects|" +
+            "certifications?|certificates?|licen[sc]es?|" +
+            "summary|objective|professional\\s*(?:summary|profile)|about\\s*me|profile|" +
+            "awards?|honors?|achievements?|accomplishments?|" +
+            "publications?|research|" +
+            "volunteering?|extracurricular|activities|" +
+            "languages?|" +
+            "references?|contact(?:\\s*info(?:rmation)?)?|interests?|hobbies?):?$",
+            Pattern.CASE_INSENSITIVE);
+
+    /**
+     * Extracts the body of a named section from resume text using a line-by-line
+     * parser. Stops at the next known section header, which fixes the previous
+     * regex-based approach where the (?i) flag made the ALL-CAPS terminator
+     * match any 4-letter word and silently truncate section content.
+     */
     private String extractSectionText(String text, String sectionRegex) {
-        Pattern pattern = Pattern.compile(
-                "(?im)^\\s*(?:" + sectionRegex
-                        + ")\\s*\\r?\\n([\\s\\S]*?)(?=\\r?\\n\\s*[A-Z][A-Z\\s]{3,}\\s*\\r?\\n|$)");
-        Matcher m = pattern.matcher(text);
-        if (m.find()) {
-            String content = m.group(1).trim();
-            return content.length() > 20 ? content : null;
+        Pattern targetHeader = Pattern.compile(
+                "^(?:" + sectionRegex + "):?$", Pattern.CASE_INSENSITIVE);
+
+        String[] lines = text.split("\\r?\\n");
+        boolean inSection = false;
+        StringBuilder content = new StringBuilder();
+
+        for (String line : lines) {
+            String trimmed = line.trim();
+            if (targetHeader.matcher(trimmed).matches()) {
+                if (inSection) break; // same header seen again — stop
+                inSection = true;
+                continue;
+            }
+            if (inSection) {
+                if (!trimmed.isEmpty()
+                        && ANY_SECTION_HEADER.matcher(trimmed).matches()
+                        && content.length() > 0) {
+                    break;
+                }
+                content.append(line).append("\n");
+            }
         }
-        return null;
+
+        String result = content.toString().trim();
+        return result.length() > 20 ? result : null;
     }
 
     private Map<String, List<String>> categorizeSkills(String lower) {
@@ -337,40 +502,54 @@ public class ResumeParserService {
         if (lines.length == 0) return null;
         Map<String, Object> entry = new LinkedHashMap<>();
 
-        for (String line : lines) {
-            // GPA
-            if (!entry.containsKey("gpa")) {
-                Matcher gpaM = Pattern.compile("(?i)\\bgpa\\b\\s*[:\\-]?\\s*([0-9.]+)").matcher(line);
-                if (gpaM.find()) { entry.put("gpa", gpaM.group(1)); continue; }
+        for (String rawLine : lines) {
+            String line = rawLine.trim();
+            if (line.isEmpty()) continue;
+
+            // --- GPA: extract and strip from line, then keep processing remainder ---
+            Matcher gpaM = Pattern.compile(
+                    "(?i)\\bgpa\\b[:\\s/]*([0-9]+\\.[0-9]+(?:\\s*/\\s*[0-9.]+)?)").matcher(line);
+            if (gpaM.find() && !entry.containsKey("gpa")) {
+                entry.put("gpa", gpaM.group(1).trim());
+                line = gpaM.replaceAll("").replaceAll("[,|·\\-]+\\s*$", "").trim();
+                if (line.isEmpty()) continue;
             }
-            // Graduation date: prefer end of date range, else any 4-digit year
-            if (!entry.containsKey("graduationDate")) {
-                Matcher rangeM = DATE_RANGE_INLINE.matcher(line);
-                if (rangeM.find()) {
-                    String endStr = rangeM.group(4);
-                    if (!endStr.toLowerCase().matches("present|current|now"))
-                        entry.put("graduationDate", endStr);
-                    else {
-                        String startYear = rangeM.group(2);
-                        entry.put("graduationDate", startYear);
-                    }
-                    continue;
-                }
+
+            // --- Date range: extract end year as graduationDate, strip from line ---
+            Matcher rangeM = DATE_RANGE_INLINE.matcher(line);
+            if (rangeM.find() && !entry.containsKey("graduationDate")) {
+                String endStr = rangeM.group(4);
+                entry.put("graduationDate",
+                        endStr.toLowerCase().matches("present|current|now")
+                                ? rangeM.group(2) : endStr);
+                line = rangeM.replaceAll("").replaceAll("\\s*[–\\-|·,]+\\s*$|^\\s*[–\\-|·,]+\\s*", "").trim();
+                if (line.isEmpty()) continue;
+            } else if (!entry.containsKey("graduationDate")) {
                 Matcher ym = SINGLE_YEAR.matcher(line);
-                if (ym.find()) { entry.put("graduationDate", ym.group(1)); continue; }
+                if (ym.find()) {
+                    entry.put("graduationDate", ym.group(1));
+                    line = ym.replaceAll("").replaceAll("\\s*[–\\-|·,]+\\s*$|^\\s*[–\\-|·,]+\\s*", "").trim();
+                    if (line.isEmpty()) continue;
+                }
             }
-            // Degree line
+
+            // --- Degree: detect on remaining text after date has been stripped ---
             if (DEGREE_PAT.matcher(line).find() && !entry.containsKey("degree")) {
-                // "Bachelor of Science in Computer Science" → degree + field
+                // "Bachelor of Technology in Computer Science" → degree + field
                 String[] inSplit = line.split("(?i)\\s+in\\s+", 2);
                 entry.put("degree", inSplit[0].trim());
-                if (inSplit.length > 1) entry.put("field", inSplit[1].trim());
+                if (inSplit.length > 1) {
+                    // Field may have trailing location like "Computer Science, Delhi" — strip it
+                    String field = inSplit[1].split("[,|·]")[0].trim();
+                    if (!field.isEmpty()) entry.put("field", field);
+                }
                 continue;
             }
-            // Institution (first remaining line)
-            if (!entry.containsKey("institution")) {
+
+            // --- Institution: first unclassified line; second unclassified → degree ---
+            if (!entry.containsKey("institution") && line.length() > 2) {
                 entry.put("institution", line);
-            } else if (!entry.containsKey("degree")) {
+            } else if (!entry.containsKey("degree") && line.length() > 2) {
                 entry.put("degree", line);
             }
         }

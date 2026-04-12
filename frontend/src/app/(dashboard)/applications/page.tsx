@@ -82,18 +82,20 @@ export default function ApplicationsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h3 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
-                          {app.job.title}
+                          {app.job?.title ?? "Job no longer available"}
                         </h3>
-                        <Badge className={SOURCE_COLORS[app.job.source] ?? "bg-gray-100 text-gray-600"}>
-                          {app.job.source}
-                        </Badge>
+                        {app.job?.source && (
+                          <Badge className={SOURCE_COLORS[app.job.source] ?? "bg-gray-100 text-gray-600"}>
+                            {app.job.source}
+                          </Badge>
+                        )}
                         <Badge className={STATUS_COLORS[app.status] ?? "bg-gray-100 text-gray-600"}>
                           {STATUS_LABELS[app.status] ?? app.status}
                         </Badge>
                       </div>
                       <p className="text-xs text-[#86868b] dark:text-[#8e8e93]">
-                        {app.job.company}
-                        {app.job.location && ` · ${app.job.location}`}
+                        {app.job?.company ?? "—"}
+                        {app.job?.location && ` · ${app.job.location}`}
                         {` · ${app.status === "NOT_INTERESTED" ? "Skipped" : "Applied"} ${formatDate(app.appliedAt)}`}
                       </p>
                       {app.notes && (
@@ -114,15 +116,17 @@ export default function ApplicationsPage() {
                         options={UPDATE_OPTIONS}
                         className="w-36 text-xs"
                       />
-                      <a
-                        href={app.job.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Button variant="ghost" size="sm">
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </a>
+                      {app.job?.url && (
+                        <a
+                          href={app.job.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button variant="ghost" size="sm">
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </a>
+                      )}
                     </div>
                   </div>
                 </CardContent>

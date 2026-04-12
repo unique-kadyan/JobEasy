@@ -132,6 +132,7 @@ app:
       read-timeout-ms: 10000
     cluster:
       server-selection-timeout-ms: 5000
+    operation-timeout-ms: 30000
 
   webclient:
     connect-timeout-ms: 8000

@@ -25,36 +25,53 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+/** Clears auth state, cookie, and navigates to /login without showing an error toast. */
+function forceLogoutAndRedirect() {
+  useAuthStore.getState().logout();
+  clearSessionCookie();
+  if (typeof window !== "undefined") {
+    window.location.href = "/login";
+    // Return a never-settling promise so the error does NOT propagate to
+    // component-level onError handlers (which would show a toast).
+    return new Promise<never>(() => {});
+  }
+  return null;
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
 
-    if (error.response?.status === 401 && !original._retry) {
-      original._retry = true;
-      const refreshToken = useAuthStore.getState().refreshToken;
+    if (error.response?.status === 401) {
+      if (!original._retry) {
+        original._retry = true;
+        const refreshToken = useAuthStore.getState().refreshToken;
 
-      if (refreshToken) {
-        try {
-          const res = await axios.post(
-            `${api.defaults.baseURL}/auth/refresh`,
-            { refreshToken },
-            { headers: { "X-Requested-With": "XMLHttpRequest" } }
-          );
-          const { accessToken, refreshToken: newRefresh } = res.data;
-          useAuthStore.getState().setTokens(accessToken, newRefresh);
-          original.headers.Authorization = `Bearer ${accessToken}`;
-          return api(original);
-        } catch {
-          useAuthStore.getState().logout();
-          clearSessionCookie();
-          if (typeof window !== "undefined") window.location.href = "/login";
+        if (refreshToken) {
+          try {
+            const res = await axios.post(
+              `${api.defaults.baseURL}/auth/refresh`,
+              { refreshToken },
+              { headers: { "X-Requested-With": "XMLHttpRequest" } }
+            );
+            const { accessToken, refreshToken: newRefresh } = res.data;
+            useAuthStore.getState().setTokens(accessToken, newRefresh);
+            original.headers.Authorization = `Bearer ${accessToken}`;
+            return api(original);
+          } catch {
+            // Refresh itself failed — session is truly expired
+            return forceLogoutAndRedirect();
+          }
+        } else {
+          // No refresh token on record — session already gone
+          return forceLogoutAndRedirect();
         }
-      } else {
-        useAuthStore.getState().logout();
-        clearSessionCookie();
-        if (typeof window !== "undefined") window.location.href = "/login";
       }
+
+      // _retry already true: the retry request itself returned 401
+      // (refresh token was also rejected) — redirect immediately
+      return forceLogoutAndRedirect();
     }
 
     const friendlyMessage = getApiErrorMessage(error);

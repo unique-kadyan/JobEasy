@@ -21,21 +21,25 @@ public class AiProviderFactory {
 
     public enum TaskType {
         RESUME_GENERATION(List.of(
-                "CLAUDE", "OPENAI",
                 "GROQ", "SAMBANOVA",
                 "TOGETHER_QWEN3_CODER", "TOGETHER_KIMI_K2",
-                "CEREBRAS", "MISTRAL", "NOVITA")),
+                "CEREBRAS", "MISTRAL", "NOVITA",
+                "GEMINI", "CLAUDE", "OPENAI")),
 
         REASONING(List.of(
                 "SAMBANOVA", "MISTRAL",
                 "CEREBRAS_LLAMA_8B", "NOVITA",
-                "GROQ", "CLAUDE")),
+                "GROQ", "GEMINI", "CLAUDE")),
+
+        RESUME_PARSING(List.of(
+                "GROQ", "CEREBRAS", "SAMBANOVA", "MISTRAL",
+                "TOGETHER", "NOVITA", "GEMINI", "CLAUDE", "OPENAI")),
 
         COVER_LETTER(List.of(
-                "CLAUDE", "OPENAI",
                 "GROQ", "MISTRAL",
                 "SAMBANOVA", "NOVITA",
-                "TOGETHER_MISTRAL_SMALL", "CEREBRAS")),
+                "TOGETHER_MISTRAL_SMALL", "CEREBRAS",
+                "GEMINI", "CLAUDE", "OPENAI")),
 
         FAST_TEXT(List.of(
                 "GROQ", "CEREBRAS_LLAMA_8B",

@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import { useAuthStore } from "@/store/auth-store";
 import { Card, CardContent } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -13,6 +14,7 @@ import type { Resume } from "@/types";
 
 export default function ResumesPage() {
   const queryClient = useQueryClient();
+  const { setUser } = useAuthStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -33,6 +35,8 @@ export default function ResumesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      // Refresh user profile so backfilled fields (linkedin, github, etc.) appear immediately
+      api.get("/users/profile").then((r) => setUser(r.data)).catch(() => {});
       toast.success("Resume uploaded successfully!");
     },
     onError: () => {
