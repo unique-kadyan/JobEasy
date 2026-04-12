@@ -158,18 +158,22 @@ function ExperienceTimeline({ experiences }: { experiences: ExpEntry[] }) {
     return assignRows(raw);
   }, [experiences]);
 
-  if (bars.length === 0) return null;
+  const axisData = useMemo(() => {
+    if (bars.length === 0) return null;
+    const startYear = new Date(Math.min(...bars.map((b) => b.startMs))).getFullYear();
+    const axisMinMs = new Date(startYear, 0, 1).getTime();
+    const axisMaxMs = Date.now();
+    const totalMs = axisMaxMs - axisMinMs;
+    const endYear = new Date(axisMaxMs).getFullYear();
+    const allYears = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
+    const toPercent = (ms: number) =>
+      Math.max(0, Math.min(100, ((ms - axisMinMs) / totalMs) * 100));
+    return { startYear, axisMinMs, axisMaxMs, totalMs, endYear, allYears, toPercent };
+  }, [bars]);
 
-  const startYear = new Date(Math.min(...bars.map((b) => b.startMs))).getFullYear();
-  const axisMinMs = new Date(startYear, 0, 1).getTime();
-  const axisMaxMs = Date.now();
-  const totalMs = axisMaxMs - axisMinMs;
+  if (!axisData) return null;
 
-  const toPercent = (ms: number) =>
-    Math.max(0, Math.min(100, ((ms - axisMinMs) / totalMs) * 100));
-
-  const endYear = new Date(axisMaxMs).getFullYear();
-  const allYears = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
+  const { startYear, axisMinMs, axisMaxMs, totalMs, endYear, allYears, toPercent } = axisData;
 
   const visibleYears = allYears.filter((y) => {
     const px = ((new Date(y, 0).getTime() - axisMinMs) / totalMs) * containerWidth;

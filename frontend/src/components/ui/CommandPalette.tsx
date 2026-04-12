@@ -157,7 +157,6 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
           >
             <Typography
               component="span"
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               {...({ "cmdk-group-heading": "" } as any)}
             >
               Navigation
