@@ -20,7 +20,6 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
-
   # ── Redis — Render managed Key Value store ─────────────────────────────────
   #
   # Render provisions and manages this Redis instance automatically.
@@ -38,9 +37,9 @@ services:
   - type: redis
     name: kaddy-redis
     region: oregon
-    plan: free              # upgrade to starter for AOF persistence
-    maxmemoryPolicy: allkeys-lru   # matches redis.conf — evict LRU keys on memory pressure
-    ipAllowList: []         # empty = accessible only from services in this Render account
+    plan: free # upgrade to starter for AOF persistence
+    maxmemoryPolicy: allkeys-lru # matches redis.conf — evict LRU keys on memory pressure
+    ipAllowList: [] # empty = accessible only from services in this Render account
 
   # ── Backend — Spring Boot 4 (Java 25 via Docker) ──────────────────────────
   #
@@ -54,7 +53,7 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     region: oregon
-    plan: free              # upgrade to starter+ for always-on (free tier sleeps after 15 min)
+    plan: free # upgrade to starter+ for always-on (free tier sleeps after 15 min)
 
     # Health check — Spring Boot Actuator; Render polls this to determine
     # liveness and routes traffic only after the service is healthy.
@@ -63,8 +62,9 @@ services:
     envVars:
       # ── Database ────────────────────────────────────────────────────────────
       - key: MONGODB_URI
-        sync: false         # paste your MongoDB Atlas URI in the Render dashboard
-                            # format: mongodb+srv://user:pass@cluster.mongodb.net/autoapply?appName=...
+        sync:
+          false # paste your MongoDB Atlas URI in the Render dashboard
+          # format: mongodb+srv://user:pass@cluster.mongodb.net/autoapply?appName=...
 
       # ── Redis ───────────────────────────────────────────────────────────────
       # REDIS_URL is injected automatically from the kaddy-redis service above.
@@ -75,18 +75,18 @@ services:
         fromService:
           type: redis
           name: kaddy-redis
-          property: connectionString   # format: redis://:password@host:port
+          property: connectionString # format: redis://:password@host:port
 
       # ── JWT ─────────────────────────────────────────────────────────────────
       - key: JWT_SECRET
-        generateValue: true   # Render auto-generates a cryptographically secure random value
+        generateValue: true # Render auto-generates a cryptographically secure random value
 
       # ── CORS & Frontend URL ─────────────────────────────────────────────────
       # Set these after the frontend service URL is known.
       - key: CORS_ORIGINS
-        sync: false         # e.g. https://kaddy-frontend.onrender.com
+        sync: false # e.g. https://kaddy-frontend.onrender.com
       - key: FRONTEND_URL
-        sync: false         # same value as CORS_ORIGINS (used in email reset links)
+        sync: false # same value as CORS_ORIGINS (used in email reset links)
 
       # ── Email ───────────────────────────────────────────────────────────────
       - key: RESEND_API_KEY
@@ -94,14 +94,14 @@ services:
       - key: BREVO_API_KEY
         sync: false
       - key: MAIL_FROM
-        sync: false         # e.g. noreply@yourdomain.com
+        sync: false # e.g. noreply@yourdomain.com
 
       # ── AI Providers ────────────────────────────────────────────────────────
       - key: AI_DEFAULT_PROVIDER
-        value: OPENAI       # change to GROQ / CLAUDE / GEMINI etc. as preferred
+        value: OPENAI # change to GROQ / CLAUDE / GEMINI etc. as preferred
       - key: OPENAI_API_KEY
         sync: false
-      - key: ANTHROPIC_API_KEY      # Claude — app reads ${ANTHROPIC_API_KEY:}
+      - key: ANTHROPIC_API_KEY # Claude — app reads ${ANTHROPIC_API_KEY:}
         sync: false
       - key: GEMINI_API_KEY
         sync: false
@@ -125,7 +125,7 @@ services:
       # ── Job Scrapers ────────────────────────────────────────────────────────
       - key: JSEARCH_API_KEY
         sync: false
-      - key: SERPAPI_API_KEY        # app reads ${SERPAPI_API_KEY:}
+      - key: SERPAPI_API_KEY # app reads ${SERPAPI_API_KEY:}
         sync: false
       - key: ADZUNA_APP_ID
         sync: false
@@ -144,11 +144,11 @@ services:
       # PORT is injected automatically by Render — no manual entry needed.
       # The Dockerfile ENTRYPOINT reads ${PORT:-8080} at container start.
       - key: SPRING_PROFILES_ACTIVE
-        value: prod           # activates application-prod.yml (sets spring.data.redis.url)
+        value: prod # activates application-prod.yml (sets spring.data.redis.url)
       - key: SPRING_THREADS_VIRTUAL_ENABLED
         value: "true"
       - key: UPLOAD_DIR
-        value: /tmp/uploads  # ephemeral on free tier — use S3/R2 for production
+        value: /tmp/uploads # ephemeral on free tier — use S3/R2 for production
 
   # ── Frontend — Next.js 14 (native Node.js runtime) ─────────────────────────
   #
@@ -156,7 +156,7 @@ services:
   # Render's native Node runtime is sufficient; no Dockerfile required.
   # ───────────────────────────────────────────────────────────────────────────
   - type: web
-    name: kaddy-frontend
+    name: Rolevo
     runtime: node
     region: oregon
     plan: free
