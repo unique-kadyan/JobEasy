@@ -128,7 +128,9 @@ class ApplicationServiceTest {
     @Test
     void getUserApplications_shouldReturnPageWithJobDetails() {
         var page = new PageImpl<>(List.of(testApp), PageRequest.of(0, 10), 1);
-        when(applicationRepository.findByUserIdOrderByAppliedAtDesc("user1", PageRequest.of(0, 10)))
+        // null filter → exclude DISMISSED via findByUserIdAndStatusNotOrderByAppliedAtDesc
+        when(applicationRepository.findByUserIdAndStatusNotOrderByAppliedAtDesc(
+                eq("user1"), eq(ApplicationStatus.DISMISSED), any()))
                 .thenReturn(page);
         when(jobService.getJobEntity("job1")).thenReturn(testJob);
 
@@ -142,7 +144,8 @@ class ApplicationServiceTest {
     @Test
     void getUserApplications_shouldGracefullyHandleMissingJob() {
         var page = new PageImpl<>(List.of(testApp), PageRequest.of(0, 10), 1);
-        when(applicationRepository.findByUserIdOrderByAppliedAtDesc("user1", PageRequest.of(0, 10)))
+        when(applicationRepository.findByUserIdAndStatusNotOrderByAppliedAtDesc(
+                eq("user1"), eq(ApplicationStatus.DISMISSED), any()))
                 .thenReturn(page);
         when(jobService.getJobEntity("job1")).thenThrow(new ResourceNotFoundException("Job not found"));
 
