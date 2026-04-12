@@ -25,7 +25,6 @@ import {
   XCircle,
   TrendingUp,
   Search,
-  FileText,
   Zap,
   Sparkles,
   ArrowRight,
@@ -267,8 +266,7 @@ export default function DashboardPage() {
           <div className="space-y-1">
             {[
               { href: "/jobs",          icon: Search,   label: "Search Jobs",   iconBg: "bg-blue-50   dark:bg-blue-500/10",   iconColor: "text-blue-500   dark:text-blue-400" },
-              { href: "/resumes",       icon: FileText,  label: "Upload Resume", iconBg: "bg-indigo-50 dark:bg-indigo-500/10", iconColor: "text-indigo-500 dark:text-indigo-400" },
-              { href: "/smart-resume",  icon: Sparkles,  label: "Smart Resume",  iconBg: "bg-purple-50 dark:bg-purple-500/10", iconColor: "text-purple-500 dark:text-purple-400" },
+              { href: "/smart-resume",  icon: Sparkles,  label: "Smart Resume",  iconBg: "bg-indigo-50 dark:bg-indigo-500/10", iconColor: "text-indigo-500 dark:text-indigo-400" },
               { href: "/cover-letters", icon: Zap,       label: "Cover Letters", iconBg: "bg-amber-50  dark:bg-amber-500/10",  iconColor: "text-amber-500  dark:text-amber-400" },
             ].map((a) => (
               <Link

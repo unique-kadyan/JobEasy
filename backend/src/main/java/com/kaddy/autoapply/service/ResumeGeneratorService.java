@@ -22,11 +22,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @Service
@@ -136,14 +140,23 @@ public class ResumeGeneratorService {
 
         String userPrompt = buildPrompt(user, resume);
 
-        AiProviderFactory.GenerationResult result = aiProviderFactory.generate(
-                SYSTEM_PROMPT, userPrompt, AiProviderFactory.TaskType.RESUME_GENERATION);
-        log.info("Resume generated for user {} using {}", userId, result.providerName());
-
-        Map<String, Object> resumeData = parseResumeJson(result.content());
-        // Fix #2: fail fast on unparseable AI output instead of saving corrupt data
+        // Generate with automatic retry: if a provider returns truncated/unparseable JSON,
+        // exclude it and try the next one (up to 3 attempts total).
+        Map<String, Object> resumeData = null;
+        Set<String> exhausted = new HashSet<>();
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            AiProviderFactory.GenerationResult result = aiProviderFactory.generate(
+                    SYSTEM_PROMPT, userPrompt, AiProviderFactory.TaskType.RESUME_GENERATION, exhausted);
+            log.info("Resume generated for user {} using {} (attempt {})", userId, result.providerName(), attempt);
+            resumeData = parseResumeJson(result.content());
+            if (!Boolean.TRUE.equals(resumeData.get("parseError"))) break;
+            log.warn("Provider {} returned malformed/truncated JSON on attempt {} — will exclude and retry",
+                    result.providerName(), attempt);
+            exhausted.add(result.providerName().toUpperCase());
+        }
         if (Boolean.TRUE.equals(resumeData.get("parseError"))) {
-            log.error("AI resume generation returned unparseable JSON for user {} — aborting", userId);
+            log.error("AI resume generation returned unparseable JSON for user {} after {} attempts — aborting",
+                    userId, exhausted.size());
             throw new BadRequestException("AI returned malformed JSON. Please retry.");
         }
 
@@ -243,24 +256,93 @@ public class ResumeGeneratorService {
     }
 
     private Map<String, Object> parseResumeJson(String raw) {
+        String json = extractJsonBlock(raw.trim());
         try {
-            String json = raw.trim();
-
-            if (json.startsWith("```")) {
-                int start = json.indexOf('{');
-                int end = json.lastIndexOf('}');
-                if (start >= 0 && end > start)
-                    json = json.substring(start, end + 1);
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+        } catch (JsonProcessingException first) {
+            // Provider likely truncated the response — attempt structural repair before giving up
+            try {
+                String repaired = repairTruncatedJson(json);
+                Map<String, Object> result = objectMapper.readValue(repaired, new TypeReference<Map<String, Object>>() {});
+                log.info("Repaired truncated AI JSON response successfully");
+                return result;
+            } catch (JsonProcessingException second) {
+                log.warn("Failed to parse AI resume JSON (repair also failed): {}", first.getMessage());
+                Map<String, Object> fallback = new HashMap<>();
+                fallback.put("raw", raw);
+                fallback.put("parseError", true);
+                return fallback;
             }
-            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {
-            });
-        } catch (JsonProcessingException e) {
-            log.warn("Failed to parse AI resume JSON, wrapping raw: {}", e.getMessage());
-            Map<String, Object> fallback = new HashMap<>();
-            fallback.put("raw", raw);
-            fallback.put("parseError", true);
-            return fallback;
         }
+    }
+
+    /** Strip markdown fences and extract the JSON object from the AI response. */
+    private String extractJsonBlock(String text) {
+        if (text.startsWith("```")) {
+            int start = text.indexOf('{');
+            int end = text.lastIndexOf('}');
+            if (start >= 0 && end > start)
+                return text.substring(start, end + 1);
+        }
+        // Bare JSON — find outermost braces
+        int start = text.indexOf('{');
+        if (start > 0) {
+            int end = text.lastIndexOf('}');
+            if (end > start) return text.substring(start, end + 1);
+            // No closing brace — keep from first { for repair to handle
+            return text.substring(start);
+        }
+        return text;
+    }
+
+    /**
+     * Attempts to close any open arrays/objects in a truncated JSON string.
+     * Walks the string character-by-character, tracks the open-bracket stack,
+     * removes any trailing comma before closing, then appends the missing closers.
+     */
+    private String repairTruncatedJson(String json) {
+        StringBuilder sb = new StringBuilder(json.length() + 32);
+        Deque<Character> stack = new ArrayDeque<>();
+        boolean inString = false;
+        boolean escaped = false;
+
+        for (int i = 0; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (escaped) {
+                escaped = false;
+                sb.append(c);
+                continue;
+            }
+            if (c == '\\' && inString) {
+                escaped = true;
+                sb.append(c);
+                continue;
+            }
+            if (c == '"') {
+                inString = !inString;
+                sb.append(c);
+                continue;
+            }
+            if (!inString) {
+                if (c == '{') stack.push('}');
+                else if (c == '[') stack.push(']');
+                else if ((c == '}' || c == ']') && !stack.isEmpty()) stack.pop();
+            }
+            sb.append(c);
+        }
+
+        // Close any unterminated string
+        if (inString) sb.append('"');
+
+        // Close all open structures, removing any trailing comma first
+        while (!stack.isEmpty()) {
+            String s = sb.toString().stripTrailing();
+            if (s.endsWith(",")) s = s.substring(0, s.length() - 1);
+            sb = new StringBuilder(s);
+            sb.append(stack.pop());
+        }
+
+        return sb.toString();
     }
 
     private record AtsEvaluation(int score, List<String> weaknesses) {

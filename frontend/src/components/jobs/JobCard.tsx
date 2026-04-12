@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { SOURCE_COLORS } from "@/lib/constants";
-import { timeAgo } from "@/lib/utils";
+import { timeAgo, toCamelCase } from "@/lib/utils";
 import Tooltip from "@mui/material/Tooltip";
 import { MapPin, Building2, Clock, DollarSign, ExternalLink, Bookmark, BookmarkCheck, CheckCircle2, Zap } from "@/components/ui/icons";
 import type { Job } from "@/types";
@@ -136,7 +136,7 @@ export default function JobCard({ job, onApply, applied, selected, onSelect, sho
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {job.tags.slice(0, 4).map((tag) => (
                   <span key={tag} className="text-[10px] font-medium bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#6e6e73] dark:text-[#8e8e93] px-2 py-0.5 rounded-full">
-                    {tag}
+                    {toCamelCase(tag)}
                   </span>
                 ))}
               </div>

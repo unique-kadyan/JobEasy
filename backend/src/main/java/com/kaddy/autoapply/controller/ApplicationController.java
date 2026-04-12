@@ -4,6 +4,7 @@ import com.kaddy.autoapply.dto.request.ApplyRequest;
 import com.kaddy.autoapply.dto.request.InterviewDetailsRequest;
 import com.kaddy.autoapply.dto.request.OfferDetailsRequest;
 import com.kaddy.autoapply.dto.response.ApplicationResponse;
+import com.kaddy.autoapply.dto.response.PagedResponse;
 import com.kaddy.autoapply.service.ApplicationService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -53,14 +54,16 @@ public class ApplicationController {
         }
 
         @GetMapping
-        public ResponseEntity<Page<ApplicationResponse>> list(
+        public ResponseEntity<PagedResponse<ApplicationResponse>> list(
                         Authentication auth,
                         @RequestParam(required = false) String status,
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "20") int size) {
-                return ResponseEntity.ok(
-                                applicationService.getUserApplications((String) auth.getPrincipal(), status, page,
-                                                size));
+                Page<ApplicationResponse> p = applicationService.getUserApplications(
+                                (String) auth.getPrincipal(), status, page, size);
+                return ResponseEntity.ok(new PagedResponse<>(
+                                p.getContent(), p.getTotalElements(), p.getTotalPages(),
+                                p.getNumber(), p.getSize()));
         }
 
         @PutMapping("/{id}/status")

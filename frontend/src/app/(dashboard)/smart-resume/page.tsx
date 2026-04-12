@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import { useAuthStore } from "@/store/auth-store";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -18,55 +19,76 @@ import {
   Download,
   RefreshCw,
   ChevronRight,
+  FileText,
+  Upload,
+  Star,
+  Trash2,
 } from "@/components/ui/icons";
-import type { ResumeAnalysis, GeneratedResume, ResumeData } from "@/types";
+import { formatDate, toCamelCase } from "@/lib/utils";
+import type { ResumeAnalysis, GeneratedResume, ResumeData, Resume } from "@/types";
 
 export default function SmartResumePage() {
+  const queryClient = useQueryClient();
+  const { setUser } = useAuthStore();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
   const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
   const [generated, setGenerated] = useState<GeneratedResume | null>(null);
   const [payModal, setPayModal] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const resumeRef = useRef<HTMLDivElement>(null);
 
-  const handleDownloadPDF = async () => {
-    if (!resumeRef.current) return;
-    setDownloading(true);
+  // ── Uploaded resumes ─────────────────────────────────────────────────────
+  const { data: resumes, isLoading: resumesLoading } = useQuery<Resume[]>({
+    queryKey: ["resumes"],
+    queryFn: async () => {
+      const res = await api.get("/resumes", { params: { page: 0, size: 20 } });
+      return Array.isArray(res.data) ? res.data : (res.data.content ?? []);
+    },
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await api.post("/resumes/upload", formData);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      api.get("/users/profile").then((r) => setUser(r.data)).catch(() => {});
+      toast.success("Resume uploaded successfully!");
+    },
+    onError: () => toast.error("Failed to upload resume. Please try a valid PDF file."),
+  });
+
+  const setPrimaryMutation = useMutation({
+    mutationFn: async (id: string) => { await api.put(`/resumes/${id}/primary`); },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["resumes"] }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => { await api.delete(`/resumes/${id}`); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      toast.success("Resume deleted.");
+    },
+  });
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const jsPDF = (await import("jspdf")).default;
-
-      const canvas = await html2canvas(resumeRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.98);
-      const pdf = new jsPDF({
-        unit: "mm",
-        format: "a4",
-        orientation: "portrait",
-      });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * pageWidth) / canvas.width;
-
-      let yOffset = 0;
-      while (yOffset < imgHeight) {
-        if (yOffset > 0) pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, -yOffset, imgWidth, imgHeight);
-        yOffset += pageHeight;
-      }
-
-      pdf.save(`${generated?.resumeData?.name ?? "resume"}.pdf`);
-    } catch (err) {
-      console.error("PDF generation failed:", err);
+      await uploadMutation.mutateAsync(file);
     } finally {
-      setDownloading(false);
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
     }
   };
 
+  // ── Smart resume (AI generation) ─────────────────────────────────────────
   const { data: latestResume } = useQuery<GeneratedResume>({
     queryKey: ["smart-resume-latest"],
     queryFn: async (): Promise<GeneratedResume> => {
@@ -89,8 +111,7 @@ export default function SmartResumePage() {
       setAnalysis(data);
       toast.success(`ATS Score: ${data.atsScore}/100 — ${data.scoreLabel}`);
     },
-    onError: () =>
-      toast.error("Analysis failed. Make sure you have a resume uploaded."),
+    onError: () => toast.error("Analysis failed. Make sure you have a resume uploaded."),
   });
 
   const generateMutation = useMutation({
@@ -111,6 +132,41 @@ export default function SmartResumePage() {
     setGenerated(res.data);
   };
 
+  const handleDownloadPDF = async () => {
+    if (!resumeRef.current) return;
+    setDownloading(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const jsPDF = (await import("jspdf")).default;
+
+      const canvas = await html2canvas(resumeRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.98);
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+      let yOffset = 0;
+      while (yOffset < imgHeight) {
+        if (yOffset > 0) pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, -yOffset, imgWidth, imgHeight);
+        yOffset += pageHeight;
+      }
+
+      pdf.save(`${generated?.resumeData?.name ?? "resume"}.pdf`);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl space-y-6">
       <div>
@@ -119,10 +175,117 @@ export default function SmartResumePage() {
           Smart Resume
         </h1>
         <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-0.5">
-          AI-powered ATS analysis and professionally optimized resume generation
+          Upload your resumes, then use AI to analyse and generate an ATS-optimized version
         </p>
       </div>
 
+      {/* ── Section: Resume Library ─────────────────────────────────────── */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
+              Your Resumes
+            </h2>
+            <div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                onChange={handleUpload}
+              />
+              <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} loading={uploading}>
+                <Upload className="h-4 w-4" /> Upload PDF
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {resumesLoading ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+            </div>
+          ) : resumes && resumes.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {resumes.map((resume) => (
+                <div
+                  key={resume.id}
+                  className="flex items-start gap-3 p-3 rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-[#f9f9fb] dark:bg-[#1c1c1e]"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-600/10 shrink-0">
+                    <FileText className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-medium text-[#1d1d1f] dark:text-white truncate">
+                        {resume.filename}
+                      </p>
+                      {resume.isPrimary && (
+                        <Badge className="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 shrink-0">
+                          <Star className="h-3 w-3 mr-1" /> Primary
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#86868b] dark:text-[#8e8e93] mt-0.5">
+                      {formatDate(resume.createdAt)}
+                      {resume.fileSize && ` · ${(resume.fileSize / 1024).toFixed(0)} KB`}
+                    </p>
+                    {resume.parsedData?.skills && (() => {
+                      const allSkills = Object.values(resume.parsedData.skills!).flat().filter(Boolean) as string[];
+                      return allSkills.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {allSkills.slice(0, 6).map((skill) => (
+                            <Badge key={skill} className="bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#6e6e73] dark:text-[#8e8e93] text-[10px]">
+                              {toCamelCase(skill)}
+                            </Badge>
+                          ))}
+                          {allSkills.length > 6 && (
+                            <Badge className="bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#86868b] dark:text-[#636366] text-[10px]">
+                              +{allSkills.length - 6} more
+                            </Badge>
+                          )}
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    {!resume.isPrimary && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPrimaryMutation.mutate(resume.id)}
+                        title="Set as primary"
+                      >
+                        <Star className="h-4 w-4 text-amber-500" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteMutation.mutate(resume.id)}
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center py-8 gap-2 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-600/10">
+                <FileText className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <p className="text-sm font-medium text-[#1d1d1f] dark:text-white">No resumes yet</p>
+              <p className="text-xs text-[#86868b] dark:text-[#8e8e93] max-w-xs">
+                Upload a PDF resume to enable ATS analysis and AI-powered optimization
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Step 1: ATS Analysis ─────────────────────────────────────────── */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -136,13 +299,9 @@ export default function SmartResumePage() {
               loading={analyzeMutation.isPending}
             >
               {analysis ? (
-                <>
-                  <RefreshCw className="h-4 w-4" /> Re-analyze
-                </>
+                <><RefreshCw className="h-4 w-4" /> Re-analyze</>
               ) : (
-                <>
-                  <Sparkles className="h-4 w-4" /> Analyze Resume
-                </>
+                <><Sparkles className="h-4 w-4" /> Analyze Resume</>
               )}
             </Button>
           </div>
@@ -176,10 +335,7 @@ export default function SmartResumePage() {
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {analysis.strengths.map((s) => (
-                      <Badge
-                        key={s}
-                        className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
-                      >
+                      <Badge key={s} className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400">
                         {s}
                       </Badge>
                     ))}
@@ -190,15 +346,11 @@ export default function SmartResumePage() {
               {analysis.missingFields.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-[#1d1d1f] dark:text-white mb-2 flex items-center gap-1">
-                    <AlertCircle className="h-4 w-4 text-red-500" /> Missing
-                    Sections
+                    <AlertCircle className="h-4 w-4 text-red-500" /> Missing Sections
                   </p>
                   <ul className="space-y-1">
                     {analysis.missingFields.map((f) => (
-                      <li
-                        key={f}
-                        className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400"
-                      >
+                      <li key={f} className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400">
                         <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
                         {f}
                       </li>
@@ -214,10 +366,7 @@ export default function SmartResumePage() {
                   </p>
                   <ul className="space-y-2">
                     {analysis.suggestions.map((s) => (
-                      <li
-                        key={s}
-                        className="flex items-start gap-2 text-sm text-[#3c3c43] dark:text-[#c9d1d9]"
-                      >
+                      <li key={s} className="flex items-start gap-2 text-sm text-[#3c3c43] dark:text-[#c9d1d9]">
                         <ChevronRight className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
                         {s}
                       </li>
@@ -230,13 +379,13 @@ export default function SmartResumePage() {
 
           {!analysis && !analyzeMutation.isPending && (
             <p className="text-sm text-[#86868b] dark:text-[#8e8e93] py-2">
-              Click &ldquo;Analyze Resume&rdquo; to scan your primary resume for
-              ATS compatibility issues.
+              Click &ldquo;Analyze Resume&rdquo; to scan your primary resume for ATS compatibility issues.
             </p>
           )}
         </CardContent>
       </Card>
 
+      {/* ── Step 2: Generate Optimized Resume ───────────────────────────── */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -284,28 +433,16 @@ export default function SmartResumePage() {
                   )}
                 </div>
                 {generated.paid && (
-                  <Button
-                    size="sm"
-                    onClick={handleDownloadPDF}
-                    loading={downloading}
-                  >
+                  <Button size="sm" onClick={handleDownloadPDF} loading={downloading}>
                     <Download className="h-4 w-4" /> Download PDF
                   </Button>
                 )}
               </div>
 
               <div className="relative rounded-2xl border border-black/[0.06] dark:border-white/[0.08] overflow-hidden">
-                <div
-                  className="p-8 bg-white"
-                  ref={resumeRef}
-                  id="resume-preview"
-                >
+                <div className="p-8 bg-white" ref={resumeRef} id="resume-preview">
                   <ResumePreview
-                    data={
-                      generated.paid
-                        ? generated.resumeData
-                        : generated.previewData
-                    }
+                    data={generated.paid ? generated.resumeData : generated.previewData}
                     full={generated.paid}
                   />
                 </div>
@@ -325,12 +462,9 @@ export default function SmartResumePage() {
                     </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[2px]">
                       <Lock className="h-8 w-8 text-indigo-500 mb-3" />
-                      <p className="font-semibold text-[#1d1d1f] mb-1 text-sm">
-                        Full resume locked
-                      </p>
+                      <p className="font-semibold text-[#1d1d1f] mb-1 text-sm">Full resume locked</p>
                       <p className="text-sm text-[#86868b] mb-4 text-center max-w-xs">
-                        Pay a one-time fee to unlock, download, and keep your
-                        optimized resume.
+                        Pay a one-time fee to unlock, download, and keep your optimized resume.
                       </p>
                       <Button onClick={() => setPayModal(true)}>
                         <CreditCardIcon />
@@ -345,8 +479,7 @@ export default function SmartResumePage() {
 
           {!generated && !generateMutation.isPending && (
             <p className="text-sm text-[#86868b] dark:text-[#8e8e93] py-2">
-              Click &ldquo;Fix &amp; Generate&rdquo; to create an AI-optimized
-              version of your resume with all ATS issues fixed.
+              Click &ldquo;Fix &amp; Generate&rdquo; to create an AI-optimized version of your resume with all ATS issues fixed.
             </p>
           )}
         </CardContent>
@@ -380,32 +513,18 @@ function AnimatedGauge({ score }: { score: number }) {
       if (progress < 1) rafRef.current = requestAnimationFrame(step);
     };
     rafRef.current = requestAnimationFrame(step);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [score]);
 
-  const strokeColor =
-    score >= 70 ? "#4F46E5" : score >= 50 ? "#F59E0B" : "#EF4444";
+  const strokeColor = score >= 70 ? "#4F46E5" : score >= 50 ? "#F59E0B" : "#EF4444";
 
   return (
     <div className="relative w-24 h-24 shrink-0">
       <svg viewBox="0 0 36 36" className="w-24 h-24 -rotate-90">
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" strokeWidth="3" />
         <circle
-          cx="18"
-          cy="18"
-          r="15.9"
-          fill="none"
-          stroke="#E5E7EB"
-          strokeWidth="3"
-        />
-        <circle
-          cx="18"
-          cy="18"
-          r="15.9"
-          fill="none"
-          stroke={strokeColor}
-          strokeWidth="3"
+          cx="18" cy="18" r="15.9" fill="none"
+          stroke={strokeColor} strokeWidth="3"
           strokeDasharray={`${displayed} ${100 - displayed}`}
           strokeLinecap="round"
           style={{ transition: "stroke 0.3s" }}
@@ -421,12 +540,7 @@ function AnimatedGauge({ score }: { score: number }) {
 
 function CreditCardIcon() {
   return (
-    <svg
-      className="h-4 w-4 mr-1"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
+    <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <rect x="1" y="4" width="22" height="16" rx="2" ry="2" strokeWidth="2" />
       <line x1="1" y1="10" x2="23" y2="10" strokeWidth="2" />
     </svg>
@@ -463,9 +577,7 @@ function ResumePreview({
               .map((item, i, arr) => (
                 <span key={i} className="whitespace-nowrap">
                   {item}
-                  {i < arr.length - 1 && (
-                    <span className="ml-3 text-gray-300">·</span>
-                  )}
+                  {i < arr.length - 1 && <span className="ml-3 text-gray-300">·</span>}
                 </span>
               ))}
           </div>
@@ -489,14 +601,11 @@ function ResumePreview({
                 </p>
               </div>
               <p className="text-xs text-gray-600 mb-1">
-                {exp.company}
-                {exp.location ? ` · ${exp.location}` : ""}
+                {exp.company}{exp.location ? ` · ${exp.location}` : ""}
               </p>
               <ul className="list-disc list-inside space-y-0.5">
                 {exp.bullets?.map((b, j) => (
-                  <li key={j} className="text-gray-700">
-                    {b}
-                  </li>
+                  <li key={j} className="text-gray-700">{b}</li>
                 ))}
               </ul>
             </div>
@@ -521,8 +630,7 @@ function ResumePreview({
               .filter(([, v]) => v && v.length > 0)
               .map(([label, v]) => (
                 <p key={label}>
-                  <span className="font-medium">{label}:</span>{" "}
-                  {v!.join(", ")}
+                  <span className="font-medium">{label}:</span> {v!.join(", ")}
                 </p>
               ))}
           </div>
@@ -536,16 +644,11 @@ function ResumePreview({
               {d.education.map((edu, i) => (
                 <div key={i} className="mb-2">
                   <div className="flex justify-between items-baseline">
-                    <p className="font-semibold">
-                      {edu.degree} in {edu.field}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {edu.graduationDate}
-                    </p>
+                    <p className="font-semibold">{edu.degree} in {edu.field}</p>
+                    <p className="text-xs text-gray-500">{edu.graduationDate}</p>
                   </div>
                   <p className="text-xs text-gray-600">
-                    {edu.institution}
-                    {edu.gpa ? ` · GPA: ${edu.gpa}` : ""}
+                    {edu.institution}{edu.gpa ? ` · GPA: ${edu.gpa}` : ""}
                   </p>
                 </div>
               ))}
@@ -559,9 +662,7 @@ function ResumePreview({
                   <p className="font-semibold">{p.name}</p>
                   <p className="text-gray-700">{p.description}</p>
                   {p.technologies?.length > 0 && (
-                    <p className="text-xs text-gray-500">
-                      {p.technologies.join(", ")}
-                    </p>
+                    <p className="text-xs text-gray-500">{p.technologies.join(", ")}</p>
                   )}
                 </div>
               ))}
@@ -572,8 +673,7 @@ function ResumePreview({
             <Section title="Certifications">
               {d.certifications.map((c, i) => (
                 <p key={i} className="text-gray-700">
-                  {c.name} — {c.issuer}
-                  {c.date ? ` (${c.date})` : ""}
+                  {c.name} — {c.issuer}{c.date ? ` (${c.date})` : ""}
                 </p>
               ))}
             </Section>
@@ -584,13 +684,7 @@ function ResumePreview({
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
       <h2 className="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-1 mb-2">

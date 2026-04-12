@@ -76,6 +76,13 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import DownloadIcon from "@mui/icons-material/Download";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import MicIcon from "@mui/icons-material/Mic";
+import MicOffIcon from "@mui/icons-material/MicOff";
+import VideocamIcon from "@mui/icons-material/Videocam";
+import VideocamOffIcon from "@mui/icons-material/VideocamOff";
+import KeyboardIcon from "@mui/icons-material/Keyboard";
+import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
 // ─── Icon wrapper ───────────────────────────────────────────────────────────
 type WrappedIconProps = Omit<SvgIconProps, "fontSize"> & {
@@ -165,6 +172,13 @@ export const Info          = wrap(InfoOutlinedIcon);
 export const Download      = wrap(DownloadIcon);
 export const RefreshCw     = wrap(RefreshIcon);
 export const ReceiptText   = wrap(ReceiptLongIcon);
+export const Mic           = wrap(MicIcon);
+export const MicOff        = wrap(MicOffIcon);
+export const Video         = wrap(VideocamIcon);
+export const VideoOff      = wrap(VideocamOffIcon);
+export const Keyboard      = wrap(KeyboardIcon);
+export const ListChecks    = wrap(PlaylistAddCheckIcon);
+export const AlertTriangle = wrap(WarningAmberIcon);
 
 // ─── LucideIcon type compat — used as prop type in EmptyState etc. ─────────
 export type LucideIcon = React.ComponentType<WrappedIconProps>;

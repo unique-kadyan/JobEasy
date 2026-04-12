@@ -13,7 +13,6 @@ import {
   Crown,
   LogOut,
   User,
-  FileText,
   Briefcase,
   Settings,
   Moon,
@@ -36,7 +35,6 @@ const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/jobs", label: "Jobs", icon: Search },
   { href: "/applications", label: "Applications", icon: Send },
-  { href: "/resumes", label: "Resumes", icon: FileText },
   { href: "/smart-resume", label: "Smart Resume", icon: Sparkles },
   { href: "/cover-letters", label: "Cover Letters", icon: Mail },
   { href: "/career-path", label: "Career Path", icon: TrendingUp },
@@ -116,11 +114,8 @@ export default function Navbar({
         <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-600">
           <Zap className="h-3.5 w-3.5 text-white" />
         </div>
-        <span className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
+        <span className="text-sm font-semibold text-[#1d1d1f] dark:text-white tracking-tight">
           Rolevo
-        </span>
-        <span className="text-[10px] bg-indigo-600 text-white px-1.5 py-0.5 rounded font-medium">
-          AI
         </span>
       </Link>
 
@@ -230,9 +225,10 @@ export default function Navbar({
                   onClick={() => navigate("/dashboard")}
                 />
                 <DropdownItem
-                  icon={<FileText className="h-4 w-4" />}
-                  label="My Resumes"
-                  onClick={() => navigate("/resumes")}
+                  icon={<Sparkles className="h-4 w-4" />}
+                  label="Smart Resume"
+                  description="Manage resumes & ATS optimizer"
+                  onClick={() => navigate("/smart-resume")}
                 />
                 <DropdownItem
                   icon={<Briefcase className="h-4 w-4" />}

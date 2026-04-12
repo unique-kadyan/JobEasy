@@ -90,18 +90,6 @@ export default function SignupPage() {
           >
             Rolevo
           </Typography>
-          <Chip
-            label="AI"
-            size="small"
-            sx={{
-              bgcolor: "rgba(255,255,255,0.2)",
-              color: "white",
-              fontWeight: 700,
-              fontSize: "0.65rem",
-              height: 20,
-              letterSpacing: 1,
-            }}
-          />
         </Stack>
 
         {/* Headline */}

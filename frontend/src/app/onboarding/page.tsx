@@ -273,7 +273,6 @@ export default function OnboardingPage() {
             <Zap className="h-5 w-5 text-white" />
           </Box>
           <Typography variant="h6" fontWeight={700} color="white" letterSpacing={-0.5}>Rolevo</Typography>
-          <Chip label="AI" size="small" sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white", fontWeight: 700, fontSize: "0.6rem", height: 20, letterSpacing: 1, "& .MuiChip-label": { px: 1 } }} />
         </Stack>
 
         {/* Per-step content — animates in/out */}

@@ -27,6 +27,8 @@ public class MockInterviewSession {
     private String overallFeedback;
     private String strengths;
     private String improvements;
+    private String gapAnalysis;    // Honest gap between candidate and role requirements
+    private List<String> actionPlan; // Concrete steps to close the gap
 
     private String status;         // IN_PROGRESS, COMPLETED
 
@@ -59,6 +61,8 @@ public class MockInterviewSession {
     public String getOverallFeedback()             { return overallFeedback; }
     public String getStrengths()                   { return strengths; }
     public String getImprovements()                { return improvements; }
+    public String getGapAnalysis()                 { return gapAnalysis; }
+    public List<String> getActionPlan()            { return actionPlan; }
     public String getStatus()                      { return status; }
     public LocalDateTime getStartedAt()            { return startedAt; }
     public LocalDateTime getCompletedAt()          { return completedAt; }
@@ -74,6 +78,8 @@ public class MockInterviewSession {
     public void setOverallFeedback(String overallFeedback)        { this.overallFeedback = overallFeedback; }
     public void setStrengths(String strengths)                    { this.strengths = strengths; }
     public void setImprovements(String improvements)              { this.improvements = improvements; }
+    public void setGapAnalysis(String gapAnalysis)                { this.gapAnalysis = gapAnalysis; }
+    public void setActionPlan(List<String> actionPlan)            { this.actionPlan = actionPlan; }
     public void setStatus(String status)                          { this.status = status; }
     public void setStartedAt(LocalDateTime startedAt)             { this.startedAt = startedAt; }
     public void setCompletedAt(LocalDateTime completedAt)         { this.completedAt = completedAt; }

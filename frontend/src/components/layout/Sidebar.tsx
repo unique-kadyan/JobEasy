@@ -11,7 +11,6 @@ import Divider from "@mui/material/Divider";
 import {
   LayoutDashboard,
   Search,
-  FileText,
   Send,
   Mail,
   Settings,
@@ -28,7 +27,6 @@ const navItems = [
   { href: "/dashboard",     label: "Dashboard",     icon: LayoutDashboard },
   { href: "/jobs",          label: "Find Jobs",      icon: Search },
   { href: "/applications",  label: "Applications",   icon: Send },
-  { href: "/resumes",       label: "Resumes",        icon: FileText },
   { href: "/smart-resume",  label: "Smart Resume",   icon: Sparkles },
   { href: "/cover-letters", label: "Cover Letters",  icon: Mail },
   { href: "/career-path",   label: "Career Path",    icon: TrendingUp },
@@ -121,20 +119,6 @@ export default function Sidebar() {
         >
           Rolevo
         </Typography>
-        <Chip
-          label="AI"
-          size="small"
-          sx={{
-            ml: "auto !important",
-            height: 20,
-            fontSize: "0.6rem",
-            fontWeight: 700,
-            letterSpacing: 1,
-            background: "linear-gradient(135deg, #4f46e5, #6366f1)",
-            color: "white",
-            "& .MuiChip-label": { px: 1 },
-          }}
-        />
       </Stack>
 
       {/* Navigation */}

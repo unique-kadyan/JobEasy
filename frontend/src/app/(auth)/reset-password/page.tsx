@@ -133,7 +133,6 @@ export default function ResetPasswordPage() {
             <Zap className="h-6 w-6 text-white" />
           </div>
           <span className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Rolevo</span>
-          <span className="text-[10px] bg-black dark:bg-white text-white dark:text-black px-1.5 py-0.5 rounded-[2px] font-black uppercase tracking-widest">AI</span>
         </div>
 
         <div

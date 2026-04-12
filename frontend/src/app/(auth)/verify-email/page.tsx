@@ -189,19 +189,6 @@ export default function VerifyEmailPage() {
           <Typography variant="h6" fontWeight={700} color="text.primary" letterSpacing={-0.5}>
             Rolevo
           </Typography>
-          <Chip
-            label="AI"
-            size="small"
-            sx={{
-              height: 20,
-              fontSize: "0.6rem",
-              fontWeight: 700,
-              letterSpacing: 1,
-              background: "linear-gradient(135deg, #4f46e5, #6366f1)",
-              color: "white",
-              "& .MuiChip-label": { px: 1 },
-            }}
-          />
         </Stack>
 
         <Paper

@@ -21,6 +21,7 @@ import {
   AlertCircle,
   CheckCheck,
 } from "@/components/ui/icons";
+import { toCamelCase } from "@/lib/utils";
 import type { CareerPathAnalysis, CareerRolePath } from "@/types";
 
 const LEVEL_LABELS: Record<string, string> = {
@@ -142,7 +143,7 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
                           key={skill}
                           className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
                         >
-                          {skill}
+                          {toCamelCase(skill)}
                         </Badge>
                       ))}
                     </div>
@@ -163,7 +164,7 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
                           key={skill}
                           className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
                         >
-                          {skill}
+                          {toCamelCase(skill)}
                         </Badge>
                       ))}
                     </div>
@@ -198,7 +199,7 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
                                   key={s}
                                   className="bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#6e6e73] dark:text-[#8e8e93] text-[10px]"
                                 >
-                                  {s}
+                                  {toCamelCase(s)}
                                 </Badge>
                               ))}
                             </div>

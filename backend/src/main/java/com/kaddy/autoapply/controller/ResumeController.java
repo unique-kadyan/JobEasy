@@ -1,5 +1,6 @@
 package com.kaddy.autoapply.controller;
 
+import com.kaddy.autoapply.dto.response.PagedResponse;
 import com.kaddy.autoapply.model.Resume;
 import com.kaddy.autoapply.service.ResumeService;
 import org.springframework.data.domain.Page;
@@ -36,10 +37,13 @@ public class ResumeController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<Resume>> list(Authentication auth,
-                                             @RequestParam(defaultValue = "0") int page,
-                                             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(resumeService.getUserResumes((String) auth.getPrincipal(), page, size));
+    public ResponseEntity<PagedResponse<Resume>> list(Authentication auth,
+                                                      @RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "20") int size) {
+        Page<Resume> p = resumeService.getUserResumes((String) auth.getPrincipal(), page, size);
+        return ResponseEntity.ok(new PagedResponse<>(
+                p.getContent(), p.getTotalElements(), p.getTotalPages(),
+                p.getNumber(), p.getSize()));
     }
 
     @GetMapping("/{id}")

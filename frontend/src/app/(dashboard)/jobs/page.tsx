@@ -31,6 +31,7 @@ import {
   Trash2,
 } from "@/components/ui/icons";
 import PageTransition, { StaggerList, StaggerItem } from "@/components/ui/PageTransition";
+import { toCamelCase } from "@/lib/utils";
 import type { Job } from "@/types";
 import { AI_PROVIDERS } from "@/lib/constants";
 import { useAuthStore } from "@/store/auth-store";
@@ -465,7 +466,7 @@ export default function JobsPage() {
                     key={skill}
                     className="inline-flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2.5 py-0.5 text-xs font-medium"
                   >
-                    {skill}
+                    {toCamelCase(skill)}
                     <button
                       type="button"
                       onClick={() => removeSkill(skill)}
@@ -493,7 +494,7 @@ export default function JobsPage() {
                             onClick={() => addSkill(skill)}
                             className="rounded-full border border-dashed border-black/10 dark:border-white/10 text-[#86868b] dark:text-[#8e8e93] px-2.5 py-0.5 text-xs font-medium hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                           >
-                            + {skill}
+                            + {toCamelCase(skill)}
                           </button>
                         ))}
                     </div>
@@ -515,7 +516,7 @@ export default function JobsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
           <span className="ml-3 text-sm font-bold text-[#86868b] dark:text-[#8e8e93]">
             {aiSearchEnabled && !searchQuery
-              ? "AI is crafting your search keywords…"
+              ? "Finding matching jobs…"
               : "Searching jobs…"}
           </span>
         </div>
@@ -525,9 +526,9 @@ export default function JobsPage() {
         <div className="flex items-center gap-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 px-4 py-2.5 text-sm">
           <Sparkles className="h-4 w-4 shrink-0 text-indigo-500" />
           <span className="text-[#6e6e73] dark:text-[#8e8e93] font-medium">
-            AI searched for:{" "}
+            Searched for:{" "}
             <span className="font-semibold text-indigo-700 dark:text-indigo-400">
-              {generatedQuery}
+              {generatedQuery.trim().split(/\s+/).join(", ")}
             </span>
           </span>
           <button
@@ -871,7 +872,7 @@ export default function JobsPage() {
                             key={s}
                             className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-400 text-xs"
                           >
-                            {s}
+                            {toCamelCase(s)}
                           </Badge>
                         ))}
                       </div>

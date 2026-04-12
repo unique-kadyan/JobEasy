@@ -35,34 +35,58 @@ public class InterviewPrepService {
     private static final Logger log = LoggerFactory.getLogger(InterviewPrepService.class);
 
     private static final String QUESTION_SYSTEM = """
-            You are an expert technical recruiter and interview coach.
-            Generate a set of interview questions for the given job role and difficulty level.
+            You are a senior technical recruiter and interview coach at a top-tier tech company.
+            Generate a comprehensive set of interview questions for the given role and difficulty level.
             Return ONLY a JSON array with exactly this structure (no markdown, no extra text):
             [
               {
                 "index": 1,
                 "question": "<interview question>",
-                "category": "<BEHAVIORAL|TECHNICAL|SITUATIONAL|CULTURE_FIT>"
+                "category": "<TECHNICAL|CORE_DEPTH|BEHAVIORAL|CULTURE_FIT|SCENARIO_BASED|SITUATIONAL|PROBLEM_SOLVING|SYSTEM_DESIGN>"
               }
             ]
-            Generate 8-10 questions with a balanced mix of categories.
-            Tailor questions to the specific job title, company, and difficulty level provided.""";
+            Category definitions:
+            - TECHNICAL: Core technology and domain knowledge (languages, frameworks, tools)
+            - CORE_DEPTH: Deep expert-level questions probing mastery of the primary stack
+            - BEHAVIORAL: Past-behavior (STAR format) — leadership, conflict, failure, success
+            - CULTURE_FIT: Values, collaboration style, growth mindset, team dynamics
+            - SCENARIO_BASED: Hypothetical "what would you do if..." challenges specific to this role
+            - SITUATIONAL: Real on-the-job situations they would face in this exact role
+            - PROBLEM_SOLVING: Algorithmic thinking, debugging approaches, trade-off analysis
+            - SYSTEM_DESIGN: Architecture, scalability, reliability (include for SENIOR and LEAD only)
+            Generate 12-15 questions with a deliberate mix across all relevant categories.
+            Make questions progressively harder. Tailor every question to the exact job title, company culture,
+            and difficulty level. Avoid generic questions — be specific to the domain.""";
 
     private static final String EVALUATION_SYSTEM = """
-            You are an expert interview coach evaluating candidate answers.
-            For each question-answer pair, score the answer and provide feedback.
+            You are a brutally honest but constructive senior interview coach at a top-tier tech company.
+            Evaluate every answer objectively — do not inflate scores. Most candidates score 40-65 overall.
+            For each question-answer pair, score the answer and provide specific feedback.
             Return ONLY a JSON array with exactly this structure (no markdown, no extra text):
             [
               {
                 "index": <same index as input>,
                 "score": <0-10 integer>,
-                "feedback": "<specific, actionable feedback>",
-                "idealAnswer": "<concise ideal answer for this question>"
+                "feedback": "<specific, actionable feedback pointing out exactly what was missing or wrong>",
+                "idealAnswer": "<concise ideal answer showing what an excellent response looks like>"
               }
             ]
-            Be constructive but honest. Score 0-4 for poor, 5-7 for adequate, 8-10 for excellent answers.
-            After the array, also return an overall summary in a separate JSON object on the next line:
-            {"overallScore": <0-100>, "strengths": "<2-3 sentences>", "improvements": "<2-3 sentences>", "overallFeedback": "<paragraph>"}""";
+            Scoring guide: 0-3 = poor/incomplete, 4-6 = adequate with gaps, 7-8 = good, 9-10 = exceptional.
+            After the array, return an overall summary as a single JSON object on the next line:
+            {
+              "overallScore": <0-100 integer — be honest, average candidate scores 40-65>,
+              "strengths": "<2-3 concrete strengths demonstrated in the answers>",
+              "improvements": "<2-3 critical areas that need immediate work>",
+              "overallFeedback": "<honest 2-3 sentence paragraph on readiness for this role>",
+              "gapAnalysis": "<1-2 paragraphs: compare what this role requires vs what the candidate demonstrated — be specific about which skills/knowledge are missing, which are partial, and which are solid>",
+              "actionPlan": [
+                "<Step 1: specific action — e.g. study topic X, build project Y, get certification Z>",
+                "<Step 2: ...>",
+                "<Step 3: ...>",
+                "<Step 4: ...>",
+                "<Step 5: ...>"
+              ]
+            }""";
 
     private final MockInterviewRepository mockInterviewRepository;
     private final UserRepository          userRepository;
@@ -154,19 +178,55 @@ public class InterviewPrepService {
         // Parse scores, feedback, ideal answers
         List<MockInterviewSession.QA> evaluated = parseEvaluation(withAnswers, result.content());
 
-        // Parse overall summary — find last line that looks like the summary JSON object
+        // Parse overall summary — find the JSON object containing overallScore
         int overallScore = 0;
-        String strengths = "", improvements = "", overallFeedback = "";
-        Optional<String> summaryLine = result.content().trim().lines()
-                .filter(l -> l.trim().startsWith("{") && l.contains("overallScore"))
-                .reduce((a, b) -> b);
-        if (summaryLine.isPresent()) {
+        String strengths = "", improvements = "", overallFeedback = "", gapAnalysis = "";
+        List<String> actionPlan = List.of();
+
+        // The summary may be a multi-line JSON object; extract from last '{' that contains overallScore
+        String rawContent = result.content().trim();
+        int summaryStart = rawContent.lastIndexOf("{\"overallScore\"");
+        if (summaryStart < 0) summaryStart = rawContent.lastIndexOf("{\n  \"overallScore\"");
+        if (summaryStart < 0) summaryStart = rawContent.lastIndexOf("{\r\n  \"overallScore\"");
+        // fallback: scan lines for the opening of the summary block
+        if (summaryStart < 0) {
+            String[] lines = rawContent.split("\\r?\\n");
+            int depth = 0; int blockStart = -1;
+            for (int i = 0; i < lines.length; i++) {
+                String t = lines[i].trim();
+                if (t.startsWith("{") && t.contains("overallScore")) { blockStart = i; break; }
+                if (blockStart < 0 && t.startsWith("{") && depth == 0) { blockStart = i; }
+                depth += (int) t.chars().filter(c -> c == '{').count();
+                depth -= (int) t.chars().filter(c -> c == '}').count();
+            }
+            if (blockStart >= 0) {
+                summaryStart = rawContent.indexOf(lines[blockStart]);
+            }
+        }
+        if (summaryStart >= 0) {
+            String candidate = rawContent.substring(summaryStart);
+            // Find matching closing brace
+            int d = 0; int end = -1;
+            for (int i = 0; i < candidate.length(); i++) {
+                char c = candidate.charAt(i);
+                if (c == '{') d++;
+                else if (c == '}') { d--; if (d == 0) { end = i + 1; break; } }
+            }
+            String summaryJson = end > 0 ? candidate.substring(0, end) : candidate;
             try {
-                Map<String, Object> summary = objectMapper.readValue(summaryLine.get().trim(), new TypeReference<>() {});
+                Map<String, Object> summary = objectMapper.readValue(summaryJson, new TypeReference<Map<String, Object>>() {});
                 overallScore    = ((Number) summary.getOrDefault("overallScore", 0)).intValue();
                 strengths       = (String) summary.getOrDefault("strengths", "");
                 improvements    = (String) summary.getOrDefault("improvements", "");
                 overallFeedback = (String) summary.getOrDefault("overallFeedback", "");
+                gapAnalysis     = (String) summary.getOrDefault("gapAnalysis", "");
+                Object ap = summary.get("actionPlan");
+                if (ap instanceof List<?> apList) {
+                    actionPlan = apList.stream()
+                            .filter(String.class::isInstance)
+                            .map(String.class::cast)
+                            .toList();
+                }
             } catch (Exception e) {
                 log.warn("Could not parse overall summary for session {}: {}", sessionId, e.getMessage());
                 overallScore = (int) Math.round(
@@ -179,6 +239,8 @@ public class InterviewPrepService {
         session.setStrengths(strengths);
         session.setImprovements(improvements);
         session.setOverallFeedback(overallFeedback);
+        session.setGapAnalysis(gapAnalysis);
+        session.setActionPlan(actionPlan);
         session.setStatus("COMPLETED");
         session.setCompletedAt(LocalDateTime.now());
 

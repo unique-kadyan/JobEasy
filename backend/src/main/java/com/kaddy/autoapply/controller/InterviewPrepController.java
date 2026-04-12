@@ -1,5 +1,6 @@
 package com.kaddy.autoapply.controller;
 
+import com.kaddy.autoapply.dto.response.PagedResponse;
 import com.kaddy.autoapply.model.MockInterviewSession;
 import com.kaddy.autoapply.service.InterviewPrepService;
 import org.springframework.data.domain.Page;
@@ -46,12 +47,15 @@ public class InterviewPrepController {
 
     /** List past interview sessions (paginated) */
     @GetMapping("/sessions")
-    public ResponseEntity<Page<MockInterviewSession>> getSessions(
+    public ResponseEntity<PagedResponse<MockInterviewSession>> getSessions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication auth) {
-        return ResponseEntity.ok(
-                interviewPrepService.getSessions((String) auth.getPrincipal(), page, size));
+        Page<MockInterviewSession> p = interviewPrepService.getSessions(
+                (String) auth.getPrincipal(), page, size);
+        return ResponseEntity.ok(new PagedResponse<>(
+                p.getContent(), p.getTotalElements(), p.getTotalPages(),
+                p.getNumber(), p.getSize()));
     }
 
     /** Get a single session by ID */

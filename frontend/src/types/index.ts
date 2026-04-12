@@ -138,10 +138,22 @@ export interface CoverLetter {
   createdAt: string;
 }
 
+export type InterviewCategory =
+  | "BEHAVIORAL"
+  | "TECHNICAL"
+  | "CORE_DEPTH"
+  | "SITUATIONAL"
+  | "CULTURE_FIT"
+  | "SCENARIO_BASED"
+  | "PROBLEM_SOLVING"
+  | "SYSTEM_DESIGN";
+
+export type InterviewMode = "TEXT" | "AUDIO" | "VIDEO";
+
 export interface MockInterviewQA {
   index: number;
   question: string;
-  category: "BEHAVIORAL" | "TECHNICAL" | "SITUATIONAL" | "CULTURE_FIT";
+  category: InterviewCategory;
   idealAnswer?: string;
   userAnswer?: string;
   score: number;
@@ -160,6 +172,8 @@ export interface MockInterviewSession {
   overallFeedback?: string;
   strengths?: string;
   improvements?: string;
+  gapAnalysis?: string;
+  actionPlan?: string[];
   status: "IN_PROGRESS" | "COMPLETED";
   startedAt: string;
   completedAt?: string;

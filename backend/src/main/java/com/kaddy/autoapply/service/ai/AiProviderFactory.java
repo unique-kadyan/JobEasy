@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 public class AiProviderFactory {
@@ -78,8 +79,15 @@ public class AiProviderFactory {
     }
 
     public GenerationResult generate(String systemPrompt, String userPrompt, TaskType taskType) {
+        return generate(systemPrompt, userPrompt, taskType, Set.of());
+    }
+
+    /** Like {@link #generate(String, String, TaskType)} but skips any provider in {@code excluded}. */
+    public GenerationResult generate(String systemPrompt, String userPrompt, TaskType taskType,
+                                     Set<String> excluded) {
         if (taskType != null && taskType != TaskType.GENERAL) {
             for (String name : taskType.preferredProviders()) {
+                if (excluded.contains(name.toUpperCase())) continue;
                 AiProvider p = providerMap.get(name);
                 if (p == null || !p.isAvailable())
                     continue;
@@ -94,7 +102,7 @@ public class AiProviderFactory {
             }
             log.warn("All task-preferred providers exhausted for task={} — falling through cascade", taskType);
         }
-        return generate(systemPrompt, userPrompt, (String) null);
+        return generateFromCascade(systemPrompt, userPrompt, excluded);
     }
 
     public GenerationResult generate(String systemPrompt, String userPrompt, String preferred) {
@@ -113,8 +121,13 @@ public class AiProviderFactory {
                 log.debug("Preferred provider '{}' not configured, skipping", preferred);
             }
         }
+        return generateFromCascade(systemPrompt, userPrompt, Set.of());
+    }
 
+    private GenerationResult generateFromCascade(String systemPrompt, String userPrompt,
+                                                  Set<String> excluded) {
         for (String name : freeProviderOrder) {
+            if (excluded.contains(name.toUpperCase())) continue;
             AiProvider p = providerMap.get(name);
             if (p == null || !p.isAvailable())
                 continue;
@@ -130,6 +143,7 @@ public class AiProviderFactory {
         log.warn("All free AI providers failed. Falling back to premium providers.");
 
         for (String name : premiumProviderOrder) {
+            if (excluded.contains(name.toUpperCase())) continue;
             AiProvider p = providerMap.get(name);
             if (p == null || !p.isAvailable())
                 continue;

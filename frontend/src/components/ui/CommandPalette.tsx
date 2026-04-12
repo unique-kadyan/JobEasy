@@ -14,7 +14,6 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
   LayoutDashboard,
   Search,
-  FileText,
   Send,
   Mail,
   Settings,
@@ -27,7 +26,6 @@ const COMMANDS = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { label: "Find Jobs", icon: Search, href: "/jobs" },
   { label: "Applications", icon: Send, href: "/applications" },
-  { label: "Resumes", icon: FileText, href: "/resumes" },
   { label: "Smart Resume", icon: Sparkles, href: "/smart-resume" },
   { label: "Cover Letters", icon: Mail, href: "/cover-letters" },
   { label: "Profile", icon: User, href: "/profile" },
