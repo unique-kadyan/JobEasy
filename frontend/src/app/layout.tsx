@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { Toaster } from "sonner";
+import EmotionCacheProvider from "@/components/emotion-cache";
 import Providers from "@/components/providers";
 import "./globals.css";
 
@@ -31,12 +31,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AppRouterCacheProvider>
+        <EmotionCacheProvider>
           <Providers>
             {children}
             <Toaster position="top-right" richColors closeButton />
           </Providers>
-        </AppRouterCacheProvider>
+        </EmotionCacheProvider>
       </body>
     </html>
   );
