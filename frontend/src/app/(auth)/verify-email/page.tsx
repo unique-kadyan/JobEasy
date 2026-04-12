@@ -3,9 +3,18 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import api from "@/lib/api";
-import Button from "@/components/ui/Button";
-import { Zap, CheckCircle, XCircle, Loader2 } from "@/components/ui/icons";
 import Link from "next/link";
+import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import Chip from "@mui/material/Chip";
+import MuiButton from "@mui/material/Button";
+import Alert from "@mui/material/Alert";
+import CircularProgress from "@mui/material/CircularProgress";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
+import { Zap } from "@/components/ui/icons";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
@@ -19,7 +28,6 @@ function VerifyEmailContent() {
       setMessage("No verification token provided.");
       return;
     }
-
     api
       .get(`/auth/verify-email?token=${token}`)
       .then(() => {
@@ -32,91 +40,193 @@ function VerifyEmailContent() {
       });
   }, [token]);
 
+  if (status === "loading") {
+    return (
+      <Stack spacing={2} alignItems="center">
+        <CircularProgress size={48} thickness={3} sx={{ color: "primary.main" }} />
+        <Typography variant="body2" color="text.secondary">
+          Verifying your email…
+        </Typography>
+      </Stack>
+    );
+  }
+
+  if (status === "success") {
+    return (
+      <Stack spacing={3} alignItems="center">
+        <Box
+          sx={{
+            width: 72,
+            height: 72,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, rgba(34,197,94,0.15), rgba(16,185,129,0.08))",
+            border: "1px solid rgba(34,197,94,0.25)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <CheckCircleRoundedIcon sx={{ fontSize: 36, color: "#22c55e" }} />
+        </Box>
+        <Box textAlign="center">
+          <Typography variant="h5" fontWeight={700} color="text.primary" mb={0.75}>
+            Email Verified!
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {message}
+          </Typography>
+        </Box>
+        <MuiButton
+          component={Link}
+          href="/login"
+          variant="contained"
+          size="large"
+          disableElevation
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            fontWeight: 600,
+            px: 4,
+            background: "linear-gradient(135deg, #4f46e5, #6366f1)",
+            "&:hover": { background: "linear-gradient(135deg, #4338ca, #4f46e5)" },
+          }}
+        >
+          Sign In to Your Account
+        </MuiButton>
+      </Stack>
+    );
+  }
+
   return (
-    <>
-      {status === "loading" && (
-        <div className="space-y-4 text-center">
-          <div className="flex justify-center">
-            <Loader2 className="h-12 w-12 animate-spin text-indigo-600 dark:text-indigo-400" />
-          </div>
-          <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">Verifying your email...</p>
-        </div>
-      )}
-
-      {status === "success" && (
-        <div className="space-y-4 text-center">
-          <div
-            className="flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-green-500 bg-green-50 dark:bg-green-900/20 mx-auto"
-            style={{ boxShadow: "3px 3px 0 #22c55e" }}
-          >
-            <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
-          </div>
-          <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Email Verified!</h1>
-          <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">{message}</p>
-          <Link href="/login">
-            <Button size="lg" className="mt-4">
-              Sign In to Your Account
-            </Button>
-          </Link>
-        </div>
-      )}
-
-      {status === "error" && (
-        <div className="space-y-4 text-center">
-          <div
-            className="flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-red-500 bg-red-50 dark:bg-red-900/20 mx-auto"
-            style={{ boxShadow: "3px 3px 0 #ef4444" }}
-          >
-            <XCircle className="h-8 w-8 text-red-500" />
-          </div>
-          <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Verification Failed</h1>
-          <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">{message}</p>
-          <div className="flex gap-3 justify-center mt-4">
-            <Link href="/login">
-              <Button variant="outline">Sign In</Button>
-            </Link>
-            <Link href="/signup">
-              <Button>Sign Up Again</Button>
-            </Link>
-          </div>
-        </div>
-      )}
-    </>
+    <Stack spacing={3} alignItems="center">
+      <Box
+        sx={{
+          width: 72,
+          height: 72,
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, rgba(239,68,68,0.15), rgba(249,115,22,0.08))",
+          border: "1px solid rgba(239,68,68,0.25)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <ErrorRoundedIcon sx={{ fontSize: 36, color: "#ef4444" }} />
+      </Box>
+      <Box textAlign="center">
+        <Typography variant="h5" fontWeight={700} color="text.primary" mb={0.75}>
+          Verification Failed
+        </Typography>
+        <Alert severity="error" variant="outlined" sx={{ borderRadius: 2, mt: 1 }}>
+          {message}
+        </Alert>
+      </Box>
+      <Stack direction="row" spacing={1.5}>
+        <MuiButton
+          component={Link}
+          href="/login"
+          variant="outlined"
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            fontWeight: 600,
+            borderColor: "divider",
+            color: "text.secondary",
+            "&:hover": { borderColor: "primary.main", color: "primary.main" },
+          }}
+        >
+          Sign In
+        </MuiButton>
+        <MuiButton
+          component={Link}
+          href="/signup"
+          variant="contained"
+          disableElevation
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            fontWeight: 600,
+            background: "linear-gradient(135deg, #4f46e5, #6366f1)",
+            "&:hover": { background: "linear-gradient(135deg, #4338ca, #4f46e5)" },
+          }}
+        >
+          Sign Up Again
+        </MuiButton>
+      </Stack>
+    </Stack>
   );
 }
 
 export default function VerifyEmailPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f5f2ea] dark:bg-[#0d1117] p-8">
-      <div className="w-full max-w-md">
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "background.default",
+        p: 3,
+      }}
+    >
+      <Box sx={{ width: "100%", maxWidth: 440 }}>
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div
-            className="flex h-10 w-10 items-center justify-center rounded-[4px] bg-indigo-600 border-2 border-black"
-            style={{ boxShadow: "3px 3px 0 #000" }}
+        <Stack direction="row" alignItems="center" spacing={1.5} justifyContent="center" mb={4}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 2,
+              background: "linear-gradient(135deg, #4f46e5, #6366f1)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 12px rgba(99,102,241,0.4)",
+            }}
           >
-            <Zap className="h-6 w-6 text-white" />
-          </div>
-          <span className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Rolevo</span>
-          <span className="text-[10px] bg-black dark:bg-white text-white dark:text-black px-1.5 py-0.5 rounded-[2px] font-black uppercase tracking-widest">AI</span>
-        </div>
+            <Zap style={{ fontSize: 20, color: "white" }} />
+          </Box>
+          <Typography variant="h6" fontWeight={700} color="text.primary" letterSpacing={-0.5}>
+            Rolevo
+          </Typography>
+          <Chip
+            label="AI"
+            size="small"
+            sx={{
+              height: 20,
+              fontSize: "0.6rem",
+              fontWeight: 700,
+              letterSpacing: 1,
+              background: "linear-gradient(135deg, #4f46e5, #6366f1)",
+              color: "white",
+              "& .MuiChip-label": { px: 1 },
+            }}
+          />
+        </Stack>
 
-        <div
-          className="rounded-[4px] border-2 border-black dark:border-white bg-white dark:bg-[#161b22] p-8"
-          style={{ boxShadow: "6px 6px 0 #000" }}
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: 3,
+            border: "1px solid",
+            borderColor: "divider",
+            p: 5,
+            boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+            bgcolor: "background.paper",
+          }}
         >
           <Suspense
             fallback={
-              <div className="space-y-4 text-center">
-                <Loader2 className="h-12 w-12 animate-spin text-indigo-600 mx-auto" />
-                <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">Loading...</p>
-              </div>
+              <Stack spacing={2} alignItems="center">
+                <CircularProgress size={48} thickness={3} sx={{ color: "primary.main" }} />
+                <Typography variant="body2" color="text.secondary">Loading…</Typography>
+              </Stack>
             }
           >
             <VerifyEmailContent />
           </Suspense>
-        </div>
-      </div>
-    </div>
+        </Paper>
+      </Box>
+    </Box>
   );
 }

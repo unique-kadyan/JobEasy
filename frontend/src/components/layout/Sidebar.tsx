@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import Chip from "@mui/material/Chip";
+import Divider from "@mui/material/Divider";
 import {
   LayoutDashboard,
   Search,
@@ -27,45 +31,33 @@ const navItems = [
   { href: "/resumes",       label: "Resumes",        icon: FileText },
   { href: "/smart-resume",  label: "Smart Resume",   icon: Sparkles },
   { href: "/cover-letters", label: "Cover Letters",  icon: Mail },
-  { href: "/career-path",     label: "Career Path",    icon: TrendingUp },
-  { href: "/interview-prep",  label: "Interview Prep", icon: MessageSquare },
-  { href: "/profile",         label: "Profile",        icon: User },
+  { href: "/career-path",   label: "Career Path",    icon: TrendingUp },
+  { href: "/interview-prep", label: "Interview Prep", icon: MessageSquare },
+  { href: "/profile",       label: "Profile",        icon: User },
   { href: "/settings",      label: "Settings",       icon: Settings },
 ];
 
 const TIER_CONFIG: Record<string, {
   label: string;
-  iconColor: string;
-  textColor: string;
   gradient: string;
-  upgradeBtn?: string;
-  upgradeBtnHover?: string;
   upgradeLabel?: string;
   upgradeHint?: string;
 }> = {
   FREE: {
     label: "Free Plan",
-    iconColor: "text-gray-400",
-    textColor: "text-gray-500",
-    gradient: "from-gray-50 to-gray-100",
-    upgradeBtn: "bg-indigo-600 hover:bg-indigo-700",
-    upgradeLabel: "Upgrade Plan",
-    upgradeHint: "Upgrade to Gold to unlock up to 10 jobs per search.",
+    gradient: "linear-gradient(135deg, #6b7280 0%, #9ca3af 100%)",
+    upgradeLabel: "Upgrade to Gold →",
+    upgradeHint: "Unlock 10× more jobs",
   },
   GOLD: {
     label: "Gold Plan",
-    iconColor: "text-yellow-500",
-    textColor: "text-yellow-700",
-    gradient: "from-yellow-50 to-amber-100",
-    upgradeBtn: "bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800",
-    upgradeLabel: "Go Platinum",
-    upgradeHint: "Upgrade to Platinum for auto-apply and scheduled job search.",
+    gradient: "linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)",
+    upgradeLabel: "Go Platinum →",
+    upgradeHint: "Unlock auto-apply & more",
   },
   PLATINUM: {
     label: "Platinum Plan",
-    iconColor: "text-slate-400",
-    textColor: "text-slate-600",
-    gradient: "from-slate-100 to-slate-200",
+    gradient: "linear-gradient(135deg, #4f46e5 0%, #818cf8 100%)",
   },
 };
 
@@ -76,78 +68,253 @@ export default function Sidebar() {
   const cfg = TIER_CONFIG[tier] ?? TIER_CONFIG.FREE;
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r-2 border-black bg-[#f5f2ea] flex flex-col">
-      <div className="flex h-14 items-center gap-2 border-b-2 border-black px-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-[3px] bg-indigo-600 border-2 border-black" style={{ boxShadow: "2px 2px 0 #000" }}>
-          <Zap className="h-4 w-4 text-white" />
-        </div>
-        <span className="text-lg font-black text-black tracking-tight">Rolevo</span>
-        <span className="text-[10px] bg-black text-white px-2 py-0.5 rounded-[2px] font-bold ml-auto uppercase tracking-widest">
-          AI
-        </span>
-      </div>
+    <Box
+      component="aside"
+      sx={{
+        position: "fixed",
+        left: 0,
+        top: 0,
+        zIndex: 40,
+        height: "100vh",
+        width: 256,
+        display: "flex",
+        flexDirection: "column",
+        bgcolor: "background.paper",
+        borderRight: "1px solid",
+        borderColor: "divider",
+        boxShadow: "4px 0 24px rgba(0,0,0,0.05)",
+      }}
+    >
+      {/* Logo */}
+      <Stack
+        direction="row"
+        alignItems="center"
+        spacing={1.5}
+        sx={{
+          px: 2.5,
+          height: 64,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          flexShrink: 0,
+        }}
+      >
+        <Box
+          sx={{
+            width: 36,
+            height: 36,
+            borderRadius: 2,
+            background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 4px 12px rgba(99,102,241,0.4)",
+            flexShrink: 0,
+          }}
+        >
+          <Zap style={{ fontSize: 18, color: "white" }} />
+        </Box>
+        <Typography
+          variant="h6"
+          fontWeight={700}
+          color="text.primary"
+          letterSpacing={-0.5}
+        >
+          Rolevo
+        </Typography>
+        <Chip
+          label="AI"
+          size="small"
+          sx={{
+            ml: "auto !important",
+            height: 20,
+            fontSize: "0.6rem",
+            fontWeight: 700,
+            letterSpacing: 1,
+            background: "linear-gradient(135deg, #4f46e5, #6366f1)",
+            color: "white",
+            "& .MuiChip-label": { px: 1 },
+          }}
+        />
+      </Stack>
 
-      <nav className="mt-3 px-3 space-y-0.5 flex-1 overflow-y-auto">
+      {/* Navigation */}
+      <Box
+        component="nav"
+        sx={{
+          flex: 1,
+          overflowY: "auto",
+          px: 1.5,
+          py: 1.5,
+          "&::-webkit-scrollbar": { width: 4 },
+          "&::-webkit-scrollbar-thumb": { borderRadius: 4, bgcolor: "divider" },
+          "&::-webkit-scrollbar-track": { bgcolor: "transparent" },
+        }}
+      >
+        <Typography
+          variant="caption"
+          color="text.disabled"
+          fontWeight={600}
+          sx={{ px: 1.5, mb: 1, display: "block", letterSpacing: 0.8, fontSize: "0.65rem" }}
+        >
+          MENU
+        </Typography>
+
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href));
+
           return (
-            <Link
+            <Box
               key={item.href}
+              component={Link}
               href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-[3px] px-3 py-2 text-xs font-bold uppercase tracking-wide transition-all duration-100",
-                isActive
-                  ? "bg-indigo-600 text-white border-2 border-black"
-                  : "text-gray-700 hover:bg-white hover:text-black border-2 border-transparent hover:border-black"
-              )}
-              style={isActive ? { boxShadow: "2px 2px 0 #000" } : undefined}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                px: 1.5,
+                py: 1,
+                mb: 0.25,
+                borderRadius: 2,
+                textDecoration: "none",
+                position: "relative",
+                overflow: "hidden",
+                transition: "all 0.15s ease",
+                color: isActive ? "primary.main" : "text.secondary",
+                fontWeight: isActive ? 600 : 500,
+                fontSize: "0.875rem",
+                bgcolor: isActive ? "rgba(99,102,241,0.08)" : "transparent",
+                "&:hover": {
+                  bgcolor: isActive
+                    ? "rgba(99,102,241,0.12)"
+                    : "action.hover",
+                  color: isActive ? "primary.main" : "text.primary",
+                  transform: "translateX(2px)",
+                },
+                // Left active indicator bar
+                "&::before": isActive
+                  ? {
+                      content: '""',
+                      position: "absolute",
+                      left: 0,
+                      top: "20%",
+                      height: "60%",
+                      width: 3,
+                      borderRadius: "0 3px 3px 0",
+                      background: "linear-gradient(180deg, #4f46e5, #6366f1)",
+                    }
+                  : {},
+              }}
             >
-              <item.icon className="h-3.5 w-3.5 shrink-0" />
-              {item.label}
-            </Link>
+              <item.icon style={{ fontSize: 16, flexShrink: 0 }} />
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: "inherit",
+                  fontWeight: "inherit",
+                  color: "inherit",
+                  lineHeight: 1,
+                }}
+              >
+                {item.label}
+              </Typography>
+            </Box>
           );
         })}
-      </nav>
+      </Box>
 
-      <div className="px-3 pb-4 space-y-2 border-t-2 border-black pt-3">
-        <div className="rounded-[4px] border-2 border-black p-3 bg-white" style={{ boxShadow: "3px 3px 0 #000" }}>
-          <div className="flex items-center gap-2 mb-2">
-            <Crown className={cn("h-4 w-4", cfg.iconColor)} />
-            <span className="text-xs font-black text-black uppercase tracking-wide">{cfg.label}</span>
-          </div>
+      {/* Plan card + Pricing link */}
+      <Box sx={{ px: 1.5, pb: 2, flexShrink: 0 }}>
+        <Divider sx={{ mb: 1.5 }} />
+
+        {/* Tier badge */}
+        <Box
+          sx={{
+            borderRadius: 2.5,
+            background: cfg.gradient,
+            p: 2,
+            color: "white",
+            mb: 0.5,
+          }}
+        >
+          <Stack direction="row" alignItems="center" spacing={1} mb={tier !== "PLATINUM" ? 1 : 0}>
+            <Crown style={{ fontSize: 15 }} />
+            <Typography variant="caption" fontWeight={700} letterSpacing={0.5}>
+              {cfg.label}
+            </Typography>
+          </Stack>
+
           {tier !== "PLATINUM" && cfg.upgradeHint && (
             <>
-              <p className="text-xs text-gray-600 mb-2 font-medium">{cfg.upgradeHint}</p>
-              <Link
+              <Typography
+                variant="caption"
+                sx={{ color: "rgba(255,255,255,0.82)", display: "block", mb: 1.5, lineHeight: 1.4 }}
+              >
+                {cfg.upgradeHint}
+              </Typography>
+              <Box
+                component={Link}
                 href="/pricing"
-                className="block w-full text-center text-xs font-black text-white py-1.5 rounded-[3px] bg-indigo-600 border-2 border-black nb-lift"
-                style={{ boxShadow: "2px 2px 0 #000" }}
+                sx={{
+                  display: "block",
+                  textAlign: "center",
+                  py: 0.75,
+                  borderRadius: 1.5,
+                  bgcolor: "rgba(255,255,255,0.2)",
+                  backdropFilter: "blur(4px)",
+                  border: "1px solid rgba(255,255,255,0.3)",
+                  color: "white",
+                  textDecoration: "none",
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  letterSpacing: 0.3,
+                  transition: "background 0.15s ease",
+                  "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
+                }}
               >
                 {cfg.upgradeLabel}
-              </Link>
+              </Box>
             </>
           )}
-          {tier === "PLATINUM" && (
-            <p className="text-xs font-bold text-gray-700">You have full access!</p>
-          )}
-        </div>
 
-        <Link
-          href="/pricing"
-          className={cn(
-            "flex items-center gap-3 rounded-[3px] px-3 py-2 text-xs font-bold uppercase tracking-wide transition-all duration-100 border-2",
-            pathname === "/pricing"
-              ? "bg-indigo-600 text-white border-black"
-              : "text-gray-700 border-transparent hover:bg-white hover:text-black hover:border-black"
+          {tier === "PLATINUM" && (
+            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.82)" }}>
+              Full access unlocked ✓
+            </Typography>
           )}
-          style={pathname === "/pricing" ? { boxShadow: "2px 2px 0 #000" } : undefined}
+        </Box>
+
+        {/* Pricing nav item */}
+        <Box
+          component={Link}
+          href="/pricing"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            px: 1.5,
+            py: 1,
+            borderRadius: 2,
+            textDecoration: "none",
+            transition: "all 0.15s ease",
+            color: pathname === "/pricing" ? "primary.main" : "text.secondary",
+            fontWeight: pathname === "/pricing" ? 600 : 500,
+            fontSize: "0.875rem",
+            bgcolor: pathname === "/pricing" ? "rgba(99,102,241,0.08)" : "transparent",
+            "&:hover": {
+              bgcolor: "action.hover",
+              color: "text.primary",
+              transform: "translateX(2px)",
+            },
+          }}
         >
-          <CreditCard className="h-3.5 w-3.5 shrink-0" />
-          Pricing
-        </Link>
-      </div>
-    </aside>
+          <CreditCard style={{ fontSize: 16 }} />
+          <Typography component="span" sx={{ fontSize: "inherit", fontWeight: "inherit", color: "inherit" }}>
+            Pricing
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
   );
 }

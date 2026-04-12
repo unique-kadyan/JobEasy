@@ -1,17 +1,22 @@
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/auth-store";
+import { useAuthStore, REMEMBER_ME_KEY } from "@/store/auth-store";
 import api, { setSessionCookie, clearSessionCookie } from "@/lib/api";
 import type { AuthResponse } from "@/types";
 
 export function useAuth() {
   const router = useRouter();
-  const { setAuth, logout: clearAuth, setWelcomeScreen, user, isAuthenticated, hasRole } =
+  const { setAuth, logout: clearAuth, setWelcomeScreen, setFarewellScreen, user, isAuthenticated, hasRole } =
     useAuthStore();
 
-  const login = async (email: string, password: string): Promise<void> => {
-    const res = await api.post<AuthResponse>("/auth/login", { email, password });
+  const login = async (email: string, password: string, rememberMe = false): Promise<void> => {
+    // Set the flag BEFORE calling setAuth so the dynamic storage picks up the
+    // correct backing store (localStorage vs sessionStorage) on first write.
+    if (typeof window !== "undefined") {
+      localStorage.setItem(REMEMBER_ME_KEY, rememberMe ? "true" : "false");
+    }
+    const res = await api.post<AuthResponse>("/auth/login", { email, password, rememberMe });
     setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
-    setSessionCookie();
+    setSessionCookie(rememberMe);
     setWelcomeScreen({
       show: true,
       type: "login",
@@ -30,8 +35,12 @@ export function useAuth() {
       email,
       password,
     });
+    // Signup never enables "remember me" — user can opt in on next login
+    if (typeof window !== "undefined") {
+      localStorage.setItem(REMEMBER_ME_KEY, "false");
+    }
     setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
-    setSessionCookie();
+    setSessionCookie(false);
     setWelcomeScreen({
       show: true,
       type: "signup",
@@ -41,14 +50,16 @@ export function useAuth() {
   };
 
   const logout = async (): Promise<void> => {
+    // Capture name before clearing auth so the farewell screen can use it
+    const firstName = user?.name?.split(" ")[0] ?? "there";
     try {
       await api.post("/auth/logout");
     } catch {
-    } finally {
-      clearAuth();
-      clearSessionCookie();
-      router.push("/login");
+      // ignore — proceed with local logout regardless
     }
+    // Show the farewell animation; the layout's onComplete handler will
+    // call clearAuth() + redirect after the animation finishes.
+    setFarewellScreen({ show: true, userName: firstName });
   };
 
   const userHasRole = (role: string): boolean => hasRole(role);

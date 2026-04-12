@@ -4,8 +4,17 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Modal from "@/components/ui/Modal";
-import { Crown, Zap, CheckCircle, Lock, AlertCircle } from "@/components/ui/icons";
+import { Crown, Zap, CheckCircle, AlertCircle } from "@/components/ui/icons";
 import { useAuthStore } from "@/store/auth-store";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import ToggleButton from "@mui/material/ToggleButton";
+import Chip from "@mui/material/Chip";
+import Alert from "@mui/material/Alert";
+import CircularProgress from "@mui/material/CircularProgress";
+import Divider from "@mui/material/Divider";
 
 interface RazorpayInstance {
   on(event: string, handler: () => void): void;
@@ -31,10 +40,7 @@ interface Props {
 
 function loadRazorpay(): Promise<boolean> {
   return new Promise((resolve) => {
-    if (window.Razorpay) {
-      resolve(true);
-      return;
-    }
+    if (window.Razorpay) { resolve(true); return; }
     const s = document.createElement("script");
     s.src = "https://checkout.razorpay.com/v1/checkout.js";
     s.onload = () => resolve(true);
@@ -49,16 +55,12 @@ const PLANS = [
     name: "Gold",
     monthlyPrice: 325,
     icon: Crown,
-    iconBg: "bg-amber-50 dark:bg-yellow-900/30",
-    iconColor: "text-amber-500",
-    iconBorder: "border-amber-400",
-    accentBorder: "border-amber-400",
-    accentBg: "bg-amber-50 dark:bg-yellow-900/10",
-    textColor: "text-amber-700 dark:text-amber-400",
-    btnClass: "bg-amber-500 hover:bg-amber-600 text-white border-2 border-black dark:border-black",
+    gradient: "linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)",
+    glowColor: "rgba(245,158,11,0.25)",
+    accentColor: "#f59e0b",
     features: [
       "Up to 10 job results per search",
-      "All job sources (Indeed, LinkedIn, JSearch...)",
+      "All job sources (Indeed, LinkedIn, JSearch…)",
       "Resume skills auto-detection",
       "AI cover letter generation",
       "Full application tracking",
@@ -69,13 +71,9 @@ const PLANS = [
     name: "Platinum",
     monthlyPrice: 500,
     icon: Zap,
-    iconBg: "bg-slate-100 dark:bg-slate-800",
-    iconColor: "text-indigo-500",
-    iconBorder: "border-slate-400 dark:border-slate-600",
-    accentBorder: "border-indigo-600",
-    accentBg: "bg-slate-50 dark:bg-slate-900/30",
-    textColor: "text-slate-700 dark:text-slate-300",
-    btnClass: "bg-indigo-600 hover:bg-indigo-700 text-white border-2 border-black dark:border-black",
+    gradient: "linear-gradient(135deg, #4f46e5 0%, #818cf8 100%)",
+    glowColor: "rgba(99,102,241,0.25)",
+    accentColor: "#6366f1",
     features: [
       "Unlimited job results",
       "Auto-apply — AI fills & submits forms",
@@ -100,9 +98,7 @@ export default function UpgradeModal({ open, onClose, targetTier, billingCycle =
 
   const createOrderMutation = useMutation({
     mutationFn: ({ tier, billingCycle: bc }: { tier: string; billingCycle: string }) =>
-      api
-        .post("/subscriptions/create-order", null, { params: { tier, billingCycle: bc } })
-        .then((r) => r.data),
+      api.post("/subscriptions/create-order", null, { params: { tier, billingCycle: bc } }).then((r) => r.data),
   });
 
   const verifyMutation = useMutation({
@@ -129,10 +125,7 @@ export default function UpgradeModal({ open, onClose, targetTier, billingCycle =
       }
 
       const ok = await loadRazorpay();
-      if (!ok) {
-        setError("Payment gateway failed to load.");
-        return;
-      }
+      if (!ok) { setError("Payment gateway failed to load."); return; }
 
       const plan = PLANS.find((p) => p.tier === tier)!;
       const rzp = new window.Razorpay({
@@ -170,103 +163,175 @@ export default function UpgradeModal({ open, onClose, targetTier, billingCycle =
 
   return (
     <Modal open={open} onClose={onClose} title="Upgrade Your Plan">
-      <div className="space-y-4">
-        <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">
+      <Stack spacing={3}>
+        <Typography variant="body2" color="text.secondary">
           Unlock more jobs and powerful automation features.
-        </p>
+        </Typography>
 
         {/* Billing cycle toggle */}
-        <div className="flex items-center gap-0 rounded-[4px] border-2 border-black dark:border-[#30363d] p-0.5 w-fit bg-gray-50 dark:bg-[#161b22]">
-          <button
-            onClick={() => setCycle("ANNUAL")}
-            className={`px-4 py-1.5 rounded-[3px] text-xs font-black uppercase tracking-wide transition-all ${
-              cycle === "ANNUAL"
-                ? "bg-white dark:bg-[#21262d] text-black dark:text-white border-2 border-black dark:border-[#30363d]"
-                : "text-gray-500 dark:text-[#8b949e] border-2 border-transparent"
-            }`}
-            style={cycle === "ANNUAL" ? { boxShadow: "2px 2px 0 #000" } : {}}
+        <Box>
+          <ToggleButtonGroup
+            value={cycle}
+            exclusive
+            onChange={(_, val) => val && setCycle(val)}
+            size="small"
+            sx={{
+              "& .MuiToggleButton-root": {
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "0.8rem",
+                px: 2,
+                border: "1px solid",
+                borderColor: "divider",
+                "&.Mui-selected": {
+                  bgcolor: "primary.main",
+                  color: "white",
+                  borderColor: "primary.main",
+                  "&:hover": { bgcolor: "primary.dark" },
+                },
+              },
+            }}
           >
-            Annual
-            <span className="ml-1.5 text-green-600 dark:text-green-400 font-black normal-case tracking-normal">Save 2 mo</span>
-          </button>
-          <button
-            onClick={() => setCycle("SEMI_ANNUAL")}
-            className={`px-4 py-1.5 rounded-[3px] text-xs font-black uppercase tracking-wide transition-all ${
-              cycle === "SEMI_ANNUAL"
-                ? "bg-white dark:bg-[#21262d] text-black dark:text-white border-2 border-black dark:border-[#30363d]"
-                : "text-gray-500 dark:text-[#8b949e] border-2 border-transparent"
-            }`}
-            style={cycle === "SEMI_ANNUAL" ? { boxShadow: "2px 2px 0 #000" } : {}}
-          >
-            Semi-Annual
-          </button>
-        </div>
+            <ToggleButton value="ANNUAL">
+              Annual
+              <Chip
+                label="Save 2 mo"
+                size="small"
+                color="success"
+                sx={{ ml: 1, height: 18, fontSize: "0.6rem", fontWeight: 700 }}
+              />
+            </ToggleButton>
+            <ToggleButton value="SEMI_ANNUAL">Semi-Annual</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
 
         {/* Plan cards */}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
           {PLANS.map((plan) => {
             const Icon = plan.icon;
             const highlighted = targetTier === plan.tier;
+            const isProcessing = paying === plan.tier;
+
             return (
-              <div
+              <Box
                 key={plan.tier}
-                className={`rounded-[4px] border-2 p-4 space-y-3 transition-all ${
-                  highlighted
-                    ? `${plan.accentBorder} ${plan.accentBg}`
-                    : "border-black dark:border-[#30363d] bg-white dark:bg-[#161b22]"
-                }`}
-                style={highlighted ? { boxShadow: "4px 4px 0 #000" } : { boxShadow: "2px 2px 0 #000" }}
+                sx={{
+                  borderRadius: 3,
+                  border: "1px solid",
+                  borderColor: highlighted ? plan.accentColor : "divider",
+                  p: 2.5,
+                  position: "relative",
+                  overflow: "hidden",
+                  transition: "all 0.2s ease",
+                  boxShadow: highlighted
+                    ? `0 0 0 2px ${plan.accentColor}40, 0 8px 24px ${plan.glowColor}`
+                    : "0 1px 3px rgba(0,0,0,0.06)",
+                  "&:hover": {
+                    boxShadow: `0 0 0 2px ${plan.accentColor}60, 0 12px 32px ${plan.glowColor}`,
+                    transform: "translateY(-2px)",
+                  },
+                  // gradient top border
+                  "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0, left: 0, right: 0,
+                    height: 3,
+                    background: plan.gradient,
+                  },
+                }}
               >
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-[3px] border-2 ${plan.iconBorder} ${plan.iconBg}`}
+                {/* Header */}
+                <Stack direction="row" alignItems="center" spacing={1.5} mb={0.75}>
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 2,
+                      background: plan.gradient,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: `0 4px 12px ${plan.glowColor}`,
+                    }}
                   >
-                    <Icon className={`h-4 w-4 ${plan.iconColor}`} />
-                  </div>
-                  <span className={`font-black uppercase tracking-wide text-sm ${plan.textColor}`}>
-                    {plan.name}
-                  </span>
-                  <span className={`ml-auto text-sm font-black ${plan.textColor}`}>
-                    ₹{plan.monthlyPrice}/mo
-                  </span>
-                </div>
-                <p className="text-xs font-medium text-gray-400 dark:text-[#8b949e]">
-                  {cycleTotal(plan.monthlyPrice, cycle)} billed
-                </p>
-                <ul className="space-y-1.5">
+                    <Icon style={{ fontSize: 18, color: "white" }} />
+                  </Box>
+                  <Box flex={1}>
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      {plan.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      ₹{plan.monthlyPrice}/mo
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                    {cycleTotal(plan.monthlyPrice, cycle)}
+                  </Typography>
+                </Stack>
+
+                <Divider sx={{ my: 1.5 }} />
+
+                {/* Features */}
+                <Stack spacing={1} mb={2}>
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-xs font-medium text-gray-600 dark:text-[#8b949e]">
-                      <CheckCircle className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
-                      {f}
-                    </li>
+                    <Stack key={f} direction="row" alignItems="flex-start" spacing={1}>
+                      <CheckCircle style={{ fontSize: 14, color: "#22c55e", marginTop: 2, flexShrink: 0 }} />
+                      <Typography variant="caption" color="text.secondary" lineHeight={1.5}>
+                        {f}
+                      </Typography>
+                    </Stack>
                   ))}
-                </ul>
-                <button
-                  className={`w-full py-2 rounded-[4px] text-xs font-black uppercase tracking-wide transition-colors ${plan.btnClass} disabled:opacity-60`}
-                  style={{ boxShadow: "3px 3px 0 #000" }}
+                </Stack>
+
+                {/* CTA */}
+                <Box
+                  component="button"
                   disabled={paying !== null}
                   onClick={() => handleSubscribe(plan.tier)}
+                  sx={{
+                    width: "100%",
+                    py: 1.25,
+                    borderRadius: 2,
+                    border: "none",
+                    background: plan.gradient,
+                    color: "white",
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    cursor: paying !== null ? "not-allowed" : "pointer",
+                    opacity: paying !== null ? 0.65 : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 1,
+                    transition: "all 0.15s ease",
+                    boxShadow: `0 4px 14px ${plan.glowColor}`,
+                    "&:hover:not(:disabled)": {
+                      opacity: 0.9,
+                      transform: "translateY(-1px)",
+                      boxShadow: `0 6px 20px ${plan.glowColor}`,
+                    },
+                  }}
                 >
-                  {paying === plan.tier
-                    ? "Processing..."
+                  {isProcessing && <CircularProgress size={14} color="inherit" />}
+                  {isProcessing
+                    ? "Processing…"
                     : `Subscribe — ${cycleTotal(plan.monthlyPrice, cycle)}`}
-                </button>
-              </div>
+                </Box>
+              </Box>
             );
           })}
-        </div>
+        </Box>
 
         {error && (
-          <div className="rounded-[4px] border-2 border-red-500 bg-red-50 dark:bg-red-900/20 p-3 flex items-center gap-2 text-sm font-bold text-red-700 dark:text-red-400">
-            <AlertCircle className="h-4 w-4 shrink-0" />
+          <Alert severity="error" variant="outlined" sx={{ borderRadius: 2 }} icon={<AlertCircle style={{ fontSize: 18 }} />}>
             {error}
-          </div>
+          </Alert>
         )}
 
-        <p className="text-xs font-medium text-gray-400 dark:text-[#8b949e] text-center">
-          Payments are secured by Razorpay. Cancel anytime.
-        </p>
-      </div>
+        <Typography variant="caption" color="text.disabled" textAlign="center">
+          Payments secured by Razorpay. Cancel anytime.
+        </Typography>
+      </Stack>
     </Modal>
   );
 }

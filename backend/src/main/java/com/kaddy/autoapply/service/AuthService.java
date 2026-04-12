@@ -1,5 +1,13 @@
 package com.kaddy.autoapply.service;
 
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.kaddy.autoapply.dto.request.LoginRequest;
 import com.kaddy.autoapply.dto.request.ResetPasswordRequest;
 import com.kaddy.autoapply.dto.request.SignupRequest;
@@ -14,13 +22,6 @@ import com.kaddy.autoapply.repository.PasswordResetTokenRepository;
 import com.kaddy.autoapply.repository.UserRepository;
 import com.kaddy.autoapply.repository.VerificationTokenRepository;
 import com.kaddy.autoapply.security.JwtTokenProvider;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -34,12 +35,12 @@ public class AuthService {
     private final EmailService emailService;
 
     public AuthService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder,
-                       JwtTokenProvider tokenProvider,
-                       TokenBlacklistService blacklistService,
-                       VerificationTokenRepository verificationTokenRepository,
-                       PasswordResetTokenRepository passwordResetTokenRepository,
-                       EmailService emailService) {
+            PasswordEncoder passwordEncoder,
+            JwtTokenProvider tokenProvider,
+            TokenBlacklistService blacklistService,
+            VerificationTokenRepository verificationTokenRepository,
+            PasswordResetTokenRepository passwordResetTokenRepository,
+            EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
@@ -79,7 +80,7 @@ public class AuthService {
                 .filter(hash -> passwordEncoder.matches(request.password(), hash))
                 .orElseThrow(() -> new BadRequestException("Invalid email or password"));
 
-        return buildAuthResponse(user);
+        return buildAuthResponse(user, request.rememberMe());
     }
 
     public AuthResponse refresh(String refreshToken) {
@@ -155,7 +156,8 @@ public class AuthService {
     public void forgotPassword(String email) {
         User user = userRepository.findByEmail(email).orElse(null);
 
-        if (user == null) return;
+        if (user == null)
+            return;
 
         passwordResetTokenRepository.deleteByUserId(user.getId());
 
@@ -185,12 +187,22 @@ public class AuthService {
         blacklistService.revokeAllForUser(user.getId());
     }
 
+    // 30 days in milliseconds for "remember me" sessions
+    private static final long REMEMBER_ME_REFRESH_EXPIRY = 7L * 24 * 60 * 60 * 1000;
+
     private AuthResponse buildAuthResponse(User user) {
+        return buildAuthResponse(user, false);
+    }
+
+    private AuthResponse buildAuthResponse(User user, boolean rememberMe) {
+        String refreshToken = rememberMe
+                ? tokenProvider.generateRefreshToken(user.getId(), user.getEmail(), user.getRoles(),
+                        REMEMBER_ME_REFRESH_EXPIRY)
+                : tokenProvider.generateRefreshToken(user.getId(), user.getEmail(), user.getRoles());
         return new AuthResponse(
                 tokenProvider.generateAccessToken(user.getId(), user.getEmail(), user.getRoles()),
-                tokenProvider.generateRefreshToken(user.getId(), user.getEmail(), user.getRoles()),
-                toUserResponse(user)
-        );
+                refreshToken,
+                toUserResponse(user));
     }
 
     public static UserResponse toUserResponse(User user) {
@@ -206,7 +218,6 @@ public class AuthService {
                 user.getExperienceYears(), user.getTargetRoles(), user.getSkipKeywords(),
                 user.isAutoSearchEnabled(), user.getAutoSearchIntervalHours(),
                 user.getCreatedAt(), roleNames, user.getSubscriptionTier(),
-                user.isOnboardingCompleted()
-        );
+                user.isOnboardingCompleted());
     }
 }

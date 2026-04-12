@@ -1,7 +1,10 @@
 "use client";
 
 import { LucideIcon } from "@/components/ui/icons";
-import Button from "@/components/ui/Button";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import MuiButton from "@mui/material/Button";
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -25,27 +28,95 @@ export default function EmptyState({
   secondaryAction,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-      <div
-        className="flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-black dark:border-[#30363d] bg-indigo-50 dark:bg-indigo-900/20 mb-4"
-        style={{ boxShadow: "3px 3px 0 #000" }}
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        py: 10,
+        px: 3,
+        textAlign: "center",
+      }}
+    >
+      {/* Icon circle */}
+      <Box
+        sx={{
+          width: 72,
+          height: 72,
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08))",
+          border: "1px solid rgba(99,102,241,0.2)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          mb: 2.5,
+          position: "relative",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            inset: -6,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)",
+          },
+        }}
       >
-        <Icon className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
-      </div>
-      <h3 className="text-base font-black text-black dark:text-white uppercase tracking-tight mb-1">{title}</h3>
-      <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e] max-w-sm mb-6">{description}</p>
+        <Icon style={{ fontSize: 32, color: "#6366f1" }} />
+      </Box>
+
+      <Typography
+        variant="h6"
+        fontWeight={700}
+        color="text.primary"
+        mb={0.75}
+      >
+        {title}
+      </Typography>
+
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ maxWidth: 380, lineHeight: 1.6, mb: action || secondaryAction ? 3.5 : 0 }}
+      >
+        {description}
+      </Typography>
+
       {(action || secondaryAction) && (
-        <div className="flex items-center gap-3">
+        <Stack direction="row" spacing={1.5}>
           {action && (
-            <Button onClick={action.onClick}>{action.label}</Button>
+            <MuiButton
+              variant="contained"
+              onClick={action.onClick}
+              disableElevation
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 600,
+                background: "linear-gradient(135deg, #4f46e5, #6366f1)",
+                "&:hover": { background: "linear-gradient(135deg, #4338ca, #4f46e5)" },
+              }}
+            >
+              {action.label}
+            </MuiButton>
           )}
           {secondaryAction && (
-            <Button variant="outline" onClick={secondaryAction.onClick}>
+            <MuiButton
+              variant="outlined"
+              onClick={secondaryAction.onClick}
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 600,
+                borderColor: "divider",
+                color: "text.secondary",
+                "&:hover": { borderColor: "primary.main", color: "primary.main" },
+              }}
+            >
               {secondaryAction.label}
-            </Button>
+            </MuiButton>
           )}
-        </div>
+        </Stack>
       )}
-    </div>
+    </Box>
   );
 }

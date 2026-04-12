@@ -16,12 +16,12 @@ import java.util.UUID;
 @Component
 public class JwtTokenProvider {
 
-    private static final String CLAIM_EMAIL    = "email";
-    private static final String CLAIM_TYPE     = "type";
-    private static final String CLAIM_ROLES    = "roles";
-    private static final String ISSUER         = "kaddy-autoapply";
-    private static final String AUDIENCE       = "kaddy-autoapply-api";
-    private static final int    MIN_SECRET_LEN = 32;
+    private static final String CLAIM_EMAIL = "email";
+    private static final String CLAIM_TYPE = "type";
+    private static final String CLAIM_ROLES = "roles";
+    private static final String ISSUER = "kaddy-autoapply";
+    private static final String AUDIENCE = "kaddy-autoapply-api";
+    private static final int MIN_SECRET_LEN = 32;
 
     private final SecretKey key;
     private final long accessTokenExpiry;
@@ -33,11 +33,11 @@ public class JwtTokenProvider {
             @Value("${app.jwt.refresh-token-expiry}") long refreshTokenExpiry) {
         if (secret == null || secret.length() < MIN_SECRET_LEN) {
             throw new IllegalStateException(
-                "JWT secret must be at least 256 bits (" + MIN_SECRET_LEN + " characters). " +
-                "Generate a secure secret with: openssl rand -base64 64");
+                    "JWT secret must be at least 256 bits (" + MIN_SECRET_LEN + " characters). " +
+                            "Generate a secure secret with: openssl rand -base64 64");
         }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.accessTokenExpiry  = accessTokenExpiry;
+        this.accessTokenExpiry = accessTokenExpiry;
         this.refreshTokenExpiry = refreshTokenExpiry;
     }
 
@@ -49,8 +49,12 @@ public class JwtTokenProvider {
         return buildToken(userId, email, refreshTokenExpiry, "refresh", roles);
     }
 
+    public String generateRefreshToken(String userId, String email, Collection<Role> roles, long customExpiry) {
+        return buildToken(userId, email, customExpiry, "refresh", roles);
+    }
+
     private String buildToken(String userId, String email, long expiry,
-                              String type, Collection<Role> roles) {
+            String type, Collection<Role> roles) {
         Date now = new Date();
 
         List<String> roleNames = (roles != null && !roles.isEmpty())
@@ -109,7 +113,7 @@ public class JwtTokenProvider {
     }
 
     public long getRemainingTtlSeconds(String token) {
-        long expiryMs    = parseClaims(token).getExpiration().getTime();
+        long expiryMs = parseClaims(token).getExpiration().getTime();
         long remainingMs = expiryMs - System.currentTimeMillis();
         return Math.max(0L, remainingMs / 1000);
     }

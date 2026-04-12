@@ -31,6 +31,7 @@ import {
   ArrowRight,
   ChevronRight,
 } from "@/components/ui/icons";
+import PageTransition, { FadeIn, StaggerList, StaggerItem } from "@/components/ui/PageTransition";
 
 // ─── Colour maps ──────────────────────────────────────────────────────────────
 
@@ -152,6 +153,7 @@ export default function DashboardPage() {
   const stats = buildStatCards(analytics);
 
   return (
+    <PageTransition>
     <div className="space-y-6 pb-10">
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
@@ -306,21 +308,23 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : recentApps?.content && recentApps.content.length > 0 ? (
-            <div className="divide-y divide-black/[0.05] dark:divide-white/[0.06]">
+            <StaggerList className="divide-y divide-black/[0.05] dark:divide-white/[0.06]">
               {recentApps.content.map((app) => (
-                <div key={app.id} className="flex items-center justify-between py-3">
-                  <div className="min-w-0 flex-1 pr-4">
-                    <p className="text-sm font-medium text-[#1d1d1f] dark:text-white truncate">{app.job.title}</p>
-                    <p className="text-xs text-[#86868b] dark:text-[#8e8e93] mt-0.5">
-                      {app.job.company} · {formatDate(app.appliedAt)}
-                    </p>
+                <StaggerItem key={app.id}>
+                  <div className="flex items-center justify-between py-3">
+                    <div className="min-w-0 flex-1 pr-4">
+                      <p className="text-sm font-medium text-[#1d1d1f] dark:text-white truncate">{app.job.title}</p>
+                      <p className="text-xs text-[#86868b] dark:text-[#8e8e93] mt-0.5">
+                        {app.job.company} · {formatDate(app.appliedAt)}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[app.status] ?? "bg-gray-100 text-gray-500"}`}>
+                      {app.status}
+                    </span>
                   </div>
-                  <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[app.status] ?? "bg-gray-100 text-gray-500"}`}>
-                    {app.status}
-                  </span>
-                </div>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerList>
           ) : (
             <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
               <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
@@ -344,6 +348,7 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+    </PageTransition>
   );
 }
 

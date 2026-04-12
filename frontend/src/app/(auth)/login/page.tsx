@@ -1,66 +1,247 @@
 "use client";
 
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import Chip from "@mui/material/Chip";
 import LoginForm from "@/components/auth/LoginForm";
-import { Zap, Sparkles, Send, TrendingUp } from "@/components/ui/icons";
+import { Zap, Send, Sparkles, TrendingUp } from "@/components/ui/icons";
+
+const FEATURES = [
+  {
+    icon: Send,
+    label: "Auto Apply",
+    description: "Apply to 10× more jobs automatically",
+  },
+  {
+    icon: Sparkles,
+    label: "AI Cover Letters",
+    description: "Personalized for every position",
+  },
+  {
+    icon: TrendingUp,
+    label: "Track Progress",
+    description: "Dashboard analytics & status updates",
+  },
+];
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen bg-[#f5f2ea] dark:bg-[#0d1117]">
-      <div className="hidden lg:flex lg:w-1/2 bg-indigo-600 items-center justify-center p-12 border-r-2 border-black dark:border-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-32 h-32 border-2 border-white rotate-12" />
-          <div className="absolute bottom-20 right-10 w-24 h-24 border-2 border-white -rotate-6" />
-          <div className="absolute top-1/2 left-1/4 w-16 h-16 border-2 border-white rotate-45" />
-        </div>
-        <div className="text-white max-w-md relative z-10">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="flex h-12 w-12 items-center justify-center rounded-[4px] bg-white border-2 border-black" style={{ boxShadow: "4px 4px 0 #000" }}>
-              <Zap className="h-7 w-7 text-indigo-600" />
-            </div>
-            <span className="text-3xl font-black uppercase tracking-tight">Rolevo</span>
-            <span className="text-xs bg-white text-indigo-600 px-2 py-0.5 rounded-[3px] font-black border-2 border-black uppercase tracking-widest">AI</span>
-          </div>
-          <h1 className="text-4xl font-black mb-4 uppercase tracking-tight leading-tight">
-            Land Your Dream Job with AI
-          </h1>
-          <p className="text-indigo-200 text-base font-medium leading-relaxed">
-            Auto-apply to jobs with AI-generated cover letters customized for
-            every position. Search Indeed & LinkedIn, generate personalized
-            applications, and track everything in one place.
-          </p>
-          <div className="mt-8 grid grid-cols-3 gap-3">
-            {[
-              { icon: Send, label: "Auto Apply", stat: "10x" },
-              { icon: Sparkles, label: "AI Cover Letters", stat: "AI" },
-              { icon: TrendingUp, label: "Track Progress", stat: "📊" },
-            ].map((item) => (
-              <div key={item.label} className="bg-white/10 border-2 border-white/30 rounded-[4px] p-3 text-center">
-                <item.icon className="h-5 w-5 mx-auto mb-1 text-white" />
-                <div className="font-black text-xl">{item.stat}</div>
-                <div className="text-indigo-200 text-xs font-bold uppercase tracking-wide">{item.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="flex w-full lg:w-1/2 items-center justify-center p-8 bg-[#f5f2ea] dark:bg-[#0d1117]">
-        <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center gap-2 mb-8 justify-center">
-            <div className="flex h-9 w-9 items-center justify-center rounded-[3px] bg-indigo-600 border-2 border-black" style={{ boxShadow: "3px 3px 0 #000" }}>
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        bgcolor: "background.default",
+      }}
+    >
+      {/* ─── Left panel ──────────────────────────────────────────────────── */}
+      <Box
+        sx={{
+          display: { xs: "none", lg: "flex" },
+          width: "50%",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          px: 8,
+          py: 10,
+          background:
+            "linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Decorative blobs */}
+        <Box
+          sx={{
+            position: "absolute",
+            width: 400,
+            height: 400,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.06)",
+            top: -100,
+            right: -80,
+            pointerEvents: "none",
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            width: 280,
+            height: 280,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.05)",
+            bottom: -60,
+            left: -40,
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Logo */}
+        <Stack direction="row" alignItems="center" spacing={1.5} mb={6}>
+          <Box
+            sx={{
+              width: 44,
+              height: 44,
+              borderRadius: 2,
+              bgcolor: "rgba(255,255,255,0.15)",
+              backdropFilter: "blur(8px)",
+              border: "1px solid rgba(255,255,255,0.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Zap className="h-6 w-6 text-white" />
+          </Box>
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            color="white"
+            letterSpacing={-0.5}
+          >
+            Rolevo
+          </Typography>
+          <Chip
+            label="AI"
+            size="small"
+            sx={{
+              bgcolor: "rgba(255,255,255,0.2)",
+              color: "white",
+              fontWeight: 700,
+              fontSize: "0.65rem",
+              height: 20,
+              letterSpacing: 1,
+            }}
+          />
+        </Stack>
+
+        {/* Headline */}
+        <Typography
+          variant="h3"
+          fontWeight={800}
+          color="white"
+          lineHeight={1.15}
+          mb={2}
+          sx={{ maxWidth: 420 }}
+        >
+          Land Your Dream Job with AI
+        </Typography>
+        <Typography
+          variant="body1"
+          sx={{ color: "rgba(255,255,255,0.75)", maxWidth: 400, mb: 6, lineHeight: 1.7 }}
+        >
+          Auto-apply to jobs with AI-generated cover letters customized for
+          every position. Search Indeed &amp; LinkedIn, generate personalized
+          applications, and track everything in one place.
+        </Typography>
+
+        {/* Feature cards */}
+        <Stack spacing={2} width="100%" maxWidth={420}>
+          {FEATURES.map(({ icon: Icon, label, description }) => (
+            <Box
+              key={label}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                p: 2,
+                borderRadius: 2.5,
+                bgcolor: "rgba(255,255,255,0.08)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                transition: "background 0.2s",
+                "&:hover": { bgcolor: "rgba(255,255,255,0.13)" },
+              }}
+            >
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 2,
+                  bgcolor: "rgba(255,255,255,0.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Icon className="h-5 w-5 text-white" />
+              </Box>
+              <Box>
+                <Typography
+                  variant="body2"
+                  fontWeight={700}
+                  color="white"
+                  lineHeight={1.3}
+                >
+                  {label}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "rgba(255,255,255,0.65)" }}
+                >
+                  {description}
+                </Typography>
+              </Box>
+            </Box>
+          ))}
+        </Stack>
+      </Box>
+
+      {/* ─── Right panel ─────────────────────────────────────────────────── */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          px: { xs: 3, sm: 6 },
+          py: 8,
+          bgcolor: { xs: "background.default", lg: "background.paper" },
+        }}
+      >
+        <Box sx={{ width: "100%", maxWidth: 400 }}>
+          {/* Mobile logo */}
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1}
+            mb={5}
+            sx={{ display: { lg: "none" }, justifyContent: "center" }}
+          >
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: 1.5,
+                bgcolor: "primary.main",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <Zap className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Rolevo</span>
-            <span className="text-xs bg-black dark:bg-white text-white dark:text-black px-1.5 py-0.5 rounded-[2px] font-black uppercase tracking-widest">AI</span>
-          </div>
-          <h2 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight mb-2">
+            </Box>
+            <Typography variant="h6" fontWeight={700} color="text.primary">
+              Rolevo
+            </Typography>
+          </Stack>
+
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            color="text.primary"
+            mb={0.75}
+          >
             Welcome back
-          </h2>
-          <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e] mb-6">
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mb={4}>
             Sign in to continue your job search
-          </p>
+          </Typography>
+
           <LoginForm />
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 }

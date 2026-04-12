@@ -29,6 +29,7 @@ import {
   Target,
   Clock,
 } from "@/components/ui/icons";
+import PageTransition, { StaggerList, StaggerItem } from "@/components/ui/PageTransition";
 import type { Job } from "@/types";
 import { AI_PROVIDERS } from "@/lib/constants";
 import { useAuthStore } from "@/store/auth-store";
@@ -275,6 +276,7 @@ export default function JobsPage() {
   };
 
   return (
+    <PageTransition>
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">Find Jobs</h1>
@@ -586,8 +588,10 @@ export default function JobsPage() {
             </div>
           )}
 
+          <StaggerList>
           {jobs.map((job, i) => (
-            <div key={job.id || i} className="relative">
+            <StaggerItem key={job.id || i}>
+            <div className="relative">
               {canAutoApply() && (
                 <input
                   type="checkbox"
@@ -620,7 +624,9 @@ export default function JobsPage() {
                 </div>
               </div>
             </div>
+            </StaggerItem>
           ))}
+          </StaggerList>
 
           {!canSeeAllJobs() && searchQuery && (
             <div className="rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 p-6 text-center space-y-3">
@@ -902,6 +908,7 @@ export default function JobsPage() {
         )}
       </Modal>
     </div>
+    </PageTransition>
   );
 }
 

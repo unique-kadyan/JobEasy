@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "@/components/ui/icons";
+import PageTransition, { StaggerList, StaggerItem } from "@/components/ui/PageTransition";
 import type { ApplicationStatus } from "@/types";
 import Link from "next/link";
 
@@ -42,6 +43,7 @@ export default function ApplicationsPage() {
   const updateStatus = useUpdateStatus();
 
   return (
+    <PageTransition>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -70,9 +72,10 @@ export default function ApplicationsPage() {
         </div>
       ) : data?.content && data.content.length > 0 ? (
         <>
-          <div className="space-y-3">
+          <StaggerList className="space-y-3">
             {data.content.map((app) => (
-              <Card key={app.id}>
+              <StaggerItem key={app.id}>
+              <Card>
                 <CardContent className="py-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -118,8 +121,9 @@ export default function ApplicationsPage() {
                   </div>
                 </CardContent>
               </Card>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
           {data.totalPages > 1 && (
             <div className="flex justify-center items-center gap-3 pt-4">
               <Button
@@ -168,5 +172,6 @@ export default function ApplicationsPage() {
         </div>
       )}
     </div>
+    </PageTransition>
   );
 }

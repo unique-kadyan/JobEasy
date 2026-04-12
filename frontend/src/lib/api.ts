@@ -67,11 +67,17 @@ api.interceptors.response.use(
   }
 );
 
-export function setSessionCookie(): void {
+export function setSessionCookie(rememberMe = false): void {
   if (typeof document === "undefined") return;
-  const maxAge = 7 * 24 * 60 * 60;
   const secure = location.protocol === "https:" ? "; Secure" : "";
-  document.cookie = `kaddy-session=1; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
+  if (rememberMe) {
+    // Persist 30 days across browser restarts
+    const maxAge = 30 * 24 * 60 * 60;
+    document.cookie = `kaddy-session=1; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
+  } else {
+    // Session cookie — expires automatically when the browser is closed
+    document.cookie = `kaddy-session=1; path=/; SameSite=Lax${secure}`;
+  }
 }
 
 export function clearSessionCookie(): void {

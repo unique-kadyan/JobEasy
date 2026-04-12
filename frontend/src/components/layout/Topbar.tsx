@@ -4,31 +4,30 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/auth-store";
 import { LogOut, User, Search, Crown } from "@/components/ui/icons";
-import Button from "@/components/ui/Button";
 import CommandPalette from "@/components/ui/CommandPalette";
 import Link from "next/link";
 import type { ServerStatus } from "@/hooks/useKeepAlive";
-import { cn } from "@/lib/utils";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Chip from "@mui/material/Chip";
+import Avatar from "@mui/material/Avatar";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import ButtonBase from "@mui/material/ButtonBase";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 
-const TIER_BADGE: Record<string, { label: string; className: string }> = {
-  FREE: {
-    label: "Free",
-    className: "border border-gray-400 dark:border-[#30363d] text-gray-500 dark:text-[#8b949e] bg-gray-100 dark:bg-[#21262d]",
-  },
-  GOLD: {
-    label: "Gold",
-    className: "border border-amber-400 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-yellow-900/20",
-  },
-  PLATINUM: {
-    label: "Platinum",
-    className: "border border-indigo-400 text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20",
-  },
+const TIER_BADGE: Record<string, { label: string; color: "default" | "warning" | "primary" }> = {
+  FREE:     { label: "Free",     color: "default" },
+  GOLD:     { label: "Gold",     color: "warning" },
+  PLATINUM: { label: "Platinum", color: "primary" },
 };
 
-const STATUS_DOT: Record<ServerStatus, { color: string; pulse: boolean; label: string }> = {
-  up:         { color: "bg-green-500",  pulse: false, label: "Server online" },
-  down:       { color: "bg-red-500",    pulse: true,  label: "Server offline — reconnecting…" },
-  connecting: { color: "bg-yellow-400", pulse: true,  label: "Connecting to server…" },
+const STATUS_CONFIG: Record<ServerStatus, { color: string; pulse: boolean; label: string }> = {
+  up:         { color: "#22c55e", pulse: false, label: "Server online" },
+  down:       { color: "#ef4444", pulse: true,  label: "Server offline — reconnecting…" },
+  connecting: { color: "#f59e0b", pulse: true,  label: "Connecting to server…" },
 };
 
 export default function Topbar({ serverStatus = "connecting" }: { serverStatus?: ServerStatus }) {
@@ -38,6 +37,7 @@ export default function Topbar({ serverStatus = "connecting" }: { serverStatus?:
 
   const tier = storeUser?.subscriptionTier ?? "FREE";
   const tierBadge = TIER_BADGE[tier] ?? TIER_BADGE.FREE;
+  const statusCfg = STATUS_CONFIG[serverStatus];
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -52,72 +52,189 @@ export default function Topbar({ serverStatus = "connecting" }: { serverStatus?:
 
   return (
     <>
-      <header className="fixed top-0 left-64 right-0 z-30 flex h-16 items-center justify-between border-b-2 border-black dark:border-[#30363d] bg-[#f5f2ea]/95 dark:bg-[#0d1117]/95 backdrop-blur-sm px-6 gap-4">
+      <Box
+        component="header"
+        sx={{
+          position: "fixed",
+          top: 0,
+          left: 256,
+          right: 0,
+          zIndex: 30,
+          height: 64,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: 3,
+          gap: 2,
+          bgcolor: "background.paper",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          backdropFilter: "blur(8px)",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+        }}
+      >
         {/* Search trigger */}
-        <button
+        <ButtonBase
           onClick={() => setCmdOpen(true)}
-          className="flex items-center gap-2 text-sm font-medium text-gray-400 dark:text-[#8b949e] bg-white dark:bg-[#161b22] hover:border-indigo-600 dark:hover:border-indigo-500 border-2 border-black dark:border-[#30363d] rounded-[4px] px-3 py-1.5 transition-colors min-w-[200px]"
-          style={{ boxShadow: "2px 2px 0 #000" }}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            px: 2,
+            py: 1,
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "divider",
+            bgcolor: "action.hover",
+            minWidth: 220,
+            textAlign: "left",
+            transition: "all 0.15s ease",
+            "&:hover": {
+              borderColor: "primary.main",
+              bgcolor: "rgba(99,102,241,0.04)",
+              boxShadow: "0 0 0 3px rgba(99,102,241,0.08)",
+            },
+          }}
         >
-          <Search className="h-3.5 w-3.5 shrink-0" />
-          <span className="flex-1 text-left">Search...</span>
-          <kbd className="text-[10px] font-black font-mono bg-gray-100 dark:bg-[#21262d] border border-black dark:border-[#30363d] rounded-[2px] px-1.5 py-0.5 text-black dark:text-white">
+          <Search style={{ fontSize: 15, color: "inherit", opacity: 0.5 }} />
+          <Typography variant="body2" color="text.disabled" sx={{ flex: 1 }}>
+            Search…
+          </Typography>
+          <Box
+            component="kbd"
+            sx={{
+              fontSize: "0.65rem",
+              fontFamily: "monospace",
+              fontWeight: 600,
+              color: "text.disabled",
+              bgcolor: "background.paper",
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 1,
+              px: 0.75,
+              py: 0.25,
+              lineHeight: 1.6,
+            }}
+          >
             ⌘K
-          </kbd>
-        </button>
+          </Box>
+        </ButtonBase>
 
-        <div className="flex items-center gap-3">
+        {/* Right side */}
+        <Stack direction="row" alignItems="center" spacing={1.5}>
+          {/* Upgrade button */}
           {tier !== "PLATINUM" && (
-            <Link href="/pricing">
-              <Button size="sm" className="gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white border-2 border-black">
-                <Crown className="h-3.5 w-3.5" />
-                Upgrade
-              </Button>
-            </Link>
+            <Box
+              component={Link}
+              href="/pricing"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.75,
+                px: 1.5,
+                py: 0.75,
+                borderRadius: 2,
+                background: "linear-gradient(135deg, #4f46e5, #6366f1)",
+                color: "white",
+                textDecoration: "none",
+                fontSize: "0.8rem",
+                fontWeight: 600,
+                boxShadow: "0 2px 8px rgba(99,102,241,0.35)",
+                transition: "all 0.15s ease",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #4338ca, #4f46e5)",
+                  boxShadow: "0 4px 12px rgba(99,102,241,0.45)",
+                  transform: "translateY(-1px)",
+                },
+              }}
+            >
+              <BoltRoundedIcon sx={{ fontSize: 14 }} />
+              Upgrade
+            </Box>
           )}
 
-          <span
-            className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-[3px] ${tierBadge.className}`}
-          >
-            {tierBadge.label}
-          </span>
+          {/* Tier chip */}
+          <Chip
+            label={tierBadge.label}
+            color={tierBadge.color}
+            size="small"
+            sx={{ fontWeight: 600, fontSize: "0.7rem", height: 24 }}
+          />
 
-          <ServerStatusDot status={serverStatus} />
+          {/* Server status */}
+          <Tooltip title={statusCfg.label} placement="bottom">
+            <Box sx={{ position: "relative", display: "flex", alignItems: "center" }}>
+              <Box
+                sx={{
+                  width: 9,
+                  height: 9,
+                  borderRadius: "50%",
+                  bgcolor: statusCfg.color,
+                  boxShadow: `0 0 0 2px ${statusCfg.color}33`,
+                }}
+              />
+              {statusCfg.pulse && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    width: 9,
+                    height: 9,
+                    borderRadius: "50%",
+                    bgcolor: statusCfg.color,
+                    opacity: 0.5,
+                    "@keyframes ping": {
+                      "0%": { transform: "scale(1)", opacity: 0.5 },
+                      "100%": { transform: "scale(2.2)", opacity: 0 },
+                    },
+                    animation: "ping 1.2s ease-out infinite",
+                  }}
+                />
+              )}
+            </Box>
+          </Tooltip>
 
-          <div className="flex items-center gap-2">
-            <div
-              className="flex h-8 w-8 items-center justify-center rounded-[3px] border-2 border-black dark:border-[#30363d] bg-indigo-600 text-white font-black text-xs"
-              style={{ boxShadow: "2px 2px 0 #000" }}
+          {/* User avatar */}
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                fontSize: "0.8rem",
+                fontWeight: 700,
+                background: "linear-gradient(135deg, #4f46e5, #6366f1)",
+                boxShadow: "0 2px 8px rgba(99,102,241,0.3)",
+              }}
             >
-              {user?.name?.charAt(0)?.toUpperCase() ?? <User className="h-4 w-4" />}
-            </div>
-            <span className="text-sm font-bold text-black dark:text-white hidden sm:block">{user?.name}</span>
-          </div>
+              {user?.name?.charAt(0)?.toUpperCase() ?? <User style={{ fontSize: 16 }} />}
+            </Avatar>
+            <Typography
+              variant="body2"
+              fontWeight={600}
+              color="text.primary"
+              sx={{ display: { xs: "none", sm: "block" } }}
+            >
+              {user?.name}
+            </Typography>
+          </Stack>
 
-          <Button variant="ghost" size="sm" onClick={logout} title="Sign out">
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
-      </header>
+          {/* Logout */}
+          <Tooltip title="Sign out" placement="bottom">
+            <IconButton
+              size="small"
+              onClick={logout}
+              sx={{
+                color: "text.secondary",
+                transition: "all 0.15s ease",
+                "&:hover": { color: "error.main", bgcolor: "error.main" + "12" },
+              }}
+            >
+              <LogoutRoundedIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      </Box>
 
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
     </>
-  );
-}
-
-function ServerStatusDot({ status }: { status: ServerStatus }) {
-  const cfg = STATUS_DOT[status];
-  return (
-    <div className="relative flex items-center" title={cfg.label}>
-      <span className={cn("h-2.5 w-2.5 rounded-[2px]", cfg.color)} />
-      {cfg.pulse && (
-        <span
-          className={cn(
-            "absolute inline-flex h-2.5 w-2.5 rounded-[2px] opacity-75 animate-ping",
-            cfg.color
-          )}
-        />
-      )}
-    </div>
   );
 }

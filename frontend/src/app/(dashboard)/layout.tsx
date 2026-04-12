@@ -7,7 +7,9 @@ import { useThemeStore } from "@/store/theme-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import WelcomeScreen from "@/components/layout/WelcomeScreen";
+import FarewellScreen from "@/components/layout/FarewellScreen";
 import { useKeepAlive } from "@/hooks/useKeepAlive";
+import { clearSessionCookie } from "@/lib/api";
 import type { ServerStatus } from "@/hooks/useKeepAlive";
 
 const queryClient = new QueryClient({
@@ -22,7 +24,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated, user, welcomeScreen, setWelcomeScreen } = useAuthStore();
+  const { isAuthenticated, user, welcomeScreen, setWelcomeScreen, farewellScreen, setFarewellScreen, logout: clearAuth } = useAuthStore();
   const { theme } = useThemeStore();
   const [hydrated, setHydrated] = useState(false);
   const serverStatus = useKeepAlive();
@@ -93,6 +95,18 @@ export default function DashboardLayout({
           type={welcomeScreen.type}
           userName={welcomeScreen.userName}
           onComplete={() => setWelcomeScreen(null)}
+        />
+      )}
+
+      {farewellScreen?.show && (
+        <FarewellScreen
+          userName={farewellScreen.userName}
+          onComplete={() => {
+            setFarewellScreen(null);
+            clearAuth();
+            clearSessionCookie();
+            router.push("/login");
+          }}
         />
       )}
     </QueryClientProvider>
