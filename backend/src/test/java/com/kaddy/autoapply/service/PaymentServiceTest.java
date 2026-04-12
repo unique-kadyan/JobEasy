@@ -87,13 +87,14 @@ class PaymentServiceTest {
     }
 
     @Test
-    void createOrder_shouldTreatNullCountryAsIndia() {
+    void createOrder_shouldTreatNullCountryAsInternational() {
         when(generatedResumeRepository.findById("gr1")).thenReturn(Optional.of(unpaidResume));
         when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
+        // Null country code must NOT silently downgrade to India pricing — use international rate.
         PaymentOrderResponse response = devService.createOrder("user1", "gr1", null);
 
-        assertEquals(5400L, response.amount());
+        assertEquals(6300L, response.amount());
         assertEquals("INR", response.displayCurrency());
     }
 
