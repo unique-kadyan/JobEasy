@@ -131,7 +131,7 @@ export default function LoginPage() {
           sx={{ color: "rgba(255,255,255,0.75)", maxWidth: 400, mb: 6, lineHeight: 1.7 }}
         >
           Auto-apply to jobs with AI-generated cover letters customized for
-          every position. Search Indeed &amp; LinkedIn, generate personalized
+          every position. Find matching roles, generate personalized
           applications, and track everything in one place.
         </Typography>
 

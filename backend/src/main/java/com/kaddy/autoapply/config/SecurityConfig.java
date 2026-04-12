@@ -1,5 +1,6 @@
 package com.kaddy.autoapply.config;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,12 +33,19 @@ import com.kaddy.autoapply.security.JwtAuthenticationFilter;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
-    private final String allowedOrigins;
+    private final List<String> allowedOrigins;
 
     public SecurityConfig(JwtAuthenticationFilter jwtFilter,
-            @Value("${app.cors.allowed-origins}") String allowedOrigins) {
+            @Value("${app.cors.allowed-origins}") String allowedOrigins,
+            @Value("${app.frontend-url:}") String frontendUrl) {
         this.jwtFilter = jwtFilter;
-        this.allowedOrigins = allowedOrigins;
+        List<String> origins = new ArrayList<>(Arrays.asList(allowedOrigins.split(",")));
+        // app.frontend-url (driven by FRONTEND_URL on Render) is always added so
+        // setting one env var covers both the keep-alive scheduler and CORS.
+        if (!frontendUrl.isBlank() && !origins.contains(frontendUrl)) {
+            origins.add(frontendUrl);
+        }
+        this.allowedOrigins = origins;
     }
 
     @Bean
@@ -63,7 +71,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(
                 Arrays.asList("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));

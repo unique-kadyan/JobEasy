@@ -12,7 +12,9 @@ const INTERVAL_MS = 45_000;
 export default function KeepAlive() {
   useEffect(() => {
     const ping = () => {
-      fetch(BACKEND_PING_URL, { method: "GET", cache: "no-store" }).catch(
+      // mode: "no-cors" avoids CORS preflight entirely — we only need the
+      // server to receive the request to stay warm; the response is not read.
+      fetch(BACKEND_PING_URL, { method: "GET", mode: "no-cors" }).catch(
         () => {}, // silently ignore — network may be temporarily unavailable
       );
     };

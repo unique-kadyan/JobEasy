@@ -10,7 +10,7 @@ import { Zap, CheckCircle } from "@/components/ui/icons";
 const BENEFITS = [
   "Free to start — no credit card required",
   "AI-generated cover letters in seconds",
-  "Search Indeed, LinkedIn & more",
+  "Smart job matching across multiple sources",
   "Track all applications in one place",
 ];
 
