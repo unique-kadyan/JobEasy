@@ -124,6 +124,7 @@ function ExperienceTimeline({ experiences }: { experiences: ExpEntry[] }) {
   const isDark = theme === "dark";
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(700);
+  const [now] = useState(Date.now);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -162,14 +163,14 @@ function ExperienceTimeline({ experiences }: { experiences: ExpEntry[] }) {
     if (bars.length === 0) return null;
     const startYear = new Date(Math.min(...bars.map((b) => b.startMs))).getFullYear();
     const axisMinMs = new Date(startYear, 0, 1).getTime();
-    const axisMaxMs = Date.now();
+    const axisMaxMs = now;
     const totalMs = axisMaxMs - axisMinMs;
     const endYear = new Date(axisMaxMs).getFullYear();
     const allYears = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
     const toPercent = (ms: number) =>
       Math.max(0, Math.min(100, ((ms - axisMinMs) / totalMs) * 100));
     return { startYear, axisMinMs, axisMaxMs, totalMs, endYear, allYears, toPercent };
-  }, [bars]);
+  }, [bars, now]);
 
   if (!axisData) return null;
 
