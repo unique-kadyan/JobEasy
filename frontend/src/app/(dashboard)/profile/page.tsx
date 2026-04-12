@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
+import { useThemeStore } from "@/store/theme-store";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -22,8 +23,12 @@ import {
   Code2,
   ExternalLink,
   Edit2,
-  Star,
 } from "@/components/ui/icons";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import CallSplitRoundedIcon from "@mui/icons-material/CallSplitRounded";
+import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
+import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import { formatDate } from "@/lib/utils";
 import type { Resume, User as UserType } from "@/types";
 
@@ -84,6 +89,8 @@ function ProfileCompletion({ user }: { user: UserType | null }) {
 
 export default function ProfilePage() {
   const { user, setUser } = useAuthStore();
+  const { theme } = useThemeStore();
+  const isDark = theme === "dark";
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -203,6 +210,25 @@ export default function ProfilePage() {
     let h = 0;
     for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
     return TAG_COLORS[h % TAG_COLORS.length];
+  };
+
+  // Generates a unique HSL colour for every tech badge — billions of possible hues
+  const repoTagStyle = (tag: string): React.CSSProperties => {
+    let h = 0;
+    for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
+    const hue = h % 360;
+    const sat = 55 + (h % 30); // 55–85 %
+    return isDark
+      ? {
+          backgroundColor: `hsl(${hue},${sat}%,16%)`,
+          color: `hsl(${hue},${sat}%,78%)`,
+          border: `1px solid hsl(${hue},${sat}%,28%)`,
+        }
+      : {
+          backgroundColor: `hsl(${hue},${sat}%,92%)`,
+          color: `hsl(${hue},${sat}%,26%)`,
+          border: `1px solid hsl(${hue},${sat}%,72%)`,
+        };
   };
 
   const { data: githubRepos, isLoading: loadingRepos } = useQuery({
@@ -410,7 +436,7 @@ export default function ProfilePage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <GitBranch className="h-5 w-5 text-gray-800 dark:text-gray-300" />
+                <GitHubIcon sx={{ fontSize: 19 }} className="text-gray-800 dark:text-gray-300" />
                 <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">GitHub Projects</h2>
                 {githubRepos && (
                   <span className="text-xs text-[#86868b] dark:text-[#8e8e93] bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full px-2 py-0.5">
@@ -418,6 +444,15 @@ export default function ProfilePage() {
                   </span>
                 )}
               </div>
+              <a
+                href={`https://github.com/${githubUsername}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-[#86868b] dark:text-[#8e8e93] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                View all
+                <OpenInNewRoundedIcon sx={{ fontSize: 12 }} />
+              </a>
             </div>
           </CardHeader>
           <CardContent>
@@ -431,7 +466,6 @@ export default function ProfilePage() {
                   {visible.map((repo) => {
                     const langTag = repo.language ?? null;
                     const topics = repo.topics ?? [];
-                    // All topics + language (deduplicated, case-insensitive)
                     const topicsLower = new Set(topics.map((t) => t.toLowerCase()));
                     const allTechs = [
                       ...topics,
@@ -439,38 +473,64 @@ export default function ProfilePage() {
                     ];
                     return (
                       <div key={repo.id} className="py-3.5 first:pt-0 last:pb-0">
-                        <div className="flex items-center gap-3 mb-1">
-                          <a
-                            href={repo.html_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline text-sm"
-                          >
-                            {repo.name}
-                          </a>
-                          {repo.stargazers_count > 0 && (
-                            <span className="flex items-center gap-0.5 text-[11px] text-[#86868b] dark:text-[#8e8e93] font-medium">
-                              <Star className="h-3 w-3" /> {repo.stargazers_count}
-                            </span>
+                        <div className="flex items-start justify-between gap-4">
+
+                          {/* Left: icon + name + description + stats */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <FolderOpenRoundedIcon
+                                sx={{ fontSize: 15 }}
+                                className="text-[#86868b] dark:text-[#8e8e93] shrink-0"
+                              />
+                              <a
+                                href={repo.html_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline text-sm truncate"
+                              >
+                                {repo.name}
+                              </a>
+                              <OpenInNewRoundedIcon
+                                sx={{ fontSize: 11 }}
+                                className="text-[#86868b] dark:text-[#8e8e93] opacity-50 shrink-0"
+                              />
+                            </div>
+                            {repo.description && (
+                              <p className="text-xs text-[#86868b] dark:text-[#8e8e93] line-clamp-1 mb-1.5 ml-5">
+                                {repo.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-3 ml-5">
+                              {repo.stargazers_count > 0 && (
+                                <span className="flex items-center gap-0.5 text-[11px] text-[#86868b] dark:text-[#8e8e93] font-medium">
+                                  <StarRoundedIcon sx={{ fontSize: 13 }} className="text-amber-400" />
+                                  {repo.stargazers_count}
+                                </span>
+                              )}
+                              {repo.forks_count > 0 && (
+                                <span className="flex items-center gap-0.5 text-[11px] text-[#86868b] dark:text-[#8e8e93] font-medium">
+                                  <CallSplitRoundedIcon sx={{ fontSize: 13 }} className="text-indigo-400" />
+                                  {repo.forks_count}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Right: all tech badges */}
+                          {allTechs.length > 0 && (
+                            <div className="flex flex-wrap justify-end gap-1 max-w-[54%] shrink-0">
+                              {allTechs.map((t) => (
+                                <span
+                                  key={t}
+                                  style={repoTagStyle(t.toLowerCase())}
+                                  className="rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap"
+                                >
+                                  {t}
+                                </span>
+                              ))}
+                            </div>
                           )}
                         </div>
-                        {repo.description && (
-                          <p className="text-xs text-[#86868b] dark:text-[#8e8e93] mb-2 line-clamp-2">
-                            {repo.description}
-                          </p>
-                        )}
-                        {allTechs.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5">
-                            {allTechs.map((t) => (
-                              <span
-                                key={t}
-                                className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium whitespace-nowrap ${tagColor(t.toLowerCase())}`}
-                              >
-                                {t}
-                              </span>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     );
                   })}
@@ -519,7 +579,7 @@ export default function ProfilePage() {
                       {skills.map((skill) => (
                         <span
                           key={skill}
-                          className={`rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${palette.badge}`}
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${tagColor(skill)}`}
                         >
                           {skill}
                         </span>
@@ -569,21 +629,95 @@ export default function ProfilePage() {
         </Card>
       )}
 
+      {(primaryResume?.parsedData?.experience?.length ?? 0) > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5 text-indigo-600" />
+              <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Work Experience</h2>
+              <span className="text-xs text-[#86868b] dark:text-[#8e8e93] bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full px-2 py-0.5">
+                {primaryResume!.parsedData!.experience!.length}
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y divide-black/[0.04] dark:divide-white/[0.05]">
+              {primaryResume!.parsedData!.experience!.map((exp, i) => (
+                <div key={i} className="py-4 first:pt-0 last:pb-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
+                        {exp.title ?? "Role"}
+                      </p>
+                      <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mt-0.5">
+                        {exp.company ?? "Company"}
+                        {exp.location && <span className="text-gray-400 dark:text-gray-500 font-normal"> · {exp.location}</span>}
+                      </p>
+                    </div>
+                    {(exp.startDate || exp.endDate) && (
+                      <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0 mt-0.5">
+                        {exp.startDate ?? ""}{exp.endDate ? ` – ${exp.endDate}` : ""}
+                      </span>
+                    )}
+                  </div>
+                  {exp.bullets && exp.bullets.length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {exp.bullets.slice(0, 4).map((b, bi) => (
+                        <li key={bi} className="text-xs text-gray-600 dark:text-gray-400 flex gap-1.5">
+                          <span className="text-gray-300 dark:text-gray-600 shrink-0">•</span>
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <GraduationCap className="h-5 w-5 text-indigo-600" />
             <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Education</h2>
+            {(primaryResume?.parsedData?.education?.length ?? 0) > 0 && (
+              <span className="text-xs text-[#86868b] dark:text-[#8e8e93] bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full px-2 py-0.5">
+                {primaryResume!.parsedData!.education!.length}
+              </span>
+            )}
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">
-            Education details are extracted from your resume. Use{" "}
-            <a href="/smart-resume" className="text-indigo-600 dark:text-indigo-400 font-black hover:underline">
-              Smart Resume
-            </a>{" "}
-            to view and improve your parsed education data.
-          </p>
+          {(primaryResume?.parsedData?.education?.length ?? 0) > 0 ? (
+            <div className="divide-y divide-black/[0.04] dark:divide-white/[0.05]">
+              {primaryResume!.parsedData!.education!.map((edu, i) => (
+                <div key={i} className="py-4 first:pt-0 last:pb-0">
+                  <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
+                    {edu.institution ?? "Institution"}
+                  </p>
+                  {(edu.degree || edu.field) && (
+                    <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mt-0.5">
+                      {[edu.degree, edu.field].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-3 mt-1">
+                    {edu.graduationDate && (
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{edu.graduationDate}</span>
+                    )}
+                    {edu.gpa && (
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">GPA {edu.gpa}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm font-medium text-gray-400 dark:text-[#8b949e]">
+              Upload a resume to auto-detect your education history.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -597,6 +731,7 @@ interface GitHubRepo {
   description: string | null;
   language: string | null;
   stargazers_count: number;
+  forks_count: number;
   fork: boolean;
   topics?: string[];
 }

@@ -205,13 +205,10 @@ public class ResumeProfileService {
             }
         }
 
-        if (m.containsKey("skills")) {
-            Object raw = m.get("skills");
-            if (raw instanceof Map<?, ?> rawMap) {
-                Map<String, List<String>> skills = new HashMap<>();
-                rawMap.forEach((k, v) -> skills.put(k.toString(), toStringList(v)));
-                p.setSkills(skills);
-            }
+        if (m.get("skills") instanceof Map<?, ?> rawMap) {
+            Map<String, List<String>> skills = new HashMap<>();
+            rawMap.forEach((k, v) -> skills.put(k.toString(), toStringList(v)));
+            p.setSkills(skills);
         }
 
         if (m.containsKey("projects")) {

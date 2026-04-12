@@ -28,6 +28,7 @@ import {
   FileText,
   Target,
   Clock,
+  Trash2,
 } from "@/components/ui/icons";
 import PageTransition, { StaggerList, StaggerItem } from "@/components/ui/PageTransition";
 import type { Job } from "@/types";
@@ -255,6 +256,24 @@ export default function JobsPage() {
     }
   };
 
+  const [dismissing, setDismissing] = useState(false);
+
+  const handleClearSearch = async () => {
+    if (jobs.length === 0) return;
+    setDismissing(true);
+    try {
+      await api.post("/jobs/dismiss", { jobIds: jobs.map((j) => j.id) });
+      setSearchQuery("");
+      setQuery("");
+      setPage(0);
+      setAiSearchEnabled(false);
+    } catch {
+      // silently ignore — user can retry
+    } finally {
+      setDismissing(false);
+    }
+  };
+
   const confirmApply = async () => {
     if (!applyModal) return;
     setApplying(true);
@@ -267,6 +286,8 @@ export default function JobsPage() {
         jobId: applyModal.id,
         coverLetterId: coverLetter.id,
       });
+      // Open the actual application form on the external platform
+      if (applyModal.url) window.open(applyModal.url, "_blank", "noopener,noreferrer");
       setApplyModal(null);
     } catch (err) {
       console.error("Apply failed:", err);
@@ -570,6 +591,20 @@ export default function JobsPage() {
                   {selectedJobs.size > 1 ? "s" : ""}
                 </Button>
               )}
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                disabled={dismissing}
+                title="Hide these jobs permanently and start fresh"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] px-3 py-1.5 text-xs font-medium text-[#86868b] dark:text-[#8e8e93] hover:border-red-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50"
+              >
+                {dismissing ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3 w-3" />
+                )}
+                Clear old search
+              </button>
               {canSeeAllJobs() && showPagination && (
                 <Select
                   value={String(size)}

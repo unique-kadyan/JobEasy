@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 public non-sealed class DevITJobsScraper implements JobScraper {
@@ -50,7 +51,7 @@ public non-sealed class DevITJobsScraper implements JobScraper {
             for (Map<String, Object> item : raw) {
                 String title = Optional.ofNullable((String) item.get("title")).orElse("");
                 String techStack = item.get("techStack") instanceof List<?> ts
-                        ? ts.stream().map(Object::toString).reduce("", (a, b) -> a + " " + b).toLowerCase()
+                        ? ts.stream().map(Object::toString).collect(Collectors.joining(" ")).toLowerCase()
                         : "";
 
                 if (!q.isBlank() &&

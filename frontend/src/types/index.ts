@@ -200,7 +200,8 @@ export type ApplicationStatus =
   | "INTERVIEWING"
   | "OFFERED"
   | "REJECTED"
-  | "WITHDRAWN";
+  | "WITHDRAWN"
+  | "NOT_INTERESTED";
 
 export interface Template {
   id: string;

@@ -70,6 +70,22 @@ public class TemplateService {
         templateRepository.delete(template);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @CacheEvict(value = "templates", allEntries = true)
+    public Template adminUpdateTemplate(String templateId, TemplateRequest request) {
+        Template template = findTemplate(templateId);
+        template.setName(sanitizer.sanitize(request.name()));
+        template.setContent(request.content());
+        template.setDescription(sanitizer.sanitize(request.description()));
+        return templateRepository.save(template);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @CacheEvict(value = "templates", allEntries = true)
+    public void adminDeleteTemplate(String templateId) {
+        templateRepository.deleteById(templateId);
+    }
+
     private Template findTemplate(String templateId) {
         return templateRepository.findById(templateId)
                 .orElseThrow(() -> new ResourceNotFoundException("Template not found"));

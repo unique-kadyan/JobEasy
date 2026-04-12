@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Year;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -115,8 +116,8 @@ public class ResumeParserService {
         data.put("name", extractName(lines));
         data.put("contact", extractContact(text));
         data.put("summary", extractSectionText(text, "summary|objective|professional profile|about me|profile"));
-        data.put("experience", new ArrayList<>());
-        data.put("education", new ArrayList<>());
+        data.put("experience", extractExperience(text));
+        data.put("education", extractEducation(text));
         data.put("skills", categorizeSkills(lower));
         data.put("projects", new ArrayList<>());
         data.put("certifications", new ArrayList<>());
@@ -218,6 +219,163 @@ public class ResumeParserService {
                 .filter(lower::contains)
                 .sorted()
                 .collect(Collectors.toList());
+    }
+
+    // ── Experience / Education parsing ────────────────────────────────────────
+
+    private static final Pattern DATE_RANGE_INLINE = Pattern.compile(
+            "\\b((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.?\\s*)?(20\\d{2}|19\\d{2})" +
+            "\\s*(?:–|—|-|to)\\s*" +
+            "((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.?\\s*)?(20\\d{2}|19\\d{2}|present|current|now)\\b",
+            Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern BULLET_START = Pattern.compile("^[•\\-\\*▪▸►→✓◦◆]\\s*");
+
+    private static final Pattern DEGREE_PAT = Pattern.compile(
+            "(?i)\\b(bachelor|master|phd|ph\\.d|doctorate|associate|diploma|" +
+            "b\\.?s\\.?|m\\.?s\\.?|b\\.?a\\.?|m\\.?a\\.?|mba|b\\.?tech|m\\.?tech|" +
+            "b\\.?e\\.?|m\\.?e\\.?|b\\.?sc\\.?|m\\.?sc\\.?|bcom|mcom|b\\.?com|m\\.?com)\\b");
+
+    private static final Pattern SINGLE_YEAR = Pattern.compile("\\b(20\\d{2}|19\\d{2})\\b");
+
+    private List<Map<String, Object>> extractExperience(String text) {
+        String section = extractSectionText(text,
+                "experience|work experience|employment|professional experience|work history|employment history");
+        if (section == null || section.isBlank()) return new ArrayList<>();
+        List<Map<String, Object>> entries = new ArrayList<>();
+        for (String[] block : splitBlocks(section)) {
+            Map<String, Object> entry = parseExperienceBlock(block);
+            if (entry != null) entries.add(entry);
+        }
+        return entries;
+    }
+
+    private List<Map<String, Object>> extractEducation(String text) {
+        String section = extractSectionText(text,
+                "education|academic background|academic history|qualifications|academic qualifications");
+        if (section == null || section.isBlank()) return new ArrayList<>();
+        List<Map<String, Object>> entries = new ArrayList<>();
+        for (String[] block : splitBlocks(section)) {
+            Map<String, Object> entry = parseEducationBlock(block);
+            if (entry != null) entries.add(entry);
+        }
+        return entries;
+    }
+
+    /** Split section text into blocks of non-blank lines separated by blank lines. */
+    private List<String[]> splitBlocks(String section) {
+        String[] paragraphs = section.split("\\r?\\n(\\s*\\r?\\n)+");
+        List<String[]> blocks = new ArrayList<>();
+        for (String para : paragraphs) {
+            String[] lines = Arrays.stream(para.split("\\r?\\n"))
+                    .map(String::trim)
+                    .filter(l -> !l.isBlank())
+                    .toArray(String[]::new);
+            if (lines.length > 0) blocks.add(lines);
+        }
+        return blocks;
+    }
+
+    private Map<String, Object> parseExperienceBlock(String[] lines) {
+        String headerLine = null;
+        String dateLine   = null;
+        List<String> bullets = new ArrayList<>();
+
+        for (String line : lines) {
+            if (DATE_RANGE_INLINE.matcher(line).find()) {
+                if (dateLine == null) {
+                    // If there's content before the date on the same line, treat it as header
+                    Matcher dm = DATE_RANGE_INLINE.matcher(line);
+                    dm.find();
+                    String before = line.substring(0, dm.start()).trim();
+                    if (!before.isEmpty() && headerLine == null) headerLine = before;
+                    dateLine = line;
+                }
+            } else if (BULLET_START.matcher(line).find()) {
+                bullets.add(BULLET_START.matcher(line).replaceFirst("").trim());
+            } else if (headerLine == null) {
+                headerLine = line;
+            }
+        }
+
+        if (headerLine == null && dateLine == null) return null;
+
+        Map<String, Object> entry = new LinkedHashMap<>();
+
+        // Parse "Title | Company" or "Title @ Company" or "Title, Company"
+        if (headerLine != null) {
+            String[] parts = headerLine.split("\\s*[|@·]\\s*", 2);
+            entry.put("title", parts[0].trim());
+            if (parts.length > 1) {
+                // Might be "Company, Location" — split off location
+                String[] sub = parts[1].split(",\\s*", 2);
+                entry.put("company", sub[0].trim());
+                if (sub.length > 1) entry.put("location", sub[1].trim());
+            }
+        }
+
+        // Parse date range
+        if (dateLine != null) {
+            Matcher m = DATE_RANGE_INLINE.matcher(dateLine);
+            if (m.find()) {
+                String startMonth = m.group(1) != null ? m.group(1).trim() + " " : "";
+                String startYear  = m.group(2);
+                String endMonth   = m.group(3) != null ? m.group(3).trim() + " " : "";
+                String endStr     = m.group(4);
+                boolean current   = endStr.toLowerCase().matches("present|current|now");
+                entry.put("startDate", (startMonth + startYear).trim());
+                entry.put("endDate",   current ? "Present" : (endMonth + endStr).trim());
+                entry.put("current",   current);
+            }
+        }
+
+        if (!bullets.isEmpty()) entry.put("bullets", bullets);
+        return (entry.containsKey("title") || entry.containsKey("company")) ? entry : null;
+    }
+
+    private Map<String, Object> parseEducationBlock(String[] lines) {
+        if (lines.length == 0) return null;
+        Map<String, Object> entry = new LinkedHashMap<>();
+
+        for (String line : lines) {
+            // GPA
+            if (!entry.containsKey("gpa")) {
+                Matcher gpaM = Pattern.compile("(?i)\\bgpa\\b\\s*[:\\-]?\\s*([0-9.]+)").matcher(line);
+                if (gpaM.find()) { entry.put("gpa", gpaM.group(1)); continue; }
+            }
+            // Graduation date: prefer end of date range, else any 4-digit year
+            if (!entry.containsKey("graduationDate")) {
+                Matcher rangeM = DATE_RANGE_INLINE.matcher(line);
+                if (rangeM.find()) {
+                    String endStr = rangeM.group(4);
+                    if (!endStr.toLowerCase().matches("present|current|now"))
+                        entry.put("graduationDate", endStr);
+                    else {
+                        String startYear = rangeM.group(2);
+                        entry.put("graduationDate", startYear);
+                    }
+                    continue;
+                }
+                Matcher ym = SINGLE_YEAR.matcher(line);
+                if (ym.find()) { entry.put("graduationDate", ym.group(1)); continue; }
+            }
+            // Degree line
+            if (DEGREE_PAT.matcher(line).find() && !entry.containsKey("degree")) {
+                // "Bachelor of Science in Computer Science" → degree + field
+                String[] inSplit = line.split("(?i)\\s+in\\s+", 2);
+                entry.put("degree", inSplit[0].trim());
+                if (inSplit.length > 1) entry.put("field", inSplit[1].trim());
+                continue;
+            }
+            // Institution (first remaining line)
+            if (!entry.containsKey("institution")) {
+                entry.put("institution", line);
+            } else if (!entry.containsKey("degree")) {
+                entry.put("degree", line);
+            }
+        }
+
+        return entry.isEmpty() ? null : entry;
     }
 
     private int estimateExperienceYears(String text) {

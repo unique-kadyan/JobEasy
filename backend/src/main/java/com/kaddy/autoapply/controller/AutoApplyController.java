@@ -1,5 +1,6 @@
 package com.kaddy.autoapply.controller;
 
+import com.kaddy.autoapply.exception.BadRequestException;
 import com.kaddy.autoapply.model.AutoApplyJob;
 import com.kaddy.autoapply.service.AutoApplyService;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,7 @@ public class AutoApplyController {
             Authentication auth) {
         List<String> jobIds = body.get("jobIds");
         if (jobIds == null || jobIds.isEmpty())
-            return ResponseEntity.badRequest().build();
+            throw new BadRequestException("jobIds must be a non-empty list");
         return ResponseEntity.ok(
                 autoApplyService.queueJobs((String) auth.getPrincipal(), jobIds));
     }

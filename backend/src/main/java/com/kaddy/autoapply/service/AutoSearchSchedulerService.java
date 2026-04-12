@@ -17,6 +17,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,7 @@ public class AutoSearchSchedulerService {
     public void runScheduledSearches() {
         int pageNum = 0;
         int totalDispatched = 0;
+        List<CompletableFuture<Void>> allFutures = new ArrayList<>();
 
         while (true) {
             Page<User> page = userRepository.findByAutoSearchEnabledTrue(
@@ -72,15 +74,14 @@ public class AutoSearchSchedulerService {
                     .toList();
 
             for (User user : dueUsers) {
-                CompletableFuture
+                allFutures.add(CompletableFuture
                         .runAsync(() -> runSearchForUser(user), executor)
-
                         .orTimeout(PER_USER_TIMEOUT_MINUTES, TimeUnit.MINUTES)
                         .exceptionally(t -> {
                             log.error("Auto-search failed/timed-out for user {}: {}",
                                     user.getId(), t.getMessage());
                             return null;
-                        });
+                        }));
             }
 
             totalDispatched += dueUsers.size();
@@ -89,8 +90,9 @@ public class AutoSearchSchedulerService {
             pageNum++;
         }
 
-        if (totalDispatched > 0) {
-            log.info("Auto-search scheduler: dispatched {} user search(es)", totalDispatched);
+        if (!allFutures.isEmpty()) {
+            CompletableFuture.allOf(allFutures.toArray(new CompletableFuture[0])).join();
+            log.info("Auto-search scheduler: completed {} user search(es)", totalDispatched);
         }
     }
 

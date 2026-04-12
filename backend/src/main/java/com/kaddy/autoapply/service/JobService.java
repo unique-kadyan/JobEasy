@@ -4,11 +4,14 @@ import com.kaddy.autoapply.config.FeatureConfig;
 import com.kaddy.autoapply.dto.response.JobResponse;
 import com.kaddy.autoapply.dto.response.PagedResponse;
 import com.kaddy.autoapply.exception.ResourceNotFoundException;
+import com.kaddy.autoapply.model.Application;
 import com.kaddy.autoapply.model.Job;
 import com.kaddy.autoapply.model.User;
+import com.kaddy.autoapply.model.enums.ApplicationStatus;
 import com.kaddy.autoapply.model.enums.JobSource;
 import com.kaddy.autoapply.model.enums.SubscriptionTier;
 import com.kaddy.autoapply.security.SecurityUtils;
+import com.kaddy.autoapply.repository.ApplicationRepository;
 import com.kaddy.autoapply.repository.JobRepository;
 import com.kaddy.autoapply.repository.UserRepository;
 import com.kaddy.autoapply.service.ai.AiProviderFactory;
@@ -25,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -45,6 +49,7 @@ public class JobService {
             Be direct. No filler. Use plain text, no markdown.""";
 
     private final JobRepository                 jobRepository;
+    private final ApplicationRepository         applicationRepository;
     private final ScraperOrchestrator           scraperOrchestrator;
     private final JobScoringService             jobScoringService;
     private final UserRepository                userRepository;
@@ -54,6 +59,7 @@ public class JobService {
     private final Executor                      executor;
 
     public JobService(JobRepository jobRepository,
+                      ApplicationRepository applicationRepository,
                       ScraperOrchestrator scraperOrchestrator,
                       JobScoringService jobScoringService,
                       UserRepository userRepository,
@@ -62,6 +68,7 @@ public class JobService {
                       SearchKeywordGeneratorService keywordGeneratorService,
                       @Qualifier("virtualThreadExecutor") Executor executor) {
         this.jobRepository           = jobRepository;
+        this.applicationRepository   = applicationRepository;
         this.scraperOrchestrator     = scraperOrchestrator;
         this.jobScoringService       = jobScoringService;
         this.userRepository          = userRepository;
@@ -162,6 +169,21 @@ public class JobService {
             totalPages    = total == 0 ? 0 : (int) Math.ceil((double) total / size);
         }
 
+        // Exclude jobs the user has already interacted with (applied, skipped, dismissed).
+        // This is the core duplicate-application guard: once a job is seen and acted on
+        // (or cleared via "Clear old search") it never surfaces again in the feed.
+        if (userId != null) {
+            Set<String> interacted = new java.util.HashSet<>();
+            for (Application a : applicationRepository.findInteractedByUserId(userId)) {
+                if (a.getJobId() != null) interacted.add(a.getJobId());
+            }
+            if (!interacted.isEmpty()) {
+                candidates = candidates.stream()
+                        .filter(j -> !interacted.contains(j.id()))
+                        .toList();
+            }
+        }
+
         if (user != null) {
             candidates = jobScoringService.scoreAndFilterBatch(user, candidates);
         }
@@ -198,6 +220,28 @@ public class JobService {
         return scraped.stream()
                 .filter(j -> j.source() != null)
                 .collect(Collectors.groupingBy(JobResponse::source, Collectors.counting()));
+    }
+
+    /**
+     * Permanently hides a batch of jobs from a user's search feed without deleting
+     * them from the database. Already-interacted jobs (applied, skipped, etc.) are
+     * left untouched so their existing status is preserved.
+     */
+    @Transactional
+    public int dismissJobs(String userId, List<String> jobIds) {
+        int count = 0;
+        for (String jobId : jobIds) {
+            if (!applicationRepository.existsByUserIdAndJobId(userId, jobId)) {
+                Application dismissed = Application.builder()
+                        .userId(userId)
+                        .jobId(jobId)
+                        .status(ApplicationStatus.DISMISSED)
+                        .build();
+                applicationRepository.save(dismissed);
+                count++;
+            }
+        }
+        return count;
     }
 
     @Transactional(readOnly = true)

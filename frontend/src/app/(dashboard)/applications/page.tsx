@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
-import { STATUS_COLORS, SOURCE_COLORS } from "@/lib/constants";
+import { STATUS_COLORS, STATUS_LABELS, SOURCE_COLORS } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 import {
   Loader2,
@@ -26,6 +26,7 @@ const STATUS_OPTIONS = [
   { value: "OFFERED", label: "Offered" },
   { value: "REJECTED", label: "Rejected" },
   { value: "WITHDRAWN", label: "Withdrawn" },
+  { value: "NOT_INTERESTED", label: "Skipped" },
 ];
 
 const UPDATE_OPTIONS = [
@@ -83,18 +84,23 @@ export default function ApplicationsPage() {
                         <h3 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
                           {app.job.title}
                         </h3>
-                        <Badge className={SOURCE_COLORS[app.job.source]}>
+                        <Badge className={SOURCE_COLORS[app.job.source] ?? "bg-gray-100 text-gray-600"}>
                           {app.job.source}
                         </Badge>
-                        <Badge className={STATUS_COLORS[app.status]}>
-                          {app.status}
+                        <Badge className={STATUS_COLORS[app.status] ?? "bg-gray-100 text-gray-600"}>
+                          {STATUS_LABELS[app.status] ?? app.status}
                         </Badge>
                       </div>
                       <p className="text-xs text-[#86868b] dark:text-[#8e8e93]">
                         {app.job.company}
                         {app.job.location && ` · ${app.job.location}`}
-                        {` · Applied ${formatDate(app.appliedAt)}`}
+                        {` · ${app.status === "NOT_INTERESTED" ? "Skipped" : "Applied"} ${formatDate(app.appliedAt)}`}
                       </p>
+                      {app.notes && (
+                        <p className="mt-1.5 text-xs text-[#86868b] dark:text-[#8e8e93] italic bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-lg px-2.5 py-1.5 line-clamp-2">
+                          {app.notes}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <Select

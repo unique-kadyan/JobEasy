@@ -51,6 +51,8 @@ export default function JobDetailPage() {
         coverLetterId: coverLetter?.id,
       });
       setApplied(true);
+      // Open the actual application form on the external platform
+      if (job.url) window.open(job.url, "_blank", "noopener,noreferrer");
     } catch (err) {
       console.error("Apply failed:", err);
     }
@@ -99,11 +101,16 @@ export default function JobDetailPage() {
                 )}
               </div>
             </div>
-            <a href={job.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
-              <Button variant="outline">
-                <ExternalLink className="h-4 w-4" /> View Original
-              </Button>
-            </a>
+            <div className="flex flex-col items-end gap-1.5 shrink-0">
+              <a href={job.url} target="_blank" rel="noopener noreferrer">
+                <Button>
+                  <ExternalLink className="h-4 w-4" /> Apply Now
+                </Button>
+              </a>
+              <span className="text-[10px] text-[#86868b] dark:text-[#8e8e93] font-medium">
+                Opens application form on {job.source}
+              </span>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -127,9 +134,19 @@ export default function JobDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {applied ? (
-                <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="text-sm font-semibold">Applied successfully!</span>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <CheckCircle className="h-5 w-5" />
+                    <span className="text-sm font-semibold">Tracked in Kaddy!</span>
+                  </div>
+                  <a href={job.url} target="_blank" rel="noopener noreferrer" className="block">
+                    <Button className="w-full" variant="outline">
+                      <ExternalLink className="h-4 w-4" /> Open Application Form
+                    </Button>
+                  </a>
+                  <p className="text-[10px] text-center text-[#86868b] dark:text-[#8e8e93]">
+                    Complete your application on {job.source}
+                  </p>
                 </div>
               ) : (
                 <>

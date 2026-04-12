@@ -155,7 +155,7 @@ export default function JobCard({ job, onApply, applied, selected, onSelect, sho
             </Button>
             <a href={job.url} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm" className="w-full">
-                <ExternalLink className="h-3 w-3" /> View
+                <ExternalLink className="h-3 w-3" /> Apply
               </Button>
             </a>
             <Tooltip title={bookmarked ? "Remove bookmark" : "Save for later"}>

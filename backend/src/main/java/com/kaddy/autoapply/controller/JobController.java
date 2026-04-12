@@ -1,5 +1,6 @@
 package com.kaddy.autoapply.controller;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -70,5 +72,15 @@ public class JobController {
     public ResponseEntity<JobResponse> matchJob(Authentication auth, @PathVariable String id) {
         String userId = (auth != null) ? (String) auth.getPrincipal() : null;
         return ResponseEntity.ok(jobService.matchJob(userId, id));
+    }
+
+    @PostMapping("/dismiss")
+    public ResponseEntity<Map<String, Integer>> dismissJobs(
+            Authentication auth,
+            @RequestBody Map<String, List<String>> body) {
+        String userId = (String) auth.getPrincipal();
+        List<String> jobIds = body.getOrDefault("jobIds", List.of());
+        int dismissed = jobService.dismissJobs(userId, jobIds);
+        return ResponseEntity.ok(Map.of("dismissed", dismissed));
     }
 }

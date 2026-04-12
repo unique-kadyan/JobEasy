@@ -95,8 +95,9 @@ public class ApplicationService {
         Page<Application> apps = (status != null && !status.isBlank())
                 ? applicationRepository.findByUserIdAndStatusOrderByAppliedAtDesc(
                         userId, parseStatus(status), PageRequest.of(page, size))
-                : applicationRepository.findByUserIdOrderByAppliedAtDesc(
-                        userId, PageRequest.of(page, size));
+                // "All" view never surfaces silently-dismissed records
+                : applicationRepository.findByUserIdAndStatusNotOrderByAppliedAtDesc(
+                        userId, ApplicationStatus.DISMISSED, PageRequest.of(page, size));
 
         return apps.map(app -> {
             Job job = null;

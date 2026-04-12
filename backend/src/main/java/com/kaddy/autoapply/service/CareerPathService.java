@@ -132,7 +132,7 @@ public class CareerPathService {
 
         if (profile.getExperience() != null && !profile.getExperience().isEmpty()) {
             sb.append("Work Experience:\n");
-            profile.getExperience().forEach(exp ->
+            profile.getExperience().stream().limit(10).forEach(exp ->
                     sb.append("  - ").append(exp.title()).append(" at ").append(exp.company())
                       .append(" (").append(exp.startDate()).append(" to ")
                       .append(exp.current() ? "Present" : exp.endDate()).append(")\n"));
@@ -140,21 +140,21 @@ public class CareerPathService {
 
         if (profile.getEducation() != null && !profile.getEducation().isEmpty()) {
             sb.append("Education:\n");
-            profile.getEducation().forEach(edu ->
+            profile.getEducation().stream().limit(5).forEach(edu ->
                     sb.append("  - ").append(edu.degree()).append(" in ").append(edu.field())
                       .append(" from ").append(edu.institution()).append("\n"));
         }
 
         if (profile.getProjects() != null && !profile.getProjects().isEmpty()) {
             sb.append("Projects:\n");
-            profile.getProjects().forEach(proj ->
+            profile.getProjects().stream().limit(10).forEach(proj ->
                     sb.append("  - ").append(proj.name()).append(": ").append(proj.description())
                       .append(" [").append(String.join(", ", proj.technologies())).append("]\n"));
         }
 
         if (profile.getCertifications() != null && !profile.getCertifications().isEmpty()) {
             sb.append("Certifications:\n");
-            profile.getCertifications().forEach(cert ->
+            profile.getCertifications().stream().limit(8).forEach(cert ->
                     sb.append("  - ").append(cert.name()).append(" by ").append(cert.issuer()).append("\n"));
         }
     }

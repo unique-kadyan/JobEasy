@@ -136,6 +136,10 @@ public class ResumeService {
 
             Resume saved = resumeRepository.save(resume);
 
+            // Backfill LinkedIn / GitHub / portfolio URLs onto the user profile
+            // if they aren't already set — one-time enrichment from the resume contact block.
+            backfillContactUrls(userId, parsedData);
+
             final String savedId = saved.getId();
             final String finalText = parsedText;
             CompletableFuture.runAsync(() -> {
@@ -154,6 +158,31 @@ public class ResumeService {
                     userId, e.getClass().getName(), e.getMessage(), e);
             throw e;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void backfillContactUrls(String userId, Map<String, Object> parsedData) {
+        if (parsedData == null) return;
+        Object contactRaw = parsedData.get("contact");
+        if (!(contactRaw instanceof Map)) return;
+        Map<String, Object> contact = (Map<String, Object>) contactRaw;
+
+        String linkedin  = contact.get("linkedin")  instanceof String s ? s : null;
+        String github    = contact.get("github")    instanceof String s ? s : null;
+        String portfolio = contact.get("portfolio") instanceof String s ? s : null;
+
+        if (linkedin == null && github == null && portfolio == null) return;
+
+        userRepository.findById(userId).ifPresent(user -> {
+            boolean dirty = false;
+            if (linkedin  != null && (user.getLinkedinUrl()  == null || user.getLinkedinUrl().isBlank()))  { user.setLinkedinUrl(linkedin);   dirty = true; }
+            if (github    != null && (user.getGithubUrl()    == null || user.getGithubUrl().isBlank()))    { user.setGithubUrl(github);       dirty = true; }
+            if (portfolio != null && (user.getPortfolioUrl() == null || user.getPortfolioUrl().isBlank())) { user.setPortfolioUrl(portfolio); dirty = true; }
+            if (dirty) {
+                userRepository.save(user);
+                log.info("Backfilled contact URLs for user {} from resume", userId);
+            }
+        });
     }
 
     private void triggerAutoSearch(String userId, Map<String, Object> parsedData) {

@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -135,8 +136,8 @@ public class InterviewPrepService {
             throw new BadRequestException("This interview session has already been completed.");
         }
 
-        // Merge answers into QA list
-        Map<Integer, String> answerMap = new java.util.HashMap<>();
+        // Merge answers into QA list (LinkedHashMap preserves question ordering)
+        Map<Integer, String> answerMap = new LinkedHashMap<>();
         req.answers().forEach(a -> answerMap.put(a.index(), a.answer()));
 
         List<MockInterviewSession.QA> withAnswers = session.getQuestionsAndAnswers().stream()
@@ -153,27 +154,24 @@ public class InterviewPrepService {
         // Parse scores, feedback, ideal answers
         List<MockInterviewSession.QA> evaluated = parseEvaluation(withAnswers, result.content());
 
-        // Parse overall summary
+        // Parse overall summary — find last line that looks like the summary JSON object
         int overallScore = 0;
         String strengths = "", improvements = "", overallFeedback = "";
-        try {
-            String[] lines = result.content().trim().split("\n");
-            for (int i = lines.length - 1; i >= 0; i--) {
-                String line = lines[i].trim();
-                if (line.startsWith("{") && line.contains("overallScore")) {
-                    Map<String, Object> summary = objectMapper.readValue(line, new TypeReference<>() {});
-                    overallScore   = ((Number) summary.getOrDefault("overallScore", 0)).intValue();
-                    strengths      = (String) summary.getOrDefault("strengths", "");
-                    improvements   = (String) summary.getOrDefault("improvements", "");
-                    overallFeedback = (String) summary.getOrDefault("overallFeedback", "");
-                    break;
-                }
+        Optional<String> summaryLine = result.content().trim().lines()
+                .filter(l -> l.trim().startsWith("{") && l.contains("overallScore"))
+                .reduce((a, b) -> b);
+        if (summaryLine.isPresent()) {
+            try {
+                Map<String, Object> summary = objectMapper.readValue(summaryLine.get().trim(), new TypeReference<>() {});
+                overallScore    = ((Number) summary.getOrDefault("overallScore", 0)).intValue();
+                strengths       = (String) summary.getOrDefault("strengths", "");
+                improvements    = (String) summary.getOrDefault("improvements", "");
+                overallFeedback = (String) summary.getOrDefault("overallFeedback", "");
+            } catch (Exception e) {
+                log.warn("Could not parse overall summary for session {}: {}", sessionId, e.getMessage());
+                overallScore = (int) Math.round(
+                        evaluated.stream().mapToInt(MockInterviewSession.QA::score).average().orElse(0) * 10);
             }
-        } catch (Exception e) {
-            log.warn("Could not parse overall summary for session {}: {}", sessionId, e.getMessage());
-            // compute average from individual scores as fallback
-            overallScore = (int) Math.round(
-                    evaluated.stream().mapToInt(MockInterviewSession.QA::score).average().orElse(0) * 10);
         }
 
         session.setQuestionsAndAnswers(evaluated);
@@ -259,7 +257,7 @@ public class InterviewPrepService {
         if (lastBracket >= 0) json = json.substring(0, lastBracket + 1);
         json = stripMarkdown(json);
 
-        Map<Integer, Map<String, Object>> evalMap = new java.util.HashMap<>();
+        Map<Integer, Map<String, Object>> evalMap = new LinkedHashMap<>();
         try {
             List<Map<String, Object>> items = objectMapper.readValue(json, new TypeReference<>() {});
             items.forEach(item -> {

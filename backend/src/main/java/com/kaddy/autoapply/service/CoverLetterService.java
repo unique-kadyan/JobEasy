@@ -58,6 +58,8 @@ public class CoverLetterService {
 
     private static final long LOOKUP_TIMEOUT_SECONDS = 5;
 
+    private static final String DAILY_KEY_PREFIX = "cl:daily:";
+
     private final CoverLetterRepository coverLetterRepository;
     private final UserRepository userRepository;
     private final TemplateRepository templateRepository;
@@ -107,6 +109,7 @@ public class CoverLetterService {
         }
     }
 
+    @Transactional
     @PreAuthorize("isAuthenticated()")
     public CoverLetterResponse generate(String userId, CoverLetterRequest request) {
         if (!SecurityUtils.isAdmin()) {
@@ -114,7 +117,7 @@ public class CoverLetterService {
                     .orElseThrow(() -> new ResourceNotFoundException("User not found"));
             int maxPerDay = featureConfig.maxCoverLettersPerDay(limitUser.getSubscriptionTier());
             if (maxPerDay != Integer.MAX_VALUE) {
-                String dailyKey = "cl:daily:" + userId + ":" + LocalDate.now();
+                String dailyKey = DAILY_KEY_PREFIX + userId + ":" + LocalDate.now();
                 Long count = redis.opsForValue().increment(dailyKey);
                 if (count != null && count == 1) {
                     redis.expire(dailyKey, Duration.ofHours(25));

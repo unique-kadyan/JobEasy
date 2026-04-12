@@ -39,6 +39,13 @@ public enum ApplicationStatus {
         @Override public Set<ApplicationStatus> allowedTransitions() {
             return EnumSet.noneOf(ApplicationStatus.class);
         }
+    },
+    // Silently cleared from the jobs feed — never shown in search again,
+    // never shown on the Applications page. Created by "Clear old search".
+    DISMISSED {
+        @Override public Set<ApplicationStatus> allowedTransitions() {
+            return EnumSet.noneOf(ApplicationStatus.class);
+        }
     };
 
     public abstract Set<ApplicationStatus> allowedTransitions();
@@ -64,6 +71,8 @@ public enum ApplicationStatus {
             case REJECTED       -> "Rejected";
             case WITHDRAWN      -> "Withdrawn";
             case NOT_INTERESTED -> "Not Interested";
+            case DISMISSED      -> "Dismissed";
+            default             -> this.name();
         };
     }
 }
