@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { Toaster } from "sonner";
 import EmotionCacheProvider from "@/components/emotion-cache";
 import Providers from "@/components/providers";
+import KeepAlive from "@/components/KeepAlive";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -18,7 +19,8 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "Rolevo - Auto Apply with AI",
-  description: "AI-powered job application platform. Search jobs, generate cover letters, and auto-apply with one click.",
+  description:
+    "AI-powered job application platform. Search jobs, generate cover letters, and auto-apply with one click.",
 };
 
 export default function RootLayout({
@@ -35,6 +37,7 @@ export default function RootLayout({
           <Providers>
             {children}
             <Toaster position="top-right" richColors closeButton />
+            <KeepAlive />
           </Providers>
         </EmotionCacheProvider>
       </body>

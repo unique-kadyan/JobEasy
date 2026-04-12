@@ -44,13 +44,15 @@ export default function MultiSelect({
       disableCloseOnSelect
       renderTags={(tagValue, getTagProps) =>
         tagValue.map((option, index) => {
-          const tagProps = getTagProps({ index });
+          const { key, ...tagProps } = getTagProps({ index });
           return (
             <Chip
-              key={option.value}
+              key={key}
               label={option.label}
               size="small"
-              deleteIcon={<CloseRoundedIcon sx={{ fontSize: "14px !important" }} />}
+              deleteIcon={
+                <CloseRoundedIcon sx={{ fontSize: "14px !important" }} />
+              }
               sx={{
                 height: 24,
                 fontSize: "0.75rem",
@@ -77,7 +79,9 @@ export default function MultiSelect({
           sx={{
             "& .MuiOutlinedInput-root": {
               borderRadius: 2,
-              "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "primary.main" },
+              "&:hover .MuiOutlinedInput-notchedOutline": {
+                borderColor: "primary.main",
+              },
             },
           }}
         />

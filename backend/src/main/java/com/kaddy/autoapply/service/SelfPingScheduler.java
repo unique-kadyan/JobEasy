@@ -1,19 +1,20 @@
 package com.kaddy.autoapply.service;
 
-import jakarta.annotation.PostConstruct;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import jakarta.annotation.PostConstruct;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class SelfPingScheduler {
@@ -22,15 +23,15 @@ public class SelfPingScheduler {
 
     private static final long STARTUP_DELAY_MS = 8_000;
 
-    private static final long PING_INTERVAL_MS = 20_000;
+    private static final long PING_INTERVAL_MS = 45_000;
 
-    private static final long RETRY_DELAY_S    = 3;
+    private static final long RETRY_DELAY_S = 5;
 
-    private static final int  TIMEOUT_S        = 8;
+    private static final int TIMEOUT_S = 10;
 
-    private final WebClient                            webClient;
-    private final List<PingTarget>                     targets   = new ArrayList<>();
-    private final ConcurrentHashMap<String, Integer>   failures  = new ConcurrentHashMap<>();
+    private final WebClient webClient;
+    private final List<PingTarget> targets = new ArrayList<>();
+    private final ConcurrentHashMap<String, Integer> failures = new ConcurrentHashMap<>();
 
     public SelfPingScheduler(
             WebClient.Builder webClientBuilder,
@@ -55,9 +56,8 @@ public class SelfPingScheduler {
         if (targets.size() == 1 && targets.get(0).url().contains("localhost")) {
             log.info("[keep-alive] Running locally — self-ping disabled (RENDER_EXTERNAL_URL not set)");
         } else {
-            targets.forEach(t ->
-                log.info("[keep-alive] Will ping {} every {} s — {}", t.name(), PING_INTERVAL_MS / 1000, t.url())
-            );
+            targets.forEach(t -> log.info("[keep-alive] Will ping {} every {} s — {}", t.name(),
+                    PING_INTERVAL_MS / 1000, t.url()));
         }
     }
 
@@ -67,7 +67,8 @@ public class SelfPingScheduler {
             webClient.get()
                     .uri(target.url())
                     .retrieve()
-                    .toBodilessEntity()   // discards body immediately — avoids IllegalStateException when timeout cancels a partially-received response
+                    .toBodilessEntity() // discards body immediately — avoids IllegalStateException when timeout cancels
+                                        // a partially-received response
                     .timeout(Duration.ofSeconds(TIMEOUT_S))
 
                     .retryWhen(Retry.fixedDelay(1, Duration.ofSeconds(RETRY_DELAY_S))
@@ -84,9 +85,11 @@ public class SelfPingScheduler {
                     .subscribe(ignored -> {
                         failures.put(target.name(), 0);
                         log.trace("[keep-alive] {} OK", target.name());
-                    }, err -> {}); // onError already handled by onErrorResume; this prevents unhandled-error noise
+                    }, err -> {
+                    }); // onError already handled by onErrorResume; this prevents unhandled-error noise
         }
     }
 
-    private record PingTarget(String name, String url) {}
+    private record PingTarget(String name, String url) {
+    }
 }

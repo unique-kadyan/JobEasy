@@ -24,15 +24,15 @@ import {
 } from "@/components/ui/icons";
 
 const COMMANDS = [
-  { label: "Dashboard",     icon: LayoutDashboard, href: "/dashboard" },
-  { label: "Find Jobs",     icon: Search,          href: "/jobs" },
-  { label: "Applications",  icon: Send,            href: "/applications" },
-  { label: "Resumes",       icon: FileText,        href: "/resumes" },
-  { label: "Smart Resume",  icon: Sparkles,        href: "/smart-resume" },
-  { label: "Cover Letters", icon: Mail,            href: "/cover-letters" },
-  { label: "Profile",       icon: User,            href: "/profile" },
-  { label: "Upgrade Plan",  icon: CreditCard,      href: "/pricing" },
-  { label: "Settings",      icon: Settings,        href: "/settings" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { label: "Find Jobs", icon: Search, href: "/jobs" },
+  { label: "Applications", icon: Send, href: "/applications" },
+  { label: "Resumes", icon: FileText, href: "/resumes" },
+  { label: "Smart Resume", icon: Sparkles, href: "/smart-resume" },
+  { label: "Cover Letters", icon: Mail, href: "/cover-letters" },
+  { label: "Profile", icon: User, href: "/profile" },
+  { label: "Upgrade Plan", icon: CreditCard, href: "/pricing" },
+  { label: "Settings", icon: Settings, href: "/settings" },
 ];
 
 interface CommandPaletteProps {
@@ -64,7 +64,8 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
         sx: {
           borderRadius: 3,
           overflow: "hidden",
-          boxShadow: "0 24px 64px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.12)",
+          boxShadow:
+            "0 24px 64px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.12)",
           bgcolor: "background.paper",
           backgroundImage: "none",
           mt: { xs: "10vh", sm: "15vh" },
@@ -74,7 +75,10 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
       }}
       sx={{
         "& .MuiDialog-container": { alignItems: "flex-start" },
-        "& .MuiBackdrop-root": { backdropFilter: "blur(4px)", bgcolor: "rgba(0,0,0,0.4)" },
+        "& .MuiBackdrop-root": {
+          backdropFilter: "blur(4px)",
+          bgcolor: "rgba(0,0,0,0.4)",
+        },
       }}
     >
       <Command shouldFilter={true}>
@@ -90,7 +94,9 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
             borderColor: "divider",
           }}
         >
-          <SearchRoundedIcon sx={{ fontSize: 18, color: "text.disabled", flexShrink: 0 }} />
+          <SearchRoundedIcon
+            sx={{ fontSize: 18, color: "text.disabled", flexShrink: 0 }}
+          />
           <Box
             component={Command.Input}
             value={search}
@@ -108,13 +114,23 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
               "::placeholder": { color: "text.disabled" },
             }}
           />
-          <IconButton size="small" onClick={onClose} sx={{ color: "text.secondary", "&:hover": { color: "text.primary" } }}>
+          <IconButton
+            size="small"
+            onClick={onClose}
+            sx={{
+              color: "text.secondary",
+              "&:hover": { color: "text.primary" },
+            }}
+          >
             <CloseRoundedIcon sx={{ fontSize: 16 }} />
           </IconButton>
         </Box>
 
         {/* Results */}
-        <Box component={Command.List} sx={{ maxHeight: 320, overflowY: "auto" }}>
+        <Box
+          component={Command.List}
+          sx={{ maxHeight: 320, overflowY: "auto" }}
+        >
           <Box
             component={Command.Empty}
             sx={{
@@ -143,8 +159,8 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
           >
             <Typography
               component="span"
-              // @ts-expect-error cmdk slot
-              cmdk-group-heading=""
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              {...({ "cmdk-group-heading": "" } as any)}
             >
               Navigation
             </Typography>
@@ -180,7 +196,10 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
                     },
                   }}
                 >
-                  <Icon className="cmd-icon" style={{ fontSize: 16, color: "inherit", opacity: 0.7 }} />
+                  <Icon
+                    className="cmd-icon"
+                    style={{ fontSize: 16, color: "inherit", opacity: 0.7 }}
+                  />
                   <Typography variant="body2" color="inherit" fontWeight={500}>
                     {cmd.label}
                   </Typography>
@@ -202,7 +221,12 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
             { keys: "↵", label: "select" },
             { keys: "Esc", label: "close" },
           ].map(({ keys, label }) => (
-            <Stack key={label} direction="row" alignItems="center" spacing={0.75}>
+            <Stack
+              key={label}
+              direction="row"
+              alignItems="center"
+              spacing={0.75}
+            >
               <Box
                 component="kbd"
                 sx={{

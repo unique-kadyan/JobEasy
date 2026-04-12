@@ -1,5 +1,25 @@
 package com.kaddy.autoapply.service;
 
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import com.kaddy.autoapply.dto.request.LoginRequest;
 import com.kaddy.autoapply.dto.request.SignupRequest;
 import com.kaddy.autoapply.dto.response.AuthResponse;
@@ -9,32 +29,27 @@ import com.kaddy.autoapply.repository.PasswordResetTokenRepository;
 import com.kaddy.autoapply.repository.UserRepository;
 import com.kaddy.autoapply.repository.VerificationTokenRepository;
 import com.kaddy.autoapply.security.JwtTokenProvider;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
-    @Mock private UserRepository userRepository;
-    @Mock private PasswordEncoder passwordEncoder;
-    @Mock private JwtTokenProvider tokenProvider;
-    @Mock private TokenBlacklistService blacklistService;
-    @Mock private VerificationTokenRepository verificationTokenRepository;
-    @Mock private PasswordResetTokenRepository passwordResetTokenRepository;
-    @Mock private EmailService emailService;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private PasswordEncoder passwordEncoder;
+    @Mock
+    private JwtTokenProvider tokenProvider;
+    @Mock
+    private TokenBlacklistService blacklistService;
+    @Mock
+    private VerificationTokenRepository verificationTokenRepository;
+    @Mock
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+    @Mock
+    private EmailService emailService;
 
-    @InjectMocks private AuthService authService;
+    @InjectMocks
+    private AuthService authService;
 
     private User testUser;
 
@@ -54,7 +69,8 @@ class AuthServiceTest {
         when(passwordEncoder.encode("password123")).thenReturn("hashed");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(tokenProvider.generateAccessToken(eq("user1"), eq("test@example.com"), any())).thenReturn("access-token");
-        when(tokenProvider.generateRefreshToken(eq("user1"), eq("test@example.com"), any())).thenReturn("refresh-token");
+        when(tokenProvider.generateRefreshToken(eq("user1"), eq("test@example.com"), any()))
+                .thenReturn("refresh-token");
         when(verificationTokenRepository.save(any())).thenReturn(null);
 
         AuthResponse response = authService.signup(request);
@@ -77,7 +93,7 @@ class AuthServiceTest {
 
     @Test
     void login_shouldReturnTokensForValidCredentials() {
-        var request = new LoginRequest("test@example.com", "password123");
+        var request = new LoginRequest("test@example.com", "password123", false);
 
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("password123", "hashed")).thenReturn(true);
@@ -92,7 +108,7 @@ class AuthServiceTest {
 
     @Test
     void login_shouldRejectInvalidPassword() {
-        var request = new LoginRequest("test@example.com", "wrong");
+        var request = new LoginRequest("test@example.com", "wrong", false);
 
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
@@ -102,7 +118,7 @@ class AuthServiceTest {
 
     @Test
     void login_shouldRejectUnknownEmail() {
-        var request = new LoginRequest("unknown@example.com", "password");
+        var request = new LoginRequest("unknown@example.com", "password", false);
 
         when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
 
