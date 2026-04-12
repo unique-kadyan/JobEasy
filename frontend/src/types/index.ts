@@ -78,7 +78,7 @@ export interface ResumeData {
   summary?: string;
   experience?: ResumeExperience[];
   education?: ResumeEducation[];
-  skills?: { technical?: string[]; soft?: string[]; languages?: string[] };
+  skills?: ResumeSkills;
   projects?: ResumeProject[];
   certifications?: ResumeCertification[];
 }
