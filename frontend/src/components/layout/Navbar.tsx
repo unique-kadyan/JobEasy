@@ -28,6 +28,7 @@ import {
   TrendingUp,
   Send,
   MessageSquare,
+  GraduationCap,
 } from "@/components/ui/icons";
 import type { ServerStatus } from "@/hooks/useKeepAlive";
 
@@ -40,6 +41,7 @@ const NAV_LINKS = [
   { href: "/cover-letters", label: "Cover Letters", icon: Mail },
   { href: "/career-path", label: "Career Path", icon: TrendingUp },
   { href: "/interview-prep", label: "Interview Prep", icon: MessageSquare },
+  { href: "/skill-hub", label: "Skill Hub", icon: GraduationCap },
 ];
 
 const TIER_BADGE: Record<string, { label: string; className: string }> = {

@@ -29,6 +29,9 @@ import {
   Sparkles,
   ArrowRight,
   ChevronRight,
+  ExternalLink,
+  Clock,
+  Newspaper,
 } from "@/components/ui/icons";
 import PageTransition, { FadeIn, StaggerList, StaggerItem } from "@/components/ui/PageTransition";
 
@@ -345,8 +348,119 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* ── Career News Feed ──────────────────────────────────────────────── */}
+      <NewsFeed />
+
     </div>
     </PageTransition>
+  );
+}
+
+// ─── Career News Feed ─────────────────────────────────────────────────────────
+
+interface NewsItem {
+  id: number;
+  title: string;
+  summary: string;
+  url: string;
+  publishedAt: string;
+  author: string;
+  tags: string[];
+  readingTime: number;
+}
+
+function newsTimeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const h = Math.floor(diff / 3600000);
+  if (h < 1) return "just now";
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+const TAG_COLORS: Record<string, string> = {
+  career:       "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
+  jobs:         "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  productivity: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  programming:  "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400",
+};
+
+function NewsFeed() {
+  const { data: news, isLoading } = useQuery<NewsItem[]>({
+    queryKey: ["career-news"],
+    queryFn: async () => (await fetch("/api/news")).json(),
+    staleTime: 30 * 60 * 1000,
+  });
+
+  return (
+    <div className="rounded-2xl bg-white dark:bg-[#16161a] border border-black/[0.05] dark:border-white/[0.07] p-6 shadow-[0_2px_10px_rgba(0,0,0,0.05)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
+            <Newspaper className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <h3 className="text-base font-semibold text-[#1d1d1f] dark:text-white">Career News</h3>
+          <span className="text-[10px] font-semibold bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#86868b] dark:text-[#8e8e93] rounded-full px-2 py-0.5">
+            Live
+          </span>
+        </div>
+        <a
+          href="https://dev.to/t/career"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-0.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+        >
+          More <ExternalLink className="h-3 w-3 ml-0.5" />
+        </a>
+      </div>
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-black/[0.05] dark:border-white/[0.06] p-4 space-y-2">
+              <div className="h-3 w-16 rounded bg-[#f2f2f7] dark:bg-[#2c2c2e] animate-pulse" />
+              <div className="h-4 rounded bg-[#f2f2f7] dark:bg-[#2c2c2e] animate-pulse" />
+              <div className="h-4 w-3/4 rounded bg-[#f2f2f7] dark:bg-[#2c2c2e] animate-pulse" />
+            </div>
+          ))}
+        </div>
+      ) : news && news.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {news.slice(0, 8).map((item) => (
+            <a
+              key={item.id}
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-xl border border-black/[0.05] dark:border-white/[0.06] p-4 flex flex-col gap-2 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5 transition-all duration-150"
+            >
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {item.tags.slice(0, 2).map((t) => (
+                  <span key={t} className={`text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full ${TAG_COLORS[t] ?? "bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400"}`}>
+                    {t}
+                  </span>
+                ))}
+              </div>
+              <p className="text-sm font-medium text-[#1d1d1f] dark:text-white line-clamp-2 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                {item.title}
+              </p>
+              {item.summary && (
+                <p className="text-xs text-[#86868b] dark:text-[#8e8e93] line-clamp-2">{item.summary}</p>
+              )}
+              <div className="flex items-center gap-2 mt-auto pt-1 text-[10px] text-[#86868b] dark:text-[#8e8e93]">
+                <Clock className="h-3 w-3 shrink-0" />
+                <span>{item.readingTime} min read</span>
+                <span className="ml-auto">{newsTimeAgo(item.publishedAt)}</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-[#86868b] dark:text-[#8e8e93] text-center py-6">
+          No articles available right now — check back soon.
+        </p>
+      )}
+    </div>
   );
 }
 

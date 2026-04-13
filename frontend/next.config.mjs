@@ -16,11 +16,12 @@ const securityHeaders = [
   },
   {
     key: "Permissions-Policy",
+    // camera and microphone allowed for video profile recording
     value: [
-      "camera=()",
-      "microphone=()",
+      "camera=(self)",
+      "microphone=(self)",
       "geolocation=()",
-      "payment=()",
+      "payment=(self)",
       "usb=()",
       "interest-cohort=()",
     ].join(", "),
@@ -32,6 +33,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
+      "media-src 'self' blob:",
       "font-src 'self' data:",
       `connect-src 'self' ${API_ORIGIN} https://api.razorpay.com`,
       "worker-src 'self' blob:",

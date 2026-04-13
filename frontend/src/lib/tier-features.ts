@@ -18,7 +18,7 @@ export interface TierCapabilities {
 
 const TIER_CAPS: Record<SubscriptionTier, TierCapabilities> = {
   FREE: {
-    maxJobResults: 2,
+    maxJobResults: 15,
     autoApply: false,
     scheduledSearch: false,
     smartResume: false,
@@ -33,7 +33,7 @@ const TIER_CAPS: Record<SubscriptionTier, TierCapabilities> = {
     dataExport: false,
   },
   GOLD: {
-    maxJobResults: 10,
+    maxJobResults: 30,
     autoApply: false,
     scheduledSearch: false,
     smartResume: true,

@@ -104,7 +104,7 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (!user) return false;
         if (user.roles?.includes("ROLE_ADMIN")) return true;
-        return getTierFeatures(user.subscriptionTier).maxJobResults > 2;
+        return getTierFeatures(user.subscriptionTier).maxJobResults > 15;
       },
 
       canAutoApply: () => {

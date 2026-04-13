@@ -598,7 +598,7 @@ export default function SearchPage() {
             <div className="flex items-center gap-3 flex-wrap">
               <p className="text-sm font-medium text-[#1d1d1f] dark:text-white">
                 {!canSeeAllJobs() && searchQuery
-                  ? `Showing 2 of many results (free plan)`
+                  ? `Showing top 15 results — upgrade for unlimited`
                   : totalElements > 0
                   ? `${totalElements.toLocaleString()} jobs found`
                   : `${jobs.length} jobs found`}

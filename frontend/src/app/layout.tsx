@@ -21,6 +21,15 @@ export const metadata: Metadata = {
   title: "Rolevo - Auto Apply with AI",
   description:
     "AI-powered job application platform. Search jobs, generate cover letters, and auto-apply with one click.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Rolevo",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({

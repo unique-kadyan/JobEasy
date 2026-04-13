@@ -86,6 +86,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import InboxRoundedIcon from "@mui/icons-material/InboxRounded";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
+import ArticleRoundedIcon from "@mui/icons-material/ArticleRounded";
 
 // ─── Icon wrapper ───────────────────────────────────────────────────────────
 type WrappedIconProps = Omit<SvgIconProps, "fontSize"> & {
@@ -185,6 +186,7 @@ export const AlertTriangle = wrap(WarningAmberIcon);
 export const Copy          = wrap(ContentCopyRoundedIcon);
 export const Inbox         = wrap(InboxRoundedIcon);
 export const RotateCcw     = wrap(RotateLeftIcon);
+export const Newspaper     = wrap(ArticleRoundedIcon);
 
 // ─── LucideIcon type compat — used as prop type in EmptyState etc. ─────────
 export type LucideIcon = React.ComponentType<WrappedIconProps>;

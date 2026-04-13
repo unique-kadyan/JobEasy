@@ -1,0 +1,43 @@
+{
+  "name": "Rolevo — Auto Apply with AI",
+  "short_name": "Rolevo",
+  "description": "AI-powered job application platform. Search jobs, generate cover letters, and auto-apply with one click.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Search Jobs",
+      "url": "/search",
+      "description": "Find your next opportunity"
+    },
+    {
+      "name": "My Applications",
+      "url": "/applications",
+      "description": "Track your applications"
+    },
+    {
+      "name": "Interview Prep",
+      "url": "/interview-prep",
+      "description": "Practice for your interviews"
+    }
+  ]
+}

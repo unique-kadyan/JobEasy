@@ -24,10 +24,10 @@ public class FeatureConfig {
 
     private static final Map<SubscriptionTier, Capabilities> TIER_CAPS = Map.of(
             SubscriptionTier.FREE,
-            new Capabilities(2, false, false, false, false, true, 3, 2, false, false, 10),
+            new Capabilities(15, false, false, false, false, true, 3, 2, false, false, 10),
 
             SubscriptionTier.GOLD,
-            new Capabilities(10, false, false, true, true, true, 25, 10, true, true, 30),
+            new Capabilities(30, false, false, true, true, true, 25, 10, true, true, 30),
 
             SubscriptionTier.PLATINUM,
             new Capabilities(Integer.MAX_VALUE, true, true, true, true, true, Integer.MAX_VALUE, Integer.MAX_VALUE, true, true, 60)

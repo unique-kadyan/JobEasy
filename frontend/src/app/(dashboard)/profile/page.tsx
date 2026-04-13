@@ -33,6 +33,13 @@ import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import { formatDate, toCamelCase } from "@/lib/utils";
 import type { Resume, User as UserType } from "@/types";
+import VideoCallRoundedIcon from "@mui/icons-material/VideoCallRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
+import StopRoundedIcon from "@mui/icons-material/StopRounded";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -627,6 +634,71 @@ export default function ProfilePage() {
 
   const [highlightedExp, setHighlightedExp] = useState<number | null>(null);
 
+  // ── Video Profile ────────────────────────────────────────────────────────
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const [recording, setRecording] = useState(false);
+  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const MAX_RECORDING_SECS = 90;
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); }
+      chunksRef.current = [];
+      const mr = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp8,opus" });
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mr.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+        setVideoBlob(blob);
+        setVideoUrl(url);
+        if (videoRef.current) { videoRef.current.srcObject = null; videoRef.current.src = url; videoRef.current.controls = true; }
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      mediaRecorderRef.current = mr;
+      mr.start(100);
+      setRecording(true);
+      setRecordingSeconds(0);
+      timerRef.current = setInterval(() => {
+        setRecordingSeconds((s) => {
+          if (s + 1 >= MAX_RECORDING_SECS) stopRecording();
+          return s + 1;
+        });
+      }, 1000);
+    } catch {
+      toast.error("Camera/microphone access denied. Please allow permissions in your browser.");
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setRecording(false);
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+  };
+
+  const downloadVideo = () => {
+    if (!videoBlob) return;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(videoBlob);
+    a.download = `${(user?.name ?? "video-profile").replace(/\s+/g, "-").toLowerCase()}.webm`;
+    a.click();
+  };
+
+  const discardVideo = () => {
+    if (videoUrl) URL.revokeObjectURL(videoUrl);
+    setVideoBlob(null);
+    setVideoUrl(null);
+    if (videoRef.current) { videoRef.current.src = ""; videoRef.current.controls = false; }
+  };
+
+  const fmtSecs = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
   const handleBarClick = (originalIndex: number) => {
     setHighlightedExp(originalIndex);
     const el = document.getElementById(`exp-card-${originalIndex}`);
@@ -814,6 +886,118 @@ export default function ProfilePage() {
               <ProfileLink icon={<Globe className="h-5 w-5 text-green-600" />} label="Portfolio" url={user?.portfolioUrl} />
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Video Profile */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-50 dark:bg-violet-500/10">
+                <VideoCallRoundedIcon sx={{ fontSize: 16, color: "#7c3aed" }} />
+              </div>
+              <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Video Profile</h2>
+              <span className="text-[10px] font-semibold bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 px-2 py-0.5 rounded-full border border-violet-200 dark:border-violet-700/50">
+                Stand out
+              </span>
+            </div>
+            {videoBlob && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/u/${user?.id}`;
+                    navigator.clipboard.writeText(url);
+                    toast.success("Profile link copied!");
+                  }}
+                  className="flex items-center gap-1 text-xs text-[#86868b] dark:text-[#8e8e93] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  <ContentCopyRoundedIcon sx={{ fontSize: 14 }} /> Copy profile link
+                </button>
+              </div>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-[#86868b] dark:text-[#8e8e93] mb-4">
+            Record a short 60–90 second video introduction. Showcase your communication style, personality, and confidence — the things a resume can&apos;t capture.
+          </p>
+
+          {/* Video preview */}
+          <div className="relative rounded-xl overflow-hidden bg-black aspect-video mb-4 max-h-64">
+            <video
+              ref={videoRef}
+              className="w-full h-full object-cover"
+              playsInline
+              muted={recording}
+            />
+            {!recording && !videoUrl && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#0a0a0f]/80">
+                <VideoCallRoundedIcon sx={{ fontSize: 40, color: "#7c3aed" }} />
+                <p className="text-xs text-white/70">Camera preview will appear here</p>
+              </div>
+            )}
+            {recording && (
+              <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                REC {fmtSecs(recordingSeconds)} / {fmtSecs(MAX_RECORDING_SECS)}
+              </div>
+            )}
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {!recording ? (
+              <button
+                onClick={startRecording}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold transition-colors"
+              >
+                <PlayArrowRoundedIcon sx={{ fontSize: 16 }} />
+                {videoBlob ? "Re-record" : "Start Recording"}
+              </button>
+            ) : (
+              <button
+                onClick={stopRecording}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors"
+              >
+                <StopRoundedIcon sx={{ fontSize: 16 }} />
+                Stop
+              </button>
+            )}
+            {videoBlob && !recording && (
+              <>
+                <button
+                  onClick={downloadVideo}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#f5f5f7] dark:bg-[#2c2c2e] hover:bg-[#e8e8ed] dark:hover:bg-[#3a3a3c] text-[#1d1d1f] dark:text-white text-xs font-semibold transition-colors"
+                >
+                  <DownloadRoundedIcon sx={{ fontSize: 16 }} />
+                  Download
+                </button>
+                <button
+                  onClick={discardVideo}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-semibold transition-colors"
+                >
+                  <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                  Discard
+                </button>
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/u/${user?.id}`;
+                    navigator.clipboard.writeText(url);
+                    toast.success("Public profile link copied!");
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-xs font-semibold transition-colors hover:bg-indigo-100"
+                >
+                  <PublicRoundedIcon sx={{ fontSize: 14 }} />
+                  Share profile
+                </button>
+              </>
+            )}
+          </div>
+
+          <p className="text-[10px] text-[#86868b] dark:text-[#8e8e93] mt-3">
+            Recorded video is saved locally in your browser. Use Download to keep a copy or Share Profile to send your public Rolevo link.
+          </p>
         </CardContent>
       </Card>
 
