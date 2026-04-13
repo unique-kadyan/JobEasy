@@ -17,11 +17,7 @@ export function useApplications(status?: string, page = 0, size = 20) {
 export function useApply() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: {
-      jobId: string;
-      coverLetterId?: string;
-      resumeId?: string;
-    }) => {
+    mutationFn: async (data: { jobId: string; coverLetterId?: string; resumeId?: string }) => {
       const res = await api.post("/applications", data);
       return res.data;
     },

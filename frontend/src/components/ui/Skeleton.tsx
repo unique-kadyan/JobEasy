@@ -19,7 +19,7 @@ export function Skeleton({ className, variant = "rounded" }: SkeletonProps) {
 
 export function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] p-4 space-y-3">
+    <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#161b22]">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 space-y-2">
           <MuiSkeleton variant="rounded" animation="wave" width="75%" height={20} />
@@ -27,7 +27,7 @@ export function SkeletonCard() {
           <MuiSkeleton variant="rounded" animation="wave" width="100%" height={12} />
           <MuiSkeleton variant="rounded" animation="wave" width="83%" height={12} />
         </div>
-        <div className="space-y-2 shrink-0">
+        <div className="shrink-0 space-y-2">
           <MuiSkeleton variant="rounded" animation="wave" width={96} height={32} />
           <MuiSkeleton variant="rounded" animation="wave" width={96} height={32} />
         </div>
@@ -38,7 +38,7 @@ export function SkeletonCard() {
 
 export function SkeletonStatCard() {
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] p-5 flex items-center gap-4">
+    <div className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-[#161b22]">
       <MuiSkeleton variant="rounded" animation="wave" width={40} height={40} />
       <div className="space-y-2">
         <MuiSkeleton variant="rounded" animation="wave" width={64} height={28} />
@@ -50,12 +50,18 @@ export function SkeletonStatCard() {
 
 export function SkeletonRow() {
   return (
-    <div className="flex items-center justify-between py-3 gap-4">
+    <div className="flex items-center justify-between gap-4 py-3">
       <div className="flex-1 space-y-1.5">
         <MuiSkeleton variant="rounded" animation="wave" width="66%" height={16} />
         <MuiSkeleton variant="rounded" animation="wave" width="33%" height={12} />
       </div>
-      <MuiSkeleton variant="rounded" animation="wave" width={80} height={24} sx={{ borderRadius: 9999 }} />
+      <MuiSkeleton
+        variant="rounded"
+        animation="wave"
+        width={80}
+        height={24}
+        sx={{ borderRadius: 9999 }}
+      />
     </div>
   );
 }

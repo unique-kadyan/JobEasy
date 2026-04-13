@@ -1,17 +1,23 @@
 package com.kaddy.autoapply.security;
 
-import com.kaddy.autoapply.model.enums.Role;
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import com.kaddy.autoapply.model.enums.Role;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtTokenProvider {
@@ -116,6 +122,35 @@ public class JwtTokenProvider {
         long expiryMs = parseClaims(token).getExpiration().getTime();
         long remainingMs = expiryMs - System.currentTimeMillis();
         return Math.max(0L, remainingMs / 1000);
+    }
+
+    /**
+     * Parses the token exactly once and returns all fields needed by the
+     * security filter in a single record. Replaces the previous pattern of
+     * calling validateToken / isAccessToken / getUserId / getEmail / getRoles
+     * as five separate parseClaims() invocations per request.
+     */
+    public Optional<AccessTokenInfo> parseAccessToken(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            if (!"access".equals(claims.get(CLAIM_TYPE, String.class))) {
+                return Optional.empty();
+            }
+            Object raw = claims.get(CLAIM_ROLES);
+            List<String> roles = (raw instanceof List<?> list && !list.isEmpty())
+                    ? list.stream().map(Object::toString).toList()
+                    : List.of(Role.ROLE_USER.name());
+            return Optional.of(new AccessTokenInfo(
+                    claims.getSubject(),
+                    claims.get(CLAIM_EMAIL, String.class),
+                    roles));
+        } catch (JwtException | IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    /** Carries all per-request identity fields extracted from one JWT parse. */
+    public record AccessTokenInfo(String userId, String email, List<String> roles) {
     }
 
     private Claims parseClaims(String token) {

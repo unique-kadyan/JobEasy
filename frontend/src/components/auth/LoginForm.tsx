@@ -39,9 +39,7 @@ export default function LoginForm() {
     try {
       await login(email, password, rememberMe);
     } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : "Login failed. Please try again."
-      );
+      setError(err instanceof Error ? err.message : "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -166,19 +164,12 @@ export default function LoginForm() {
             background: "linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)",
           },
         }}
-        startIcon={
-          loading ? <CircularProgress size={18} color="inherit" /> : null
-        }
+        startIcon={loading ? <CircularProgress size={18} color="inherit" /> : null}
       >
         {loading ? "Signing in…" : "Sign In"}
       </MuiButton>
 
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        textAlign="center"
-        mt={1}
-      >
+      <Typography variant="body2" color="text.secondary" textAlign="center" mt={1}>
         Don&apos;t have an account?{" "}
         <Link
           component={NextLink}

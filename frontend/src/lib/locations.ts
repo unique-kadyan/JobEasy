@@ -71,8 +71,4 @@ export const CITIES = [
   { value: "Seoul, South Korea", label: "Seoul, South Korea", group: "APAC Cities" },
 ];
 
-export const ALL_LOCATION_OPTIONS = [
-  ...REMOTE_OPTIONS,
-  ...CITIES,
-  ...COUNTRIES,
-];
+export const ALL_LOCATION_OPTIONS = [...REMOTE_OPTIONS, ...CITIES, ...COUNTRIES];

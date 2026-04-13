@@ -79,9 +79,7 @@ export default function WelcomeScreen({ type, userName, onComplete }: WelcomeScr
   const petals = useMemo(() => generatePetals(32), []);
 
   const greeting =
-    type === "login"
-      ? `Welcome Back, ${userName}!`
-      : `Welcome to Rolevo, ${userName}!`;
+    type === "login" ? `Welcome Back, ${userName}!` : `Welcome to Rolevo, ${userName}!`;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -110,17 +108,13 @@ export default function WelcomeScreen({ type, userName, onComplete }: WelcomeScr
       queryClient.prefetchQuery({
         queryKey: ["applications", { page: 0 }],
         queryFn: () =>
-          api
-            .get("/applications", { params: { page: 0, size: 20 } })
-            .then((r) => r.data),
+          api.get("/applications", { params: { page: 0, size: 20 } }).then((r) => r.data),
         staleTime: 60_000,
       }),
       queryClient.prefetchQuery({
         queryKey: ["cover-letters"],
         queryFn: () =>
-          api
-            .get("/cover-letters", { params: { page: 0, size: 10 } })
-            .then((r) => r.data),
+          api.get("/cover-letters", { params: { page: 0, size: 10 } }).then((r) => r.data),
         staleTime: 60_000,
       }),
     ]);
@@ -137,14 +131,13 @@ export default function WelcomeScreen({ type, userName, onComplete }: WelcomeScr
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden"
       style={{
-        background:
-          "linear-gradient(135deg, #0a0f1e 0%, #1a1040 40%, #0f1a2e 70%, #0a0f1e 100%)",
+        background: "linear-gradient(135deg, #0a0f1e 0%, #1a1040 40%, #0f1a2e 70%, #0a0f1e 100%)",
         opacity: fadeOut ? 0 : 1,
         transition: "opacity 0.65s ease-out",
         pointerEvents: fadeOut ? "none" : "auto",
       }}
     >
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {petals.map((petal) => (
           <div
             key={petal.id}
@@ -164,33 +157,31 @@ export default function WelcomeScreen({ type, userName, onComplete }: WelcomeScr
       </div>
 
       <div
-        className="absolute pointer-events-none"
+        className="pointer-events-none absolute"
         style={{
           top: "25%",
           left: "15%",
           width: 500,
           height: 500,
           borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%)",
           animation: "welcomeGlow 4s ease-in-out infinite",
         }}
       />
       <div
-        className="absolute pointer-events-none"
+        className="pointer-events-none absolute"
         style={{
           bottom: "20%",
           right: "10%",
           width: 360,
           height: 360,
           borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(244,114,182,0.14) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(244,114,182,0.14) 0%, transparent 70%)",
           animation: "welcomeGlow 5s 1s ease-in-out infinite",
         }}
       />
 
-      <div className="relative z-10 text-center px-8 max-w-2xl mx-auto">
+      <div className="relative z-10 mx-auto max-w-2xl px-8 text-center">
         <div
           className="mx-auto mb-8 flex h-20 w-20 items-center justify-center"
           style={{
@@ -217,7 +208,7 @@ export default function WelcomeScreen({ type, userName, onComplete }: WelcomeScr
         </div>
 
         <h1
-          className="font-black text-white mb-4 uppercase tracking-tight"
+          className="mb-4 font-black tracking-tight text-white uppercase"
           style={{
             fontSize: "clamp(1.8rem, 5vw, 3.2rem)",
             lineHeight: 1.15,
@@ -240,7 +231,7 @@ export default function WelcomeScreen({ type, userName, onComplete }: WelcomeScr
           {slogans[sloganIndex]}
         </p>
 
-        <div className="flex items-center justify-center gap-2 mt-10">
+        <div className="mt-10 flex items-center justify-center gap-2">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
@@ -257,7 +248,7 @@ export default function WelcomeScreen({ type, userName, onComplete }: WelcomeScr
         </div>
 
         <p
-          className="mt-6 text-xs font-black uppercase tracking-widest"
+          className="mt-6 text-xs font-black tracking-widest uppercase"
           style={{ color: "rgba(148,163,184,0.6)" }}
         >
           Preparing your dashboard…

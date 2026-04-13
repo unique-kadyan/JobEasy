@@ -14,9 +14,24 @@ import Badge from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import UpgradeModal from "@/components/subscription/UpgradeModal";
 import {
-  Search, Loader2, Sparkles, X, ChevronLeft, ChevronRight,
-  Lock, Zap, Briefcase, IndianRupee, FileText, Target, Clock,
-  Trash2, XCircle, Copy, CheckCircle2, Download,
+  Search,
+  Loader2,
+  Sparkles,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Lock,
+  Zap,
+  Briefcase,
+  IndianRupee,
+  FileText,
+  Target,
+  Clock,
+  Trash2,
+  XCircle,
+  Copy,
+  CheckCircle2,
+  Download,
 } from "@/components/ui/icons";
 import PageTransition, { StaggerList, StaggerItem } from "@/components/ui/PageTransition";
 import { toCamelCase } from "@/lib/utils";
@@ -133,7 +148,10 @@ export default function SearchPage() {
   const [matchResult, setMatchResult] = useState<Job | null>(null);
   const [applyModal, setApplyModal] = useState<Job | null>(null);
   const [applying, setApplying] = useState(false);
-  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; targetTier?: "GOLD" | "PLATINUM" }>({ open: false });
+  const [upgradeModal, setUpgradeModal] = useState<{
+    open: boolean;
+    targetTier?: "GOLD" | "PLATINUM";
+  }>({ open: false });
 
   // ── Bulk apply ──────────────────────────────────────────────────────────────
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
@@ -178,7 +196,7 @@ export default function SearchPage() {
     minSalary ? Math.round(Number(minSalary) * LPA_TO_USD) : undefined,
     maxSalary ? Math.round(Number(maxSalary) * LPA_TO_USD) : undefined,
     maxAgeDays,
-    aiSearchEnabled,
+    aiSearchEnabled
   );
 
   const generatedQuery = pagedJobs?.generatedQuery ?? null;
@@ -366,609 +384,758 @@ export default function SearchPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <PageTransition>
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">Search Jobs</h1>
-        <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-0.5">
-          Discover matching positions from across the web
-        </p>
-      </div>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">Search Jobs</h1>
+          <p className="mt-0.5 text-sm text-[#86868b] dark:text-[#8e8e93]">
+            Discover matching positions from across the web
+          </p>
+        </div>
 
-      {/* ── Search form ───────────────────────────────────────────────────── */}
-      <Card>
-        <CardContent className="py-4 space-y-4">
-          <form onSubmit={handleSearch} className="space-y-4">
-            {/* Keywords */}
-            <div className="flex flex-wrap gap-3 items-end">
-              <div className="flex-1 min-w-[260px]">
-                <Input
-                  placeholder="Job title, keywords, or company"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  label="Keywords"
-                />
-              </div>
-              <div className="flex items-end pb-0">
-                <Button type="submit" loading={isLoading}>
-                  <Search className="h-4 w-4" /> Search Jobs
-                </Button>
-              </div>
-            </div>
-
-            {/* Location */}
-            <div className="flex flex-wrap items-end gap-4">
-              <label className="flex items-center gap-2 cursor-pointer pb-[9px]">
-                <input
-                  type="checkbox"
-                  checked={isRemote}
-                  onChange={(e) => setIsRemote(e.target.checked)}
-                  className="h-4 w-4 rounded border border-black/20 dark:border-white/20 text-indigo-600 focus:ring-indigo-500"
-                />
-                <span className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">Remote Only</span>
-              </label>
-              <div className="flex-1 min-w-[240px]">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Country / City</label>
-                <CreatableSelect<LocationOption>
-                  isClearable
-                  placeholder="Type or select a location…"
-                  options={LOCATION_OPTIONS}
-                  value={locationOption}
-                  onChange={(v: SingleValue<LocationOption>) => setLocationOption(v ?? null)}
-                  formatCreateLabel={(input) => `Search "${input}"`}
-                  styles={{
-                    control: (base, state) => ({
-                      ...base,
-                      minHeight: "38px",
-                      fontSize: "13px",
-                      borderColor: state.isFocused ? "#6366f1" : "rgba(0,0,0,0.1)",
-                      borderWidth: "1px",
-                      boxShadow: state.isFocused ? "0 0 0 3px rgba(99,102,241,0.25)" : "none",
-                      borderRadius: "12px",
-                      backgroundColor: "white",
-                      "&:hover": { borderColor: "#6366f1" },
-                    }),
-                    menu: (base) => ({
-                      ...base,
-                      zIndex: 50,
-                      borderRadius: "12px",
-                      border: "none",
-                      boxShadow: "0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)",
-                      fontSize: "13px",
-                      overflow: "hidden",
-                    }),
-                    option: (base, state) => ({
-                      ...base,
-                      backgroundColor: state.isSelected ? "#6366f1" : state.isFocused ? "#f5f5f7" : "white",
-                      color: state.isSelected ? "white" : "#1d1d1f",
-                      fontWeight: state.isSelected ? "600" : "400",
-                      fontSize: "13px",
-                    }),
-                    singleValue: (base) => ({ ...base, color: "#1d1d1f" }),
-                    placeholder: (base) => ({ ...base, color: "#86868b", fontSize: "13px" }),
-                    clearIndicator: (base) => ({ ...base, cursor: "pointer" }),
-                    input: (base) => ({ ...base, color: "#1d1d1f" }),
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Salary */}
-            <div className="flex flex-wrap items-end gap-4">
-              <div className="flex items-center gap-1 pb-[9px]">
-                <IndianRupee className="h-4 w-4 text-[#86868b] dark:text-[#8e8e93]" />
-                <span className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">Salary / CTC (LPA)</span>
-              </div>
-              <div className="flex items-end gap-2">
-                <div>
-                  <label className="block text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-1">Min</label>
-                  <input
-                    type="number"
-                    min={0}
-                    placeholder="e.g. 5"
-                    value={minSalary}
-                    onChange={(e) => setMinSalary(e.target.value)}
-                    className="w-28 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-white px-3 py-2 text-sm font-medium nb-input-focus outline-none"
+        {/* ── Search form ───────────────────────────────────────────────────── */}
+        <Card>
+          <CardContent className="space-y-4 py-4">
+            <form onSubmit={handleSearch} className="space-y-4">
+              {/* Keywords */}
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="min-w-[260px] flex-1">
+                  <Input
+                    placeholder="Job title, keywords, or company"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    label="Keywords"
                   />
                 </div>
-                <span className="pb-2 text-gray-400 font-bold">—</span>
-                <div>
-                  <label className="block text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-1">Max</label>
+                <div className="flex items-end pb-0">
+                  <Button type="submit" loading={isLoading}>
+                    <Search className="h-4 w-4" /> Search Jobs
+                  </Button>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div className="flex flex-wrap items-end gap-4">
+                <label className="flex cursor-pointer items-center gap-2 pb-[9px]">
                   <input
-                    type="number"
-                    min={0}
-                    placeholder="e.g. 30"
-                    value={maxSalary}
-                    onChange={(e) => setMaxSalary(e.target.value)}
-                    className="w-28 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-white px-3 py-2 text-sm font-medium nb-input-focus outline-none"
+                    type="checkbox"
+                    checked={isRemote}
+                    onChange={(e) => setIsRemote(e.target.checked)}
+                    className="h-4 w-4 rounded border border-black/20 text-indigo-600 focus:ring-indigo-500 dark:border-white/20"
+                  />
+                  <span className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">
+                    Remote Only
+                  </span>
+                </label>
+                <div className="min-w-[240px] flex-1">
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Country / City
+                  </label>
+                  <CreatableSelect<LocationOption>
+                    isClearable
+                    placeholder="Type or select a location…"
+                    options={LOCATION_OPTIONS}
+                    value={locationOption}
+                    onChange={(v: SingleValue<LocationOption>) => setLocationOption(v ?? null)}
+                    formatCreateLabel={(input) => `Search "${input}"`}
+                    styles={{
+                      control: (base, state) => ({
+                        ...base,
+                        minHeight: "38px",
+                        fontSize: "13px",
+                        borderColor: state.isFocused ? "#6366f1" : "rgba(0,0,0,0.1)",
+                        borderWidth: "1px",
+                        boxShadow: state.isFocused ? "0 0 0 3px rgba(99,102,241,0.25)" : "none",
+                        borderRadius: "12px",
+                        backgroundColor: "white",
+                        "&:hover": { borderColor: "#6366f1" },
+                      }),
+                      menu: (base) => ({
+                        ...base,
+                        zIndex: 50,
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)",
+                        fontSize: "13px",
+                        overflow: "hidden",
+                      }),
+                      option: (base, state) => ({
+                        ...base,
+                        backgroundColor: state.isSelected
+                          ? "#6366f1"
+                          : state.isFocused
+                            ? "#f5f5f7"
+                            : "white",
+                        color: state.isSelected ? "white" : "#1d1d1f",
+                        fontWeight: state.isSelected ? "600" : "400",
+                        fontSize: "13px",
+                      }),
+                      singleValue: (base) => ({ ...base, color: "#1d1d1f" }),
+                      placeholder: (base) => ({ ...base, color: "#86868b", fontSize: "13px" }),
+                      clearIndicator: (base) => ({ ...base, cursor: "pointer" }),
+                      input: (base) => ({ ...base, color: "#1d1d1f" }),
+                    }}
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Posted within */}
-            <div className="flex items-end gap-4">
-              <div className="flex items-center gap-1 pb-[9px]">
-                <Clock className="h-4 w-4 text-[#86868b] dark:text-[#8e8e93]" />
-                <span className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">Posted within</span>
-              </div>
-              <div className="flex items-center gap-1">
-                {[7, 14, 30, 60, 90].map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setMaxAgeDays(d)}
-                    className={`rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                      maxAgeDays === d
-                        ? "border-indigo-600 bg-indigo-600 text-white"
-                        : "border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-[#e5e5ea] hover:bg-[#f5f5f7] dark:hover:bg-[#2c2c2e]"
-                    }`}
-                  >
-                    {d}d
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Skills */}
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <label className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">Skills from Resume</label>
-                {resumeSkills.length > 0 && (
-                  <span className="flex items-center gap-1 text-xs font-black text-indigo-600 dark:text-indigo-400">
-                    <Sparkles className="h-3 w-3" /> Auto-detected
+              {/* Salary */}
+              <div className="flex flex-wrap items-end gap-4">
+                <div className="flex items-center gap-1 pb-[9px]">
+                  <IndianRupee className="h-4 w-4 text-[#86868b] dark:text-[#8e8e93]" />
+                  <span className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">
+                    Salary / CTC (LPA)
                   </span>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {skillTags.map((skill) => (
-                  <span
-                    key={skill}
-                    className="inline-flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2.5 py-0.5 text-xs font-medium"
-                  >
-                    {toCamelCase(skill)}
-                    <button type="button" onClick={() => removeSkill(skill)} className="hover:text-indigo-900 dark:hover:text-indigo-200">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </span>
-                ))}
-                <AddSkillInline onAdd={addSkill} />
-              </div>
-              {resumeSkills.length > 0 && skillTags.length < resumeSkills.length && (
-                <div className="mt-2">
-                  <p className="text-xs font-bold text-[#86868b] dark:text-[#8e8e93] mb-1">More skills from your resume:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {resumeSkills.filter((s) => !skillTags.includes(s)).map((skill) => (
-                      <button
-                        key={skill}
-                        type="button"
-                        onClick={() => addSkill(skill)}
-                        className="rounded-full border border-dashed border-black/10 dark:border-white/10 text-[#86868b] dark:text-[#8e8e93] px-2.5 py-0.5 text-xs font-medium hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                      >
-                        + {toCamelCase(skill)}
-                      </button>
-                    ))}
+                </div>
+                <div className="flex items-end gap-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">
+                      Min
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="e.g. 5"
+                      value={minSalary}
+                      onChange={(e) => setMinSalary(e.target.value)}
+                      className="nb-input-focus w-28 rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-medium text-[#1d1d1f] outline-none dark:border-white/10 dark:bg-[#1c1c1e] dark:text-white"
+                    />
+                  </div>
+                  <span className="pb-2 font-bold text-gray-400">—</span>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">
+                      Max
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="e.g. 30"
+                      value={maxSalary}
+                      onChange={(e) => setMaxSalary(e.target.value)}
+                      className="nb-input-focus w-28 rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-medium text-[#1d1d1f] outline-none dark:border-white/10 dark:bg-[#1c1c1e] dark:text-white"
+                    />
                   </div>
                 </div>
-              )}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+              </div>
 
-      <UpgradeModal
-        open={upgradeModal.open}
-        targetTier={upgradeModal.targetTier}
-        onClose={() => setUpgradeModal({ open: false })}
-      />
-
-      {/* ── Loading ────────────────────────────────────────────────────────── */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-          <span className="ml-3 text-sm font-bold text-[#86868b] dark:text-[#8e8e93]">
-            {aiSearchEnabled && !searchQuery ? "Finding matching jobs…" : "Searching jobs…"}
-          </span>
-        </div>
-      )}
-
-      {/* ── Generated query banner ─────────────────────────────────────────── */}
-      {generatedQuery && (
-        <div className="flex items-center gap-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 px-4 py-2.5 text-sm">
-          <Search className="h-4 w-4 shrink-0 text-indigo-500" />
-          <span className="text-[#6e6e73] dark:text-[#8e8e93] font-medium">
-            Searched for:{" "}
-            <span className="font-semibold text-indigo-700 dark:text-indigo-400">
-              {generatedQuery.trim().split(/\s+/).join(", ")}
-            </span>
-          </span>
-          <button
-            type="button"
-            onClick={() => { setQuery(generatedQuery); setAiSearchEnabled(false); }}
-            className="ml-auto text-xs text-indigo-500 underline underline-offset-2 hover:text-indigo-700"
-          >
-            Edit
-          </button>
-        </div>
-      )}
-
-      {/* ── Results ───────────────────────────────────────────────────────── */}
-      {jobs.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-3 flex-wrap">
-              <p className="text-sm font-medium text-[#1d1d1f] dark:text-white">
-                {!canSeeAllJobs() && searchQuery
-                  ? `Showing top 15 results — upgrade for unlimited`
-                  : totalElements > 0
-                  ? `${totalElements.toLocaleString()} jobs found`
-                  : `${jobs.length} jobs found`}
-                {canSeeAllJobs() && totalPages > 1 && (
-                  <span className="text-[#86868b] dark:text-[#8e8e93]"> · page {page + 1} of {totalPages}</span>
-                )}
-              </p>
-              {computedLocations.length > 0 && (
+              {/* Posted within */}
+              <div className="flex items-end gap-4">
+                <div className="flex items-center gap-1 pb-[9px]">
+                  <Clock className="h-4 w-4 text-[#86868b] dark:text-[#8e8e93]" />
+                  <span className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">
+                    Posted within
+                  </span>
+                </div>
                 <div className="flex items-center gap-1">
-                  {computedLocations.map((loc) => (
-                    <Badge key={loc} className="bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 border-gray-400 dark:border-gray-600 text-[10px]">
-                      {loc}
-                    </Badge>
+                  {[7, 14, 30, 60, 90].map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setMaxAgeDays(d)}
+                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                        maxAgeDays === d
+                          ? "border-indigo-600 bg-indigo-600 text-white"
+                          : "border-black/10 bg-white text-[#1d1d1f] hover:bg-[#f5f5f7] dark:border-white/10 dark:bg-[#1c1c1e] dark:text-[#e5e5ea] dark:hover:bg-[#2c2c2e]"
+                      }`}
+                    >
+                      {d}d
+                    </button>
                   ))}
                 </div>
-              )}
-              {(minSalary || maxSalary) && (
-                <Badge className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-400 text-[10px]">
-                  ₹{minSalary || "0"}–{maxSalary || "∞"} LPA
-                </Badge>
-              )}
+              </div>
+
+              {/* Skills */}
+              <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <label className="text-xs font-medium text-[#1d1d1f] dark:text-[#e5e5ea]">
+                    Skills from Resume
+                  </label>
+                  {resumeSkills.length > 0 && (
+                    <span className="flex items-center gap-1 text-xs font-black text-indigo-600 dark:text-indigo-400">
+                      <Sparkles className="h-3 w-3" /> Auto-detected
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {skillTags.map((skill) => (
+                    <span
+                      key={skill}
+                      className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
+                    >
+                      {toCamelCase(skill)}
+                      <button
+                        type="button"
+                        onClick={() => removeSkill(skill)}
+                        className="hover:text-indigo-900 dark:hover:text-indigo-200"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                  <AddSkillInline onAdd={addSkill} />
+                </div>
+                {resumeSkills.length > 0 && skillTags.length < resumeSkills.length && (
+                  <div className="mt-2">
+                    <p className="mb-1 text-xs font-bold text-[#86868b] dark:text-[#8e8e93]">
+                      More skills from your resume:
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {resumeSkills
+                        .filter((s) => !skillTags.includes(s))
+                        .map((skill) => (
+                          <button
+                            key={skill}
+                            type="button"
+                            onClick={() => addSkill(skill)}
+                            className="rounded-full border border-dashed border-black/10 px-2.5 py-0.5 text-xs font-medium text-[#86868b] transition-colors hover:border-indigo-400 hover:text-indigo-600 dark:border-white/10 dark:text-[#8e8e93] dark:hover:text-indigo-400"
+                          >
+                            + {toCamelCase(skill)}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        <UpgradeModal
+          open={upgradeModal.open}
+          targetTier={upgradeModal.targetTier}
+          onClose={() => setUpgradeModal({ open: false })}
+        />
+
+        {/* ── Loading ────────────────────────────────────────────────────────── */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            <span className="ml-3 text-sm font-bold text-[#86868b] dark:text-[#8e8e93]">
+              {aiSearchEnabled && !searchQuery ? "Finding matching jobs…" : "Searching jobs…"}
+            </span>
+          </div>
+        )}
+
+        {/* ── Generated query banner ─────────────────────────────────────────── */}
+        {generatedQuery && (
+          <div className="flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm dark:border-indigo-800/50 dark:bg-indigo-900/20">
+            <Search className="h-4 w-4 shrink-0 text-indigo-500" />
+            <span className="font-medium text-[#6e6e73] dark:text-[#8e8e93]">
+              Searched for:{" "}
+              <span className="font-semibold text-indigo-700 dark:text-indigo-400">
+                {generatedQuery.trim().split(/\s+/).join(", ")}
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setQuery(generatedQuery);
+                setAiSearchEnabled(false);
+              }}
+              className="ml-auto text-xs text-indigo-500 underline underline-offset-2 hover:text-indigo-700"
+            >
+              Edit
+            </button>
+          </div>
+        )}
+
+        {/* ── Results ───────────────────────────────────────────────────────── */}
+        {jobs.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-sm font-medium text-[#1d1d1f] dark:text-white">
+                  {!canSeeAllJobs() && searchQuery
+                    ? `Showing top 15 results — upgrade for unlimited`
+                    : totalElements > 0
+                      ? `${totalElements.toLocaleString()} jobs found`
+                      : `${jobs.length} jobs found`}
+                  {canSeeAllJobs() && totalPages > 1 && (
+                    <span className="text-[#86868b] dark:text-[#8e8e93]">
+                      {" "}
+                      · page {page + 1} of {totalPages}
+                    </span>
+                  )}
+                </p>
+                {computedLocations.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    {computedLocations.map((loc) => (
+                      <Badge
+                        key={loc}
+                        className="border-gray-400 bg-gray-100 text-[10px] text-gray-700 dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300"
+                      >
+                        {loc}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                {(minSalary || maxSalary) && (
+                  <Badge className="border-green-400 bg-green-50 text-[10px] text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                    ₹{minSalary || "0"}–{maxSalary || "∞"} LPA
+                  </Badge>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {canAutoApply() && selectedJobs.size > 0 && (
+                  <Button size="sm" onClick={handleBulkApply} loading={bulkApplying}>
+                    <Zap className="h-4 w-4" /> Auto Apply {selectedJobs.size} Job
+                    {selectedJobs.size > 1 ? "s" : ""}
+                  </Button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  disabled={dismissing}
+                  title="Hide these jobs and start fresh"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 py-1.5 text-xs font-medium text-[#86868b] transition-colors hover:border-red-400 hover:text-red-500 disabled:opacity-50 dark:border-white/10 dark:bg-[#1c1c1e] dark:text-[#8e8e93] dark:hover:text-red-400"
+                >
+                  {dismissing ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-3 w-3" />
+                  )}
+                  Clear old search
+                </button>
+                {canSeeAllJobs() && showPagination && (
+                  <Select
+                    value={String(size)}
+                    onChange={handleSizeChange}
+                    options={PAGE_SIZE_OPTIONS}
+                  />
+                )}
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {canAutoApply() && selectedJobs.size > 0 && (
-                <Button size="sm" onClick={handleBulkApply} loading={bulkApplying}>
-                  <Zap className="h-4 w-4" /> Auto Apply {selectedJobs.size} Job{selectedJobs.size > 1 ? "s" : ""}
-                </Button>
-              )}
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                disabled={dismissing}
-                title="Hide these jobs and start fresh"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] px-3 py-1.5 text-xs font-medium text-[#86868b] dark:text-[#8e8e93] hover:border-red-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50"
+            {bulkResult && (
+              <div
+                className={`rounded-xl border px-4 py-2 text-xs font-medium ${bulkResult.includes("Failed") ? "border-red-400 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400" : "border-green-400 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"}`}
               >
-                {dismissing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
-                Clear old search
-              </button>
-              {canSeeAllJobs() && showPagination && (
-                <Select value={String(size)} onChange={handleSizeChange} options={PAGE_SIZE_OPTIONS} />
+                {bulkResult}
+              </div>
+            )}
+
+            <StaggerList>
+              {jobs.map((job, i) => (
+                <StaggerItem key={job.id || i}>
+                  <div className="relative">
+                    {canAutoApply() && (
+                      <input
+                        type="checkbox"
+                        checked={selectedJobs.has(job.id)}
+                        onChange={() => toggleJobSelect(job.id)}
+                        className="absolute top-4 left-4 z-10 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        title="Select for auto-apply"
+                      />
+                    )}
+                    <div className={canAutoApply() ? "pl-8" : ""}>
+                      <JobCard
+                        job={job}
+                        onApply={handleQuickApply}
+                        applied={appliedIds.has(job.id)}
+                        skipped={skippedIds.has(job.id)}
+                      />
+                      {/* ── Per-job actions ───────────────────────────────── */}
+                      <div className="mt-1 ml-1 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSummaryModal(job)}
+                          className="inline-flex items-center gap-1 rounded-lg bg-[#f5f5f7] px-2.5 py-1 text-[10px] font-medium text-[#86868b] transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:bg-[#2c2c2e] dark:text-[#8e8e93] dark:hover:bg-indigo-900/20 dark:hover:text-indigo-400"
+                        >
+                          <FileText className="h-3 w-3" /> Summarize
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMatchModal(job);
+                            setMatchResult(null);
+                          }}
+                          className="inline-flex items-center gap-1 rounded-lg bg-[#f5f5f7] px-2.5 py-1 text-[10px] font-medium text-[#86868b] transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:bg-[#2c2c2e] dark:text-[#8e8e93] dark:hover:bg-indigo-900/20 dark:hover:text-indigo-400"
+                        >
+                          <Target className="h-3 w-3" /> Match Score
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openCoverLetterModal(job)}
+                          disabled={appliedIds.has(job.id) || skippedIds.has(job.id)}
+                          className="inline-flex items-center gap-1 rounded-lg bg-[#f5f5f7] px-2.5 py-1 text-[10px] font-medium text-[#86868b] transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-[#2c2c2e] dark:text-[#8e8e93] dark:hover:bg-emerald-900/20 dark:hover:text-emerald-400"
+                        >
+                          <FileText className="h-3 w-3" /> Cover Letter
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSkip(job)}
+                          disabled={skippedIds.has(job.id) || appliedIds.has(job.id)}
+                          className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                            skippedIds.has(job.id)
+                              ? "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                              : "bg-[#f5f5f7] text-[#86868b] hover:bg-red-50 hover:text-red-500 dark:bg-[#2c2c2e] dark:text-[#8e8e93] dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                          }`}
+                        >
+                          <XCircle className="h-3 w-3" />
+                          {skippedIds.has(job.id) ? "Skipped" : "Skip"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </StaggerItem>
+              ))}
+            </StaggerList>
+
+            {/* Upgrade gate */}
+            {!canSeeAllJobs() && searchQuery && (
+              <div className="space-y-3 rounded-2xl border border-indigo-200 bg-indigo-50 p-6 text-center dark:border-indigo-800/50 dark:bg-indigo-900/20">
+                <Lock className="mx-auto h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+                <h3 className="font-semibold text-[#1d1d1f] dark:text-white">
+                  Unlock All Job Results
+                </h3>
+                <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93]">
+                  You&apos;re seeing 2 of many matching jobs. Upgrade to see all results and apply
+                  faster.
+                </p>
+                <div className="flex items-center justify-center gap-3">
+                  <Button onClick={() => setUpgradeModal({ open: true, targetTier: "GOLD" })}>
+                    <Briefcase className="h-4 w-4" /> Gold — ₹325/mo
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setUpgradeModal({ open: true, targetTier: "PLATINUM" })}
+                  >
+                    <Zap className="h-4 w-4" /> Platinum — ₹500/mo
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {canSeeAllJobs() && showPagination && (
+              <div className="flex flex-wrap items-center justify-center gap-1 pt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0}
+                  onClick={() => setPage(0)}
+                  title="First page"
+                >
+                  «
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0}
+                  onClick={() => setPage(page - 1)}
+                >
+                  <ChevronLeft className="h-4 w-4" /> Previous
+                </Button>
+                <div className="mx-2 flex items-center gap-1">
+                  {buildPageRange(page, totalPages).map((p) =>
+                    p === "…" ? (
+                      <span
+                        key={p}
+                        className="px-2 font-bold text-gray-400 select-none dark:text-[#8b949e]"
+                      >
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={p}
+                        onClick={() => setPage(Number(p) - 1)}
+                        className={`h-8 min-w-[2rem] px-2 transition-all ${Number(p) - 1 === page ? "rounded-full bg-indigo-600 text-xs font-medium text-white" : "rounded-full border border-black/10 bg-white text-xs font-medium text-[#1d1d1f] hover:bg-[#f5f5f7] dark:border-white/10 dark:bg-[#1c1c1e] dark:text-[#e5e5ea] dark:hover:bg-[#2c2c2e]"}`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages - 1}
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages - 1}
+                  onClick={() => setPage(totalPages - 1)}
+                  title="Last page"
+                >
+                  »
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── No results ─────────────────────────────────────────────────────── */}
+        {searchQuery && !isLoading && jobs.length === 0 && (
+          <div className="py-12 text-center font-bold text-[#86868b] dark:text-[#8e8e93]">
+            No jobs found. Try different skills or locations.
+          </div>
+        )}
+
+        {/* ── Empty state (professional, no AI mentions) ─────────────────────── */}
+        {!searchQuery && !aiSearchEnabled && (
+          <div className="flex flex-col items-center gap-4 py-16 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#f2f2f7] dark:bg-[#2c2c2e]">
+              <Search className="h-8 w-8 text-gray-400 dark:text-[#8b949e]" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-[#1d1d1f] dark:text-white">
+                Search for jobs
+              </h3>
+              <p className="mt-1 mb-2 max-w-sm text-sm font-medium text-[#86868b] dark:text-[#8e8e93]">
+                {resumeSkills.length > 0
+                  ? "Your resume skills are loaded — hit Search to find the best matching positions."
+                  : "Upload a resume to auto-detect your skills, or type keywords and hit Search."}
+              </p>
+              {resumeSkills.length > 0 && (
+                <p className="flex items-center justify-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                  <Sparkles className="h-3 w-3" />
+                  Leave keywords blank to generate smart search terms from your profile
+                </p>
               )}
             </div>
           </div>
+        )}
 
-          {bulkResult && (
-            <div className={`text-xs font-medium px-4 py-2 rounded-xl border ${bulkResult.includes("Failed") ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-400" : "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-400"}`}>
-              {bulkResult}
+        {/* ══ Modals ═══════════════════════════════════════════════════════════ */}
+
+        {/* Summary */}
+        <Modal open={!!summaryModal} onClose={() => setSummaryModal(null)} title="Job Summary">
+          {summaryModal && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
+                  {summaryModal.title}
+                </p>
+                <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">
+                  {summaryModal.company}
+                </p>
+              </div>
+              {summaryModal.aiSummary ? (
+                <p className="text-sm font-medium whitespace-pre-line text-gray-700 dark:text-[#c9d1d9]">
+                  {summaryModal.aiSummary}
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93]">
+                    Generate a concise summary of this job&apos;s key requirements and tech stack.
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <Button variant="outline" onClick={() => setSummaryModal(null)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      loading={summarizeMutation.isPending}
+                      onClick={async () => {
+                        const updated = await summarizeMutation.mutateAsync(summaryModal.id);
+                        setSummaryModal(updated);
+                      }}
+                    >
+                      <Sparkles className="h-4 w-4" /> Summarize
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
+        </Modal>
 
-          <StaggerList>
-            {jobs.map((job, i) => (
-              <StaggerItem key={job.id || i}>
-                <div className="relative">
-                  {canAutoApply() && (
-                    <input
-                      type="checkbox"
-                      checked={selectedJobs.has(job.id)}
-                      onChange={() => toggleJobSelect(job.id)}
-                      className="absolute top-4 left-4 z-10 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                      title="Select for auto-apply"
-                    />
-                  )}
-                  <div className={canAutoApply() ? "pl-8" : ""}>
-                    <JobCard
-                      job={job}
-                      onApply={handleQuickApply}
-                      applied={appliedIds.has(job.id)}
-                      skipped={skippedIds.has(job.id)}
-                    />
-                    {/* ── Per-job actions ───────────────────────────────── */}
-                    <div className="flex gap-2 mt-1 ml-1 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={() => setSummaryModal(job)}
-                        className="inline-flex items-center gap-1 text-[10px] font-medium text-[#86868b] dark:text-[#8e8e93] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors bg-[#f5f5f7] dark:bg-[#2c2c2e] hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg px-2.5 py-1"
-                      >
-                        <FileText className="h-3 w-3" /> Summarize
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setMatchModal(job); setMatchResult(null); }}
-                        className="inline-flex items-center gap-1 text-[10px] font-medium text-[#86868b] dark:text-[#8e8e93] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors bg-[#f5f5f7] dark:bg-[#2c2c2e] hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg px-2.5 py-1"
-                      >
-                        <Target className="h-3 w-3" /> Match Score
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openCoverLetterModal(job)}
-                        disabled={appliedIds.has(job.id) || skippedIds.has(job.id)}
-                        className="inline-flex items-center gap-1 text-[10px] font-medium text-[#86868b] dark:text-[#8e8e93] hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors bg-[#f5f5f7] dark:bg-[#2c2c2e] hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg px-2.5 py-1 disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        <FileText className="h-3 w-3" /> Cover Letter
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSkip(job)}
-                        disabled={skippedIds.has(job.id) || appliedIds.has(job.id)}
-                        className={`inline-flex items-center gap-1 text-[10px] font-medium transition-colors rounded-lg px-2.5 py-1 disabled:opacity-40 disabled:cursor-not-allowed ${
-                          skippedIds.has(job.id)
-                            ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
-                            : "text-[#86868b] dark:text-[#8e8e93] hover:text-red-500 dark:hover:text-red-400 bg-[#f5f5f7] dark:bg-[#2c2c2e] hover:bg-red-50 dark:hover:bg-red-900/20"
+        {/* Match score */}
+        <Modal
+          open={!!matchModal}
+          onClose={() => {
+            setMatchModal(null);
+            setMatchResult(null);
+          }}
+          title="Resume Match"
+        >
+          {matchModal && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
+                  {matchModal.title}
+                </p>
+                <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">
+                  {matchModal.company}
+                </p>
+              </div>
+              {matchResult ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
+                      {matchResult.matchScore != null ? Math.round(matchResult.matchScore) : "—"}%
+                    </span>
+                    {matchResult.matchStrength && (
+                      <Badge
+                        className={`text-xs font-black ${
+                          matchResult.matchStrength === "STRONG"
+                            ? "border-green-400 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                            : matchResult.matchStrength === "MODERATE"
+                              ? "border-yellow-400 bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
+                              : "border-red-400 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
                         }`}
                       >
-                        <XCircle className="h-3 w-3" />
-                        {skippedIds.has(job.id) ? "Skipped" : "Skip"}
-                      </button>
-                    </div>
+                        {matchResult.matchStrength}
+                      </Badge>
+                    )}
                   </div>
-                </div>
-              </StaggerItem>
-            ))}
-          </StaggerList>
-
-          {/* Upgrade gate */}
-          {!canSeeAllJobs() && searchQuery && (
-            <div className="rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 p-6 text-center space-y-3">
-              <Lock className="h-8 w-8 text-indigo-600 dark:text-indigo-400 mx-auto" />
-              <h3 className="font-semibold text-[#1d1d1f] dark:text-white">Unlock All Job Results</h3>
-              <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93]">
-                You&apos;re seeing 2 of many matching jobs. Upgrade to see all results and apply faster.
-              </p>
-              <div className="flex items-center justify-center gap-3">
-                <Button onClick={() => setUpgradeModal({ open: true, targetTier: "GOLD" })}>
-                  <Briefcase className="h-4 w-4" /> Gold — ₹325/mo
-                </Button>
-                <Button variant="outline" onClick={() => setUpgradeModal({ open: true, targetTier: "PLATINUM" })}>
-                  <Zap className="h-4 w-4" /> Platinum — ₹500/mo
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {canSeeAllJobs() && showPagination && (
-            <div className="flex items-center justify-center gap-1 pt-4 flex-wrap">
-              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(0)} title="First page">«</Button>
-              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>
-                <ChevronLeft className="h-4 w-4" /> Previous
-              </Button>
-              <div className="flex items-center gap-1 mx-2">
-                {buildPageRange(page, totalPages).map((p) =>
-                  p === "…" ? (
-                    <span key={p} className="px-2 text-gray-400 dark:text-[#8b949e] font-bold select-none">…</span>
-                  ) : (
-                    <button
-                      key={p}
-                      onClick={() => setPage(Number(p) - 1)}
-                      className={`min-w-[2rem] h-8 px-2 transition-all ${Number(p) - 1 === page ? "rounded-full bg-indigo-600 text-white font-medium text-xs" : "rounded-full border border-black/10 dark:border-white/10 text-[#1d1d1f] dark:text-[#e5e5ea] bg-white dark:bg-[#1c1c1e] hover:bg-[#f5f5f7] dark:hover:bg-[#2c2c2e] font-medium text-xs"}`}
-                    >
-                      {p}
-                    </button>
-                  )
-                )}
-              </div>
-              <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
-                Next <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(totalPages - 1)} title="Last page">»</Button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── No results ─────────────────────────────────────────────────────── */}
-      {searchQuery && !isLoading && jobs.length === 0 && (
-        <div className="text-center py-12 font-bold text-[#86868b] dark:text-[#8e8e93]">
-          No jobs found. Try different skills or locations.
-        </div>
-      )}
-
-      {/* ── Empty state (professional, no AI mentions) ─────────────────────── */}
-      {!searchQuery && !aiSearchEnabled && (
-        <div className="flex flex-col items-center py-16 gap-4 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#f2f2f7] dark:bg-[#2c2c2e]">
-            <Search className="h-8 w-8 text-gray-400 dark:text-[#8b949e]" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-[#1d1d1f] dark:text-white">Search for jobs</h3>
-            <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93] mb-2 max-w-sm mt-1">
-              {resumeSkills.length > 0
-                ? "Your resume skills are loaded — hit Search to find the best matching positions."
-                : "Upload a resume to auto-detect your skills, or type keywords and hit Search."}
-            </p>
-            {resumeSkills.length > 0 && (
-              <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 flex items-center justify-center gap-1">
-                <Sparkles className="h-3 w-3" />
-                Leave keywords blank to generate smart search terms from your profile
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ══ Modals ═══════════════════════════════════════════════════════════ */}
-
-      {/* Summary */}
-      <Modal open={!!summaryModal} onClose={() => setSummaryModal(null)} title="Job Summary">
-        {summaryModal && (
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">{summaryModal.title}</p>
-              <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">{summaryModal.company}</p>
-            </div>
-            {summaryModal.aiSummary ? (
-              <p className="text-sm font-medium text-gray-700 dark:text-[#c9d1d9] whitespace-pre-line">{summaryModal.aiSummary}</p>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93]">
-                  Generate a concise summary of this job&apos;s key requirements and tech stack.
-                </p>
-                <div className="flex gap-3 justify-end">
-                  <Button variant="outline" onClick={() => setSummaryModal(null)}>Cancel</Button>
-                  <Button
-                    loading={summarizeMutation.isPending}
-                    onClick={async () => {
-                      const updated = await summarizeMutation.mutateAsync(summaryModal.id);
-                      setSummaryModal(updated);
-                    }}
-                  >
-                    <Sparkles className="h-4 w-4" /> Summarize
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
-
-      {/* Match score */}
-      <Modal
-        open={!!matchModal}
-        onClose={() => { setMatchModal(null); setMatchResult(null); }}
-        title="Resume Match"
-      >
-        {matchModal && (
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">{matchModal.title}</p>
-              <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">{matchModal.company}</p>
-            </div>
-            {matchResult ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
-                    {matchResult.matchScore != null ? Math.round(matchResult.matchScore) : "—"}%
-                  </span>
-                  {matchResult.matchStrength && (
-                    <Badge className={`text-xs font-black ${
-                      matchResult.matchStrength === "STRONG" ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-400"
-                      : matchResult.matchStrength === "MODERATE" ? "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-400"
-                      : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-400"
-                    }`}>
-                      {matchResult.matchStrength}
-                    </Badge>
+                  {matchResult.missingSkills && matchResult.missingSkills.length > 0 && (
+                    <div>
+                      <p className="mb-1 text-xs font-black tracking-wide text-[#86868b] uppercase dark:text-[#8e8e93]">
+                        Missing skills:
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {matchResult.missingSkills.map((s) => (
+                          <Badge
+                            key={s}
+                            className="border-red-400 bg-red-50 text-xs text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                          >
+                            {toCamelCase(s)}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
-                {matchResult.missingSkills && matchResult.missingSkills.length > 0 && (
-                  <div>
-                    <p className="text-xs font-black text-[#86868b] dark:text-[#8e8e93] mb-1 uppercase tracking-wide">Missing skills:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {matchResult.missingSkills.map((s) => (
-                        <Badge key={s} className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-400 text-xs">
-                          {toCamelCase(s)}
-                        </Badge>
-                      ))}
-                    </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93]">
+                    Compare this job against your resume to see your match score and skill gaps.
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setMatchModal(null);
+                        setMatchResult(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      loading={matchFetching}
+                      onClick={async () => {
+                        const { data } = await fetchMatch();
+                        if (data) setMatchResult(data);
+                      }}
+                    >
+                      <Target className="h-4 w-4" /> Analyse Match
+                    </Button>
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93]">
-                  Compare this job against your resume to see your match score and skill gaps.
+                </div>
+              )}
+            </div>
+          )}
+        </Modal>
+
+        {/* Quick Apply */}
+        <Modal open={!!applyModal} onClose={() => setApplyModal(null)} title="Quick Apply">
+          {applyModal && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
+                  {applyModal.title}
                 </p>
-                <div className="flex gap-3 justify-end">
-                  <Button variant="outline" onClick={() => { setMatchModal(null); setMatchResult(null); }}>Cancel</Button>
-                  <Button
-                    loading={matchFetching}
-                    onClick={async () => {
-                      const { data } = await fetchMatch();
-                      if (data) setMatchResult(data);
-                    }}
-                  >
-                    <Target className="h-4 w-4" /> Analyse Match
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
-
-      {/* Quick Apply */}
-      <Modal open={!!applyModal} onClose={() => setApplyModal(null)} title="Quick Apply">
-        {applyModal && (
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">{applyModal.title}</p>
-              <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">{applyModal.company}</p>
-            </div>
-            <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93]">
-              A customized cover letter will be generated and attached to your application automatically.
-            </p>
-            <div className="flex gap-3 justify-end">
-              <Button variant="outline" onClick={() => setApplyModal(null)}>Cancel</Button>
-              <Button onClick={confirmApply} loading={applying}>
-                <Zap className="h-4 w-4" /> Generate &amp; Apply
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      {/* Cover Letter Generator */}
-      <Modal
-        open={!!coverLetterModal}
-        onClose={() => { setCoverLetterModal(null); setClResult(null); }}
-        title="Generate Cover Letter"
-      >
-        {coverLetterModal && (
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">{coverLetterModal.title}</p>
-              <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">{coverLetterModal.company}</p>
-            </div>
-
-            {!clResult ? (
-              <>
-                <Select
-                  label="Model"
-                  value={clProvider}
-                  onChange={(e) => setClProvider(e.target.value)}
-                  options={ALL_AI_PROVIDERS}
-                />
-                <p className="text-sm text-[#86868b] dark:text-[#8e8e93]">
-                  Tailored to your profile, resume, and this job description.
+                <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">
+                  {applyModal.company}
                 </p>
-                <div className="flex gap-3 justify-end">
-                  <Button variant="outline" onClick={() => setCoverLetterModal(null)}>Cancel</Button>
-                  <Button onClick={generateCoverLetter} loading={generatingCL}>
-                    <FileText className="h-4 w-4" /> Generate
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-[#f9f9f9] dark:bg-[#1c1c1e] p-4 text-sm text-[#1d1d1f] dark:text-[#e5e5ea] whitespace-pre-wrap max-h-72 overflow-y-auto leading-relaxed">
-                  {clResult}
-                </div>
-                <div className="flex gap-3 justify-end">
-                  <Button variant="outline" onClick={() => { setClResult(null); }}>
-                    Regenerate
-                  </Button>
-                  <Button variant="outline" onClick={() => downloadCoverLetterPDF(clResult!, `cover-letter-${(coverLetterModal?.company ?? "").toLowerCase().replace(/\s+/g, "-")}.pdf`)}>
-                    <Download className="h-4 w-4" />
-                    Download PDF
-                  </Button>
-                  <Button onClick={handleCopy}>
-                    <Copy className="h-4 w-4" />
-                    {copied ? "Copied!" : "Copy"}
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-      </Modal>
-    </div>
+              </div>
+              <p className="text-sm font-medium text-[#86868b] dark:text-[#8e8e93]">
+                A customized cover letter will be generated and attached to your application
+                automatically.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setApplyModal(null)}>
+                  Cancel
+                </Button>
+                <Button onClick={confirmApply} loading={applying}>
+                  <Zap className="h-4 w-4" /> Generate &amp; Apply
+                </Button>
+              </div>
+            </div>
+          )}
+        </Modal>
+
+        {/* Cover Letter Generator */}
+        <Modal
+          open={!!coverLetterModal}
+          onClose={() => {
+            setCoverLetterModal(null);
+            setClResult(null);
+          }}
+          title="Generate Cover Letter"
+        >
+          {coverLetterModal && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
+                  {coverLetterModal.title}
+                </p>
+                <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">
+                  {coverLetterModal.company}
+                </p>
+              </div>
+
+              {!clResult ? (
+                <>
+                  <Select
+                    label="Model"
+                    value={clProvider}
+                    onChange={(e) => setClProvider(e.target.value)}
+                    options={ALL_AI_PROVIDERS}
+                  />
+                  <p className="text-sm text-[#86868b] dark:text-[#8e8e93]">
+                    Tailored to your profile, resume, and this job description.
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <Button variant="outline" onClick={() => setCoverLetterModal(null)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={generateCoverLetter} loading={generatingCL}>
+                      <FileText className="h-4 w-4" /> Generate
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="max-h-72 overflow-y-auto rounded-xl border border-black/[0.06] bg-[#f9f9f9] p-4 text-sm leading-relaxed whitespace-pre-wrap text-[#1d1d1f] dark:border-white/[0.08] dark:bg-[#1c1c1e] dark:text-[#e5e5ea]">
+                    {clResult}
+                  </div>
+                  <div className="flex justify-end gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setClResult(null);
+                      }}
+                    >
+                      Regenerate
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        downloadCoverLetterPDF(
+                          clResult!,
+                          `cover-letter-${(coverLetterModal?.company ?? "").toLowerCase().replace(/\s+/g, "-")}.pdf`
+                        )
+                      }
+                    >
+                      <Download className="h-4 w-4" />
+                      Download PDF
+                    </Button>
+                    <Button onClick={handleCopy}>
+                      <Copy className="h-4 w-4" />
+                      {copied ? "Copied!" : "Copy"}
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </Modal>
+      </div>
     </PageTransition>
   );
 }
@@ -978,7 +1145,9 @@ export default function SearchPage() {
 function buildPageRange(current: number, total: number): (number | "…")[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
   const pages: (number | "…")[] = [];
-  const add = (n: number) => { if (!pages.includes(n)) pages.push(n); };
+  const add = (n: number) => {
+    if (!pages.includes(n)) pages.push(n);
+  };
   add(1);
   if (current > 3) pages.push("…");
   for (let i = Math.max(2, current); i <= Math.min(total - 1, current + 2); i++) add(i);
@@ -996,7 +1165,7 @@ function AddSkillInline({ onAdd }: { onAdd: (skill: string) => void }) {
       <button
         type="button"
         onClick={() => setAdding(true)}
-        className="rounded-full border border-dashed border-black/10 dark:border-white/10 text-[#86868b] dark:text-[#8e8e93] px-2.5 py-0.5 text-xs font-medium hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+        className="rounded-full border border-dashed border-black/10 px-2.5 py-0.5 text-xs font-medium text-[#86868b] transition-colors hover:border-indigo-400 hover:text-indigo-600 dark:border-white/10 dark:text-[#8e8e93] dark:hover:text-indigo-400"
       >
         + Add skill
       </button>
@@ -1007,7 +1176,11 @@ function AddSkillInline({ onAdd }: { onAdd: (skill: string) => void }) {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (value.trim()) { onAdd(value.trim()); setValue(""); setAdding(false); }
+        if (value.trim()) {
+          onAdd(value.trim());
+          setValue("");
+          setAdding(false);
+        }
       }}
       className="inline-flex items-center gap-1"
     >
@@ -1015,12 +1188,25 @@ function AddSkillInline({ onAdd }: { onAdd: (skill: string) => void }) {
         autoFocus
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        onBlur={() => { if (!value.trim()) setAdding(false); }}
+        onBlur={() => {
+          if (!value.trim()) setAdding(false);
+        }}
         placeholder="Skill name"
-        className="rounded-full border border-indigo-400 bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-white px-2.5 py-0.5 text-xs font-medium outline-none w-28"
+        className="w-28 rounded-full border border-indigo-400 bg-white px-2.5 py-0.5 text-xs font-medium text-[#1d1d1f] outline-none dark:bg-[#1c1c1e] dark:text-white"
       />
-      <button type="submit" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 text-xs font-semibold">Add</button>
-      <button type="button" onClick={() => setAdding(false)} className="text-[#86868b] hover:text-red-500 text-xs">✕</button>
+      <button
+        type="submit"
+        className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400"
+      >
+        Add
+      </button>
+      <button
+        type="button"
+        onClick={() => setAdding(false)}
+        className="text-xs text-[#86868b] hover:text-red-500"
+      >
+        ✕
+      </button>
     </form>
   );
 }

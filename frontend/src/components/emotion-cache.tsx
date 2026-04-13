@@ -5,11 +5,7 @@ import { useServerInsertedHTML } from "next/navigation";
 import createCache from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
 
-export default function EmotionCacheProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function EmotionCacheProvider({ children }: { children: React.ReactNode }) {
   const [{ cache, flush }] = React.useState(() => {
     const cache = createCache({ key: "mui" });
     cache.compat = true;

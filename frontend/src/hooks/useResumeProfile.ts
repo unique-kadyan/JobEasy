@@ -14,7 +14,6 @@ export function usePatchResumeProfile() {
   return useMutation({
     mutationFn: (updates: Partial<ResumeProfile>) =>
       api.patch("/resume-profile", updates).then((r) => r.data),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["resume-profile"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["resume-profile"] }),
   });
 }

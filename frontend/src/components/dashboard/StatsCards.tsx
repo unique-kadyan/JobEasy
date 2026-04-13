@@ -22,7 +22,10 @@ function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string
   const duration = 900;
 
   useEffect(() => {
-    if (value === 0) { setDisplay(0); return; }
+    if (value === 0) {
+      setDisplay(0);
+      return;
+    }
     startRef.current = null;
     const step = (timestamp: number) => {
       if (!startRef.current) startRef.current = timestamp;
@@ -32,10 +35,17 @@ function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string
       if (progress < 1) rafRef.current = requestAnimationFrame(step);
     };
     rafRef.current = requestAnimationFrame(step);
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [value]);
 
-  return <>{display}{suffix}</>;
+  return (
+    <>
+      {display}
+      {suffix}
+    </>
+  );
 }
 
 const STATS_CONFIG = [
@@ -95,7 +105,13 @@ const STATS_CONFIG = [
 export default function StatsCards({ analytics, loading }: StatsCardsProps) {
   if (loading) {
     return (
-      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 2 }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: 2,
+        }}
+      >
         {Array.from({ length: 5 }).map((_, i) => (
           <Card key={i} sx={{ borderRadius: 3, overflow: "hidden" }}>
             <Box sx={{ height: 3, bgcolor: "action.hover" }} />
@@ -111,7 +127,9 @@ export default function StatsCards({ analytics, loading }: StatsCardsProps) {
   }
 
   return (
-    <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 2 }}>
+    <Box
+      sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 2 }}
+    >
       {STATS_CONFIG.map((stat) => {
         const value = (analytics?.[stat.key] as number) ?? 0;
         return (
@@ -132,7 +150,9 @@ export default function StatsCards({ analytics, loading }: StatsCardsProps) {
               "&::before": {
                 content: '""',
                 position: "absolute",
-                top: 0, left: 0, right: 0,
+                top: 0,
+                left: 0,
+                right: 0,
                 height: 3,
                 background: stat.gradient,
               },

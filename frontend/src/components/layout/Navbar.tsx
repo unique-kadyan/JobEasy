@@ -33,46 +33,71 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const NAV_LINKS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/search", label: "Search", icon: Search },
-  { href: "/jobs", label: "Jobs", icon: Briefcase },
-  { href: "/applications", label: "Applications", icon: Send },
-  { href: "/smart-resume", label: "Smart Resume", icon: Sparkles },
-  { href: "/cover-letters", label: "Cover Letters", icon: Mail },
-  { href: "/career-path", label: "Career Path", icon: TrendingUp },
-  { href: "/interview-prep", label: "Interview Prep", icon: MessageSquare },
-  { href: "/skill-hub", label: "Skill Hub", icon: GraduationCap },
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    short: "Dashboard",
+    icon: LayoutDashboard,
+  },
+  { href: "/search", label: "Search", short: "Search", icon: Search },
+  { href: "/jobs", label: "Jobs", short: "Jobs", icon: Briefcase },
+  {
+    href: "/applications",
+    label: "Applications",
+    short: "Applications",
+    icon: Send,
+  },
+  {
+    href: "/smart-resume",
+    label: "Smart Resume",
+    short: "Smart Resume",
+    icon: Sparkles,
+  },
+  {
+    href: "/cover-letters",
+    label: "Cover Letters",
+    short: "Cover Letters",
+    icon: Mail,
+  },
+  {
+    href: "/career-path",
+    label: "Career Path",
+    short: "Career",
+    icon: TrendingUp,
+  },
+  {
+    href: "/interview-prep",
+    label: "Interview Prep",
+    short: "Interview",
+    icon: MessageSquare,
+  },
+  {
+    href: "/skill-hub",
+    label: "Skill Hub",
+    short: "Skills",
+    icon: GraduationCap,
+  },
 ];
 
-const TIER_BADGE: Record<
-  string,
-  { label: string; className: string; iconClass: string }
-> = {
+const TIER_BADGE: Record<string, { label: string; className: string; iconClass: string }> = {
   FREE: {
     label: "Free",
-    className:
-      "bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#86868b] dark:text-[#8e8e93]",
+    className: "bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#86868b] dark:text-[#8e8e93]",
     iconClass: "text-[#86868b] dark:text-[#8e8e93]",
   },
   GOLD: {
     label: "Gold",
-    className:
-      "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-yellow-400",
+    className: "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-yellow-400",
     iconClass: "text-amber-500 dark:text-yellow-400",
   },
   PLATINUM: {
     label: "Platinum",
-    className:
-      "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300",
+    className: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300",
     iconClass: "text-indigo-500 dark:text-indigo-300",
   },
 };
 
-export default function Navbar({
-  serverStatus = "connecting",
-}: {
-  serverStatus?: ServerStatus;
-}) {
+export default function Navbar({ serverStatus = "connecting" }: { serverStatus?: ServerStatus }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -100,10 +125,7 @@ export default function Navbar({
 
   useEffect(() => {
     function handleOutsideClick(e: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setOpen(false);
         setSettingsOpen(false);
       }
@@ -124,17 +146,17 @@ export default function Navbar({
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 flex h-12 items-center border-b border-black/[0.06] dark:border-white/[0.08] bg-white/80 dark:bg-[#0d1117]/80 backdrop-blur-xl px-4 gap-6">
-      <Link href="/dashboard" className="flex items-center gap-1.5 shrink-0">
+    <header className="fixed top-0 right-0 left-0 z-40 flex h-12 items-center gap-6 border-b border-black/[0.06] bg-white/80 px-4 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0d1117]/80">
+      <Link href="/dashboard" className="flex shrink-0 items-center gap-1.5">
         <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-600">
           <Zap className="h-3.5 w-3.5 text-white" />
         </div>
-        <span className="text-sm font-semibold text-[#1d1d1f] dark:text-white tracking-tight">
+        <span className="text-sm font-semibold tracking-tight text-[#1d1d1f] dark:text-white">
           Rolevo
         </span>
       </Link>
 
-      <nav className="flex items-center gap-0.5 flex-1">
+      <nav className="flex min-w-0 flex-1 items-center gap-0.5">
         {NAV_LINKS.map((link) => {
           const isActive =
             pathname === link.href ||
@@ -144,24 +166,25 @@ export default function Navbar({
               <Link
                 href={link.href}
                 className={cn(
-                  "flex items-center justify-center h-8 w-8 rounded-lg transition-colors",
+                  "flex h-7 shrink-0 items-center gap-1 rounded-md px-1.5 whitespace-nowrap transition-colors",
                   isActive
-                    ? "bg-[#f2f2f7] dark:bg-white/10 text-[#1d1d1f] dark:text-white"
-                    : "text-[#86868b] dark:text-[#8e8e93] hover:text-[#1d1d1f] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]",
+                    ? "bg-[#f2f2f7] text-[#1d1d1f] dark:bg-white/10 dark:text-white"
+                    : "text-[#86868b] hover:bg-black/[0.04] hover:text-[#1d1d1f] dark:text-[#8e8e93] dark:hover:bg-white/[0.06] dark:hover:text-white"
                 )}
               >
-                <link.icon className="h-4 w-4 shrink-0" />
+                <link.icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[11px] font-medium">{link.short}</span>
               </Link>
             </Tooltip>
           );
         })}
       </nav>
 
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex shrink-0 items-center gap-3">
         {tier !== "PLATINUM" && (
           <Link
             href="/pricing"
-            className="flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-yellow-400 hover:text-amber-700 dark:hover:text-yellow-300 transition-colors border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 rounded-full px-2.5 py-1"
+            className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-600 transition-colors hover:text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-yellow-400 dark:hover:text-yellow-300"
           >
             <Crown className="h-3 w-3" />
             Upgrade
@@ -191,9 +214,9 @@ export default function Navbar({
               setOpen((v) => !v);
               setSettingsOpen(false);
             }}
-            className="flex items-center gap-2 rounded-xl px-2 py-1 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors"
+            className="flex items-center gap-2 rounded-xl px-2 py-1 transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
           >
-            <div className="h-7 w-7 rounded-xl overflow-hidden shrink-0 ring-1 ring-black/10 dark:ring-white/10">
+            <div className="h-7 w-7 shrink-0 overflow-hidden rounded-xl ring-1 ring-black/10 dark:ring-white/10">
               {avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -202,27 +225,27 @@ export default function Navbar({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-indigo-600 text-white text-xs font-semibold">
+                <div className="flex h-full w-full items-center justify-center bg-indigo-600 text-xs font-semibold text-white">
                   {initials}
                 </div>
               )}
             </div>
-            <span className="text-sm font-medium text-[#1d1d1f] dark:text-[#c9d1d9] hidden lg:block max-w-[100px] truncate">
+            <span className="hidden max-w-[100px] truncate text-sm font-medium text-[#1d1d1f] lg:block dark:text-[#c9d1d9]">
               {displayName}
             </span>
             <ChevronDown
               className={cn(
-                "h-3.5 w-3.5 text-[#86868b] transition-transform hidden lg:block",
-                open && "rotate-180",
+                "hidden h-3.5 w-3.5 text-[#86868b] transition-transform lg:block",
+                open && "rotate-180"
               )}
             />
           </button>
 
           {open && !settingsOpen && (
-            <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1c1c1e] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)]">
-              <div className="px-4 py-3 border-b border-black/[0.06] dark:border-white/[0.08] bg-[#f9f9f9] dark:bg-[#0d1117]/50">
+            <div className="absolute top-full right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-[0_8px_40px_rgba(0,0,0,0.12)] dark:border-white/[0.08] dark:bg-[#1c1c1e]">
+              <div className="border-b border-black/[0.06] bg-[#f9f9f9] px-4 py-3 dark:border-white/[0.08] dark:bg-[#0d1117]/50">
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 ring-1 ring-black/10 dark:ring-white/10">
+                  <div className="h-9 w-9 shrink-0 overflow-hidden rounded-xl ring-1 ring-black/10 dark:ring-white/10">
                     {avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -231,24 +254,24 @@ export default function Navbar({
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-indigo-600 text-white text-sm font-semibold">
+                      <div className="flex h-full w-full items-center justify-center bg-indigo-600 text-sm font-semibold text-white">
                         {initials}
                       </div>
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-[#1d1d1f] dark:text-white truncate">
+                    <p className="truncate text-sm font-medium text-[#1d1d1f] dark:text-white">
                       {user?.name}
                     </p>
-                    <p className="text-xs text-[#86868b] dark:text-[#8e8e93] truncate">
+                    <p className="truncate text-xs text-[#86868b] dark:text-[#8e8e93]">
                       {user?.email}
                     </p>
                   </div>
                 </div>
                 <span
                   className={cn(
-                    "mt-2 inline-block text-[10px] font-medium px-2 py-0.5 rounded-full",
-                    tierBadge.className,
+                    "mt-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium",
+                    tierBadge.className
                   )}
                 >
                   {tierBadge.label} Plan
@@ -288,7 +311,7 @@ export default function Navbar({
                 )}
               </div>
 
-              <div className="border-t border-black/[0.06] dark:border-white/[0.08] py-1">
+              <div className="border-t border-black/[0.06] py-1 dark:border-white/[0.08]">
                 <DropdownItem
                   icon={<Settings className="h-4 w-4" />}
                   label="Settings"
@@ -298,10 +321,10 @@ export default function Navbar({
                 />
               </div>
 
-              <div className="border-t border-black/[0.06] dark:border-white/[0.08] py-1">
+              <div className="border-t border-black/[0.06] py-1 dark:border-white/[0.08]">
                 <button
                   onClick={handleLogout}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                  className="flex w-full items-center gap-3 px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign out
@@ -311,11 +334,11 @@ export default function Navbar({
           )}
 
           {open && settingsOpen && (
-            <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1c1c1e] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.12)]">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-black/[0.06] dark:border-white/[0.08] bg-[#f9f9f9] dark:bg-[#0d1117]/50">
+            <div className="absolute top-full right-0 mt-2 w-72 overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-[0_8px_40px_rgba(0,0,0,0.12)] dark:border-white/[0.08] dark:bg-[#1c1c1e]">
+              <div className="flex items-center gap-2 border-b border-black/[0.06] bg-[#f9f9f9] px-4 py-3 dark:border-white/[0.08] dark:bg-[#0d1117]/50">
                 <button
                   onClick={() => setSettingsOpen(false)}
-                  className="text-[#86868b] dark:text-[#8e8e93] hover:text-[#1d1d1f] dark:hover:text-white transition-colors"
+                  className="text-[#86868b] transition-colors hover:text-[#1d1d1f] dark:text-[#8e8e93] dark:hover:text-white"
                 >
                   <ChevronDown className="h-4 w-4 rotate-90" />
                 </button>
@@ -325,7 +348,7 @@ export default function Navbar({
               </div>
 
               <div className="py-1">
-                <div className="flex items-center justify-between px-4 py-3 hover:bg-[#f9f9f9] dark:hover:bg-white/[0.04] transition-colors">
+                <div className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-[#f9f9f9] dark:hover:bg-white/[0.04]">
                   <div className="flex items-center gap-3">
                     {theme === "dark" ? (
                       <Moon className="h-4 w-4 text-[#86868b] dark:text-[#8e8e93]" />
@@ -336,7 +359,7 @@ export default function Navbar({
                       <p className="text-sm font-medium text-[#1d1d1f] dark:text-white">
                         Appearance
                       </p>
-                      <p className="text-xs text-[#86868b] dark:text-[#8e8e93] capitalize">
+                      <p className="text-xs text-[#86868b] capitalize dark:text-[#8e8e93]">
                         {theme} mode
                       </p>
                     </div>
@@ -344,20 +367,20 @@ export default function Navbar({
                   <button
                     onClick={toggleTheme}
                     className={cn(
-                      "relative inline-flex h-5 w-9 items-center rounded-full border border-black/10 dark:border-white/10 transition-colors focus:outline-none",
-                      theme === "dark" ? "bg-indigo-600" : "bg-[#e5e5ea]",
+                      "relative inline-flex h-5 w-9 items-center rounded-full border border-black/10 transition-colors focus:outline-none dark:border-white/10",
+                      theme === "dark" ? "bg-indigo-600" : "bg-[#e5e5ea]"
                     )}
                   >
                     <span
                       className={cn(
                         "inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform",
-                        theme === "dark" ? "translate-x-4" : "translate-x-0.5",
+                        theme === "dark" ? "translate-x-4" : "translate-x-0.5"
                       )}
                     />
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between px-4 py-3 hover:bg-[#f9f9f9] dark:hover:bg-white/[0.04] transition-colors">
+                <div className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-[#f9f9f9] dark:hover:bg-white/[0.04]">
                   <div className="flex items-center gap-3">
                     <Bell className="h-4 w-4 text-[#86868b] dark:text-[#8e8e93]" />
                     <div>
@@ -369,31 +392,29 @@ export default function Navbar({
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-medium text-[#86868b] dark:text-[#8e8e93] bg-[#f2f2f7] dark:bg-[#2c2c2e] px-1.5 py-0.5 rounded-md">
+                  <span className="rounded-md bg-[#f2f2f7] px-1.5 py-0.5 text-[10px] font-medium text-[#86868b] dark:bg-[#2c2c2e] dark:text-[#8e8e93]">
                     Soon
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between px-4 py-3 hover:bg-[#f9f9f9] dark:hover:bg-white/[0.04] transition-colors">
+                <div className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-[#f9f9f9] dark:hover:bg-white/[0.04]">
                   <div className="flex items-center gap-3">
                     <Shield className="h-4 w-4 text-[#86868b] dark:text-[#8e8e93]" />
                     <div>
-                      <p className="text-sm font-medium text-[#1d1d1f] dark:text-white">
-                        Privacy
-                      </p>
+                      <p className="text-sm font-medium text-[#1d1d1f] dark:text-white">Privacy</p>
                       <p className="text-xs text-[#86868b] dark:text-[#8e8e93]">
                         Data &amp; visibility controls
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-medium text-[#86868b] dark:text-[#8e8e93] bg-[#f2f2f7] dark:bg-[#2c2c2e] px-1.5 py-0.5 rounded-md">
+                  <span className="rounded-md bg-[#f2f2f7] px-1.5 py-0.5 text-[10px] font-medium text-[#86868b] dark:bg-[#2c2c2e] dark:text-[#8e8e93]">
                     Soon
                   </span>
                 </div>
 
                 <button
                   onClick={() => navigate("/pricing")}
-                  className="flex w-full items-center gap-3 px-4 py-3 hover:bg-[#f9f9f9] dark:hover:bg-white/[0.04] transition-colors"
+                  className="flex w-full items-center gap-3 px-4 py-3 transition-colors hover:bg-[#f9f9f9] dark:hover:bg-white/[0.04]"
                 >
                   <CreditCard className="h-4 w-4 text-[#86868b] dark:text-[#8e8e93]" />
                   <div className="text-left">
@@ -432,28 +453,19 @@ function DropdownItem({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-4 py-2 hover:bg-[#f9f9f9] dark:hover:bg-white/[0.04] transition-colors"
+      className="flex w-full items-center gap-3 px-4 py-2 transition-colors hover:bg-[#f9f9f9] dark:hover:bg-white/[0.04]"
     >
-      <span className="text-[#86868b] dark:text-[#8e8e93] shrink-0">
-        {icon}
-      </span>
-      <div className="flex-1 text-left min-w-0">
-        <p
-          className={cn(
-            "text-sm font-medium text-[#1d1d1f] dark:text-white",
-            labelClass,
-          )}
-        >
+      <span className="shrink-0 text-[#86868b] dark:text-[#8e8e93]">{icon}</span>
+      <div className="min-w-0 flex-1 text-left">
+        <p className={cn("text-sm font-medium text-[#1d1d1f] dark:text-white", labelClass)}>
           {label}
         </p>
         {description && (
-          <p className="text-xs text-[#86868b] dark:text-[#8e8e93] truncate">
-            {description}
-          </p>
+          <p className="truncate text-xs text-[#86868b] dark:text-[#8e8e93]">{description}</p>
         )}
       </div>
       {chevron && (
-        <ChevronDown className="h-3.5 w-3.5 text-[#86868b] dark:text-[#8e8e93] -rotate-90 shrink-0" />
+        <ChevronDown className="h-3.5 w-3.5 shrink-0 -rotate-90 text-[#86868b] dark:text-[#8e8e93]" />
       )}
     </button>
   );
@@ -468,13 +480,13 @@ function ServerDot({ status }: { status: ServerStatus }) {
   const { color, label } = cfg[status];
   return (
     <Tooltip title={label}>
-      <div className="relative flex items-center cursor-default">
+      <div className="relative flex cursor-default items-center">
         <span className={cn("h-2 w-2 rounded-full", color)} />
         {status !== "up" && (
           <span
             className={cn(
-              "absolute inline-flex h-2 w-2 rounded-full opacity-75 animate-ping",
-              color,
+              "absolute inline-flex h-2 w-2 animate-ping rounded-full opacity-75",
+              color
             )}
           />
         )}

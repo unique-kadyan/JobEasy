@@ -15,13 +15,7 @@ interface ModalProps {
   maxWidth?: "xs" | "sm" | "md" | "lg" | "xl";
 }
 
-export default function Modal({
-  open,
-  onClose,
-  title,
-  children,
-  maxWidth = "sm",
-}: ModalProps) {
+export default function Modal({ open, onClose, title, children, maxWidth = "sm" }: ModalProps) {
   const { theme } = useThemeStore();
 
   return (
@@ -37,9 +31,7 @@ export default function Modal({
             backgroundColor: theme === "dark" ? "#1c1c1e" : "#ffffff",
             backgroundImage: "none",
             boxShadow:
-              theme === "dark"
-                ? "0 20px 60px rgba(0,0,0,0.5)"
-                : "0 20px 60px rgba(0,0,0,0.15)",
+              theme === "dark" ? "0 20px 60px rgba(0,0,0,0.5)" : "0 20px 60px rgba(0,0,0,0.15)",
           },
         },
       }}

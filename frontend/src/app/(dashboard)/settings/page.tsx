@@ -42,7 +42,9 @@ export default function SettingsPage() {
     <div className="max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">Settings</h1>
-        <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-0.5">Manage your profile and preferences</p>
+        <p className="mt-0.5 text-sm text-[#86868b] dark:text-[#8e8e93]">
+          Manage your profile and preferences
+        </p>
       </div>
 
       <Card>
@@ -54,17 +56,8 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Full Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <Input
-              label="Email"
-              value={user?.email || ""}
-              disabled
-              className="opacity-50"
-            />
+            <Input label="Full Name" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input label="Email" value={user?.email || ""} disabled className="opacity-50" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input
@@ -87,11 +80,11 @@ export default function SettingsPage() {
             placeholder="e.g., Senior Software Engineer"
           />
           <div>
-            <label className="block text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-1.5">
+            <label className="mb-1.5 block text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">
               Professional Summary
             </label>
             <textarea
-              className="block w-full rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-white px-3 py-2 text-sm nb-input-focus placeholder:text-[#86868b]"
+              className="nb-input-focus block w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-[#1d1d1f] placeholder:text-[#86868b] dark:border-white/10 dark:bg-[#1c1c1e] dark:text-white"
               rows={4}
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
@@ -115,17 +108,21 @@ export default function SettingsPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <ReceiptText className="h-4 w-4 text-indigo-600" />
-              <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Refund Policy</h2>
+              <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
+                Refund Policy
+              </h2>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-[#86868b] dark:text-[#8e8e93]">
-              You can request a refund within <span className="font-medium text-[#1d1d1f] dark:text-white">7 days</span> of subscribing.
-              The refund amount is calculated as your subscription fee minus the cost of features you have already used.
+              You can request a refund within{" "}
+              <span className="font-medium text-[#1d1d1f] dark:text-white">7 days</span> of
+              subscribing. The refund amount is calculated as your subscription fee minus the cost
+              of features you have already used.
             </p>
-            <div className="text-xs text-[#86868b] dark:text-[#8e8e93] space-y-1">
+            <div className="space-y-1 text-xs text-[#86868b] dark:text-[#8e8e93]">
               <p>Feature costs deducted from refund:</p>
-              <ul className="list-disc list-inside space-y-0.5 pl-1">
+              <ul className="list-inside list-disc space-y-0.5 pl-1">
                 <li>Cover letter generated — ₹15 each</li>
                 <li>Smart resume generated — ₹30 each</li>
                 <li>Career path analysis — ₹50 each</li>

@@ -76,9 +76,17 @@ public class AuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new BadRequestException("Invalid email or password"));
 
-        Optional.ofNullable(user.getPasswordHash())
+        String storedHash = Optional.ofNullable(user.getPasswordHash())
                 .filter(hash -> passwordEncoder.matches(request.password(), hash))
                 .orElseThrow(() -> new BadRequestException("Invalid email or password"));
+
+        // Transparent hash migration: if the stored hash was encoded at a higher
+        // cost factor than the current encoder (BCrypt-10 → BCrypt-8), re-hash
+        // and persist now. The user never notices; their next login is fast.
+        if (passwordEncoder.upgradeEncoding(storedHash)) {
+            user.setPasswordHash(passwordEncoder.encode(request.password()));
+            userRepository.save(user);
+        }
 
         return buildAuthResponse(user, request.rememberMe());
     }

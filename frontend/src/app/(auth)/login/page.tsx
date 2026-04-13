@@ -44,8 +44,7 @@ export default function LoginPage() {
           alignItems: "flex-start",
           px: 8,
           py: 10,
-          background:
-            "linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%)",
+          background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%)",
           position: "relative",
           overflow: "hidden",
         }}
@@ -93,12 +92,7 @@ export default function LoginPage() {
           >
             <Zap className="h-6 w-6 text-white" />
           </Box>
-          <Typography
-            variant="h6"
-            fontWeight={700}
-            color="white"
-            letterSpacing={-0.5}
-          >
+          <Typography variant="h6" fontWeight={700} color="white" letterSpacing={-0.5}>
             Rolevo
           </Typography>
         </Stack>
@@ -118,9 +112,8 @@ export default function LoginPage() {
           variant="body1"
           sx={{ color: "rgba(255,255,255,0.75)", maxWidth: 400, mb: 6, lineHeight: 1.7 }}
         >
-          Auto-apply to jobs with AI-generated cover letters customized for
-          every position. Find matching roles, generate personalized
-          applications, and track everything in one place.
+          Auto-apply to jobs with AI-generated cover letters customized for every position. Find
+          matching roles, generate personalized applications, and track everything in one place.
         </Typography>
 
         {/* Feature cards */}
@@ -156,18 +149,10 @@ export default function LoginPage() {
                 <Icon className="h-5 w-5 text-white" />
               </Box>
               <Box>
-                <Typography
-                  variant="body2"
-                  fontWeight={700}
-                  color="white"
-                  lineHeight={1.3}
-                >
+                <Typography variant="body2" fontWeight={700} color="white" lineHeight={1.3}>
                   {label}
                 </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{ color: "rgba(255,255,255,0.65)" }}
-                >
+                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.65)" }}>
                   {description}
                 </Typography>
               </Box>
@@ -215,12 +200,7 @@ export default function LoginPage() {
             </Typography>
           </Stack>
 
-          <Typography
-            variant="h5"
-            fontWeight={700}
-            color="text.primary"
-            mb={0.75}
-          >
+          <Typography variant="h5" fontWeight={700} color="text.primary" mb={0.75}>
             Welcome back
           </Typography>
           <Typography variant="body2" color="text.secondary" mb={4}>

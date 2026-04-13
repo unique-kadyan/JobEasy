@@ -7,10 +7,7 @@ import { createMuiTheme } from "@/lib/mui-theme";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const { theme } = useThemeStore();
-  const muiTheme = useMemo(
-    () => createMuiTheme(theme === "dark" ? "dark" : "light"),
-    [theme]
-  );
+  const muiTheme = useMemo(() => createMuiTheme(theme === "dark" ? "dark" : "light"), [theme]);
 
   return <ThemeProvider theme={muiTheme}>{children}</ThemeProvider>;
 }

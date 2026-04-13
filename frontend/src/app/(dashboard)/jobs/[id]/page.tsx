@@ -11,7 +11,13 @@ import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import { SOURCE_COLORS, AI_PROVIDERS } from "@/lib/constants";
 import {
-  MapPin, Building2, DollarSign, ExternalLink, Clock, Loader2, CheckCircle,
+  MapPin,
+  Building2,
+  DollarSign,
+  ExternalLink,
+  Clock,
+  Loader2,
+  CheckCircle,
 } from "@/components/ui/icons";
 import { formatDate } from "@/lib/utils";
 import type { CoverLetter } from "@/types";
@@ -67,17 +73,21 @@ export default function JobDetailPage() {
   }
 
   if (!job) {
-    return <div className="text-center py-20 text-[#86868b] dark:text-[#8e8e93]">Job not found</div>;
+    return (
+      <div className="py-20 text-center text-[#86868b] dark:text-[#8e8e93]">Job not found</div>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <Card>
         <CardContent className="py-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">{job.title}</h1>
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">
+                  {job.title}
+                </h1>
                 <Badge className={SOURCE_COLORS[job.source]}>{job.source}</Badge>
               </div>
               <div className="flex flex-wrap items-center gap-4 text-xs text-[#86868b] dark:text-[#8e8e93]">
@@ -101,13 +111,13 @@ export default function JobDetailPage() {
                 )}
               </div>
             </div>
-            <div className="flex flex-col items-end gap-1.5 shrink-0">
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
               <a href={job.url} target="_blank" rel="noopener noreferrer">
                 <Button>
                   <ExternalLink className="h-4 w-4" /> Apply Now
                 </Button>
               </a>
-              <span className="text-[10px] text-[#86868b] dark:text-[#8e8e93] font-medium">
+              <span className="text-[10px] font-medium text-[#86868b] dark:text-[#8e8e93]">
                 Opens application form on {job.source}
               </span>
             </div>
@@ -115,13 +125,15 @@ export default function JobDetailPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Job Description</h2>
+            <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
+              Job Description
+            </h2>
           </CardHeader>
           <CardContent>
-            <div className="text-sm text-[#3c3c43] dark:text-[#c9d1d9] whitespace-pre-line leading-relaxed">
+            <div className="text-sm leading-relaxed whitespace-pre-line text-[#3c3c43] dark:text-[#c9d1d9]">
               {job.description || "No description available."}
             </div>
           </CardContent>
@@ -144,7 +156,7 @@ export default function JobDetailPage() {
                       <ExternalLink className="h-4 w-4" /> Open Application Form
                     </Button>
                   </a>
-                  <p className="text-[10px] text-center text-[#86868b] dark:text-[#8e8e93]">
+                  <p className="text-center text-[10px] text-[#86868b] dark:text-[#8e8e93]">
                     Complete your application on {job.source}
                   </p>
                 </div>
@@ -180,10 +192,12 @@ export default function JobDetailPage() {
           {coverLetter && (
             <Card>
               <CardHeader>
-                <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">Generated Cover Letter</h2>
+                <h2 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
+                  Generated Cover Letter
+                </h2>
               </CardHeader>
               <CardContent>
-                <div className="text-sm text-[#3c3c43] dark:text-[#c9d1d9] whitespace-pre-line max-h-96 overflow-y-auto leading-relaxed">
+                <div className="max-h-96 overflow-y-auto text-sm leading-relaxed whitespace-pre-line text-[#3c3c43] dark:text-[#c9d1d9]">
                   {coverLetter.content}
                 </div>
                 <p className="mt-2 text-xs text-[#86868b] dark:text-[#8e8e93]">

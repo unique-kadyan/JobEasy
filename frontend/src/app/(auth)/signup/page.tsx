@@ -33,8 +33,7 @@ export default function SignupPage() {
           alignItems: "flex-start",
           px: 8,
           py: 10,
-          background:
-            "linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%)",
+          background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%)",
           position: "relative",
           overflow: "hidden",
         }}
@@ -82,12 +81,7 @@ export default function SignupPage() {
           >
             <Zap className="h-6 w-6 text-white" />
           </Box>
-          <Typography
-            variant="h6"
-            fontWeight={700}
-            color="white"
-            letterSpacing={-0.5}
-          >
+          <Typography variant="h6" fontWeight={700} color="white" letterSpacing={-0.5}>
             Rolevo
           </Typography>
         </Stack>
@@ -107,8 +101,8 @@ export default function SignupPage() {
           variant="body1"
           sx={{ color: "rgba(255,255,255,0.75)", maxWidth: 400, mb: 6, lineHeight: 1.7 }}
         >
-          Join thousands of job seekers using AI to automate their applications.
-          Upload your resume, find matching jobs, and apply with one click.
+          Join thousands of job seekers using AI to automate their applications. Upload your resume,
+          find matching jobs, and apply with one click.
         </Typography>
 
         {/* Benefit list */}
@@ -190,12 +184,7 @@ export default function SignupPage() {
             </Typography>
           </Stack>
 
-          <Typography
-            variant="h5"
-            fontWeight={700}
-            color="text.primary"
-            mb={0.75}
-          >
+          <Typography variant="h5" fontWeight={700} color="text.primary" mb={0.75}>
             Create your account
           </Typography>
           <Typography variant="body2" color="text.secondary" mb={4}>

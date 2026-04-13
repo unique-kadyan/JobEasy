@@ -18,10 +18,7 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn(
-        "px-5 py-4 border-b border-black/[0.06] dark:border-white/[0.07]",
-        className
-      )}
+      className={cn("border-b border-black/[0.06] px-5 py-4 dark:border-white/[0.07]", className)}
       {...props}
     />
   );

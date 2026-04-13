@@ -64,8 +64,6 @@ const TIER_CAPS: Record<SubscriptionTier, TierCapabilities> = {
   },
 };
 
-export function getTierFeatures(
-  tier?: SubscriptionTier | string | null
-): TierCapabilities {
+export function getTierFeatures(tier?: SubscriptionTier | string | null): TierCapabilities {
   return TIER_CAPS[(tier as SubscriptionTier) ?? "FREE"] ?? TIER_CAPS.FREE;
 }

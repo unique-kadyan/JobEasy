@@ -68,8 +68,7 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
         sx: {
           borderRadius: 3,
           overflow: "hidden",
-          boxShadow:
-            "0 24px 64px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.12)",
+          boxShadow: "0 24px 64px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.12)",
           bgcolor: "background.paper",
           backgroundImage: "none",
           mt: { xs: "10vh", sm: "15vh" },
@@ -98,9 +97,7 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
             borderColor: "divider",
           }}
         >
-          <SearchRoundedIcon
-            sx={{ fontSize: 18, color: "text.disabled", flexShrink: 0 }}
-          />
+          <SearchRoundedIcon sx={{ fontSize: 18, color: "text.disabled", flexShrink: 0 }} />
           <Box
             component={Command.Input}
             value={search}
@@ -131,10 +128,7 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
         </Box>
 
         {/* Results */}
-        <Box
-          component={Command.List}
-          sx={{ maxHeight: 320, overflowY: "auto" }}
-        >
+        <Box component={Command.List} sx={{ maxHeight: 320, overflowY: "auto" }}>
           <Box
             component={Command.Empty}
             sx={{
@@ -161,10 +155,7 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
               },
             }}
           >
-            <Typography
-              component="span"
-              {...({ "cmdk-group-heading": "" } as any)}
-            >
+            <Typography component="span" {...({ "cmdk-group-heading": "" } as any)}>
               Navigation
             </Typography>
 
@@ -214,22 +205,13 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
         {/* Footer hints */}
         <Divider />
-        <Stack
-          direction="row"
-          spacing={2.5}
-          sx={{ px: 2.5, py: 1.25, bgcolor: "action.hover" }}
-        >
+        <Stack direction="row" spacing={2.5} sx={{ px: 2.5, py: 1.25, bgcolor: "action.hover" }}>
           {[
             { keys: "↑↓", label: "navigate" },
             { keys: "↵", label: "select" },
             { keys: "Esc", label: "close" },
           ].map(({ keys, label }) => (
-            <Stack
-              key={label}
-              direction="row"
-              alignItems="center"
-              spacing={0.75}
-            >
+            <Stack key={label} direction="row" alignItems="center" spacing={0.75}>
               <Box
                 component="kbd"
                 sx={{

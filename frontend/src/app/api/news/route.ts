@@ -19,10 +19,9 @@ export async function GET() {
     const tags = ["career", "jobs", "productivity", "programming"];
     const responses = await Promise.allSettled(
       tags.map((tag) =>
-        fetch(
-          `https://dev.to/api/articles?tag=${tag}&per_page=4&state=rising`,
-          { next: { revalidate: 1800 } }
-        ).then((r) => r.json() as Promise<DevToArticle[]>)
+        fetch(`https://dev.to/api/articles?tag=${tag}&per_page=4&state=rising`, {
+          next: { revalidate: 1800 },
+        }).then((r) => r.json() as Promise<DevToArticle[]>)
       )
     );
 
@@ -41,8 +40,7 @@ export async function GET() {
 
     // Sort by recency, cap at 8
     articles.sort(
-      (a, b) =>
-        new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
+      (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
     );
 
     const feed = articles.slice(0, 8).map((a) => ({

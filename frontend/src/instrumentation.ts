@@ -1,18 +1,17 @@
-
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
   const frontendUrl = process.env.RENDER_EXTERNAL_URL;
-  const backendUrl  = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, "");
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, "");
 
   if (!frontendUrl) {
     console.log("[keep-alive] RENDER_EXTERNAL_URL not set — scheduler disabled (local dev)");
     return;
   }
 
-  const INTERVAL_MS   = 20_000;
-  const TIMEOUT_MS    = 8_000;
-  const RETRY_DELAY   = 3_000;
+  const INTERVAL_MS = 20_000;
+  const TIMEOUT_MS = 8_000;
+  const RETRY_DELAY = 3_000;
   const STARTUP_DELAY = 8_000;
 
   const targets: Array<{ name: string; url: string }> = [

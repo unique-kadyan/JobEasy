@@ -18,7 +18,17 @@ export function useJobSearch(
   const enabled = query.trim().length > 0 || aiSearchEnabled;
 
   return useQuery<PagedResponse<Job>>({
-    queryKey: ["jobs", query, locationStr, page, size, minSalary, maxSalary, maxAgeDays, aiSearchEnabled],
+    queryKey: [
+      "jobs",
+      query,
+      locationStr,
+      page,
+      size,
+      minSalary,
+      maxSalary,
+      maxAgeDays,
+      aiSearchEnabled,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams({ page: String(page), size: String(size) });
       if (query.trim()) params.set("query", query.trim());

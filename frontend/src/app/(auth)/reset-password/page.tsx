@@ -20,15 +20,19 @@ function ResetPasswordContent() {
 
   if (!token) {
     return (
-      <div className="text-center space-y-4">
+      <div className="space-y-4 text-center">
         <div
-          className="flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-red-500 bg-red-50 dark:bg-red-900/20 mx-auto"
+          className="mx-auto flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-red-500 bg-red-50 dark:bg-red-900/20"
           style={{ boxShadow: "3px 3px 0 #ef4444" }}
         >
           <XCircle className="h-8 w-8 text-red-500" />
         </div>
-        <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Invalid Reset Link</h1>
-        <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">This password reset link is invalid or has expired.</p>
+        <h1 className="text-2xl font-black tracking-tight text-black uppercase dark:text-white">
+          Invalid Reset Link
+        </h1>
+        <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">
+          This password reset link is invalid or has expired.
+        </p>
         <Link href="/forgot-password">
           <Button className="mt-4">Request New Reset Link</Button>
         </Link>
@@ -66,15 +70,19 @@ function ResetPasswordContent() {
 
   if (success) {
     return (
-      <div className="text-center space-y-4">
+      <div className="space-y-4 text-center">
         <div
-          className="flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-green-500 bg-green-50 dark:bg-green-900/20 mx-auto"
+          className="mx-auto flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-green-500 bg-green-50 dark:bg-green-900/20"
           style={{ boxShadow: "3px 3px 0 #22c55e" }}
         >
           <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
         </div>
-        <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Password Reset!</h1>
-        <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">Your password has been successfully reset.</p>
+        <h1 className="text-2xl font-black tracking-tight text-black uppercase dark:text-white">
+          Password Reset!
+        </h1>
+        <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">
+          Your password has been successfully reset.
+        </p>
         <Link href="/login">
           <Button size="lg" className="mt-4">
             Sign In with New Password
@@ -86,11 +94,15 @@ function ResetPasswordContent() {
 
   return (
     <>
-      <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight mb-2">Set New Password</h1>
-      <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e] mb-6">Enter your new password below.</p>
+      <h1 className="mb-2 text-2xl font-black tracking-tight text-black uppercase dark:text-white">
+        Set New Password
+      </h1>
+      <p className="mb-6 text-sm font-medium text-gray-500 dark:text-[#8b949e]">
+        Enter your new password below.
+      </p>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-[4px] border-2 border-red-500 bg-red-50 dark:bg-red-900/20 p-3 text-sm font-bold text-red-700 dark:text-red-400">
+          <div className="rounded-[4px] border-2 border-red-500 bg-red-50 p-3 text-sm font-bold text-red-700 dark:bg-red-900/20 dark:text-red-400">
             {error}
           </div>
         )}
@@ -122,21 +134,23 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f5f2ea] dark:bg-[#0d1117] p-8">
+    <div className="flex min-h-screen items-center justify-center bg-[#f5f2ea] p-8 dark:bg-[#0d1117]">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="mb-8 flex items-center justify-center gap-2">
           <div
-            className="flex h-10 w-10 items-center justify-center rounded-[4px] bg-indigo-600 border-2 border-black"
+            className="flex h-10 w-10 items-center justify-center rounded-[4px] border-2 border-black bg-indigo-600"
             style={{ boxShadow: "3px 3px 0 #000" }}
           >
             <Zap className="h-6 w-6 text-white" />
           </div>
-          <span className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Rolevo</span>
+          <span className="text-2xl font-black tracking-tight text-black uppercase dark:text-white">
+            Rolevo
+          </span>
         </div>
 
         <div
-          className="rounded-[4px] border-2 border-black dark:border-white bg-white dark:bg-[#161b22] p-8"
+          className="rounded-[4px] border-2 border-black bg-white p-8 dark:border-white dark:bg-[#161b22]"
           style={{ boxShadow: "6px 6px 0 #000" }}
         >
           <Suspense

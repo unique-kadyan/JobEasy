@@ -32,7 +32,10 @@ interface Props {
 
 function loadRazorpayScript(): Promise<boolean> {
   return new Promise((resolve) => {
-    if (window.Razorpay) { resolve(true); return; }
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.onload = () => resolve(true);
@@ -61,7 +64,10 @@ export default function PaymentModal({ open, resumeId, onClose, onSuccess }: Pro
       const res = await api.post("/payments/verify", { ...params, resumeId });
       return res.data;
     },
-    onSuccess: () => { onSuccess(); onClose(); },
+    onSuccess: () => {
+      onSuccess();
+      onClose();
+    },
     onError: () => setError("Payment verification failed. Please contact support."),
   });
 
@@ -76,7 +82,10 @@ export default function PaymentModal({ open, resumeId, onClose, onSuccess }: Pro
     }
 
     const loaded = await loadRazorpayScript();
-    if (!loaded) { setError("Failed to load payment gateway. Please try again."); return; }
+    if (!loaded) {
+      setError("Failed to load payment gateway. Please try again.");
+      return;
+    }
 
     const options = {
       key: order.keyId,
@@ -113,27 +122,34 @@ export default function PaymentModal({ open, resumeId, onClose, onSuccess }: Pro
       <div className="space-y-4">
         {/* What you get */}
         <div
-          className="rounded-[4px] border-2 border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 p-4 space-y-2"
+          className="space-y-2 rounded-[4px] border-2 border-indigo-400 bg-indigo-50 p-4 dark:bg-indigo-900/20"
           style={{ boxShadow: "3px 3px 0 #6366f1" }}
         >
-          <p className="text-xs font-black text-indigo-900 dark:text-indigo-300 uppercase tracking-wide mb-2">What you get:</p>
+          <p className="mb-2 text-xs font-black tracking-wide text-indigo-900 uppercase dark:text-indigo-300">
+            What you get:
+          </p>
           {[
             "AI-optimized, ATS-ready resume",
             "Complete multi-page resume",
             "PDF download",
             "Professional formatting",
           ].map((item) => (
-            <div key={item} className="flex items-center gap-2 text-xs font-medium text-indigo-800 dark:text-indigo-300">
-              <CheckCircle className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <div
+              key={item}
+              className="flex items-center gap-2 text-xs font-medium text-indigo-800 dark:text-indigo-300"
+            >
+              <CheckCircle className="h-3.5 w-3.5 shrink-0 text-indigo-600 dark:text-indigo-400" />
               {item}
             </div>
           ))}
         </div>
 
         {/* Price */}
-        <div className="rounded-[4px] border-2 border-black dark:border-[#30363d] bg-white dark:bg-[#161b22] p-4 flex items-center justify-between">
+        <div className="flex items-center justify-between rounded-[4px] border-2 border-black bg-white p-4 dark:border-[#30363d] dark:bg-[#161b22]">
           <div>
-            <p className="text-sm font-black text-black dark:text-white uppercase tracking-wide">One-time payment</p>
+            <p className="text-sm font-black tracking-wide text-black uppercase dark:text-white">
+              One-time payment
+            </p>
             <p className="text-xs font-medium text-gray-500 dark:text-[#8b949e]">
               {country === "IN" ? "Includes 8% cess" : "Includes 25% international cess"}
             </p>
@@ -151,17 +167,17 @@ export default function PaymentModal({ open, resumeId, onClose, onSuccess }: Pro
         {/* Security notices */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-[#8b949e]">
-            <Lock className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+            <Lock className="h-3.5 w-3.5 shrink-0 text-gray-400" />
             Secured by Razorpay · 256-bit SSL encryption
           </div>
           <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-[#8b949e]">
-            <Shield className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+            <Shield className="h-3.5 w-3.5 shrink-0 text-gray-400" />
             One-time charge · No subscription · No auto-renewal
           </div>
         </div>
 
         {error && (
-          <div className="rounded-[4px] border-2 border-red-500 bg-red-50 dark:bg-red-900/20 p-3 text-sm font-bold text-red-700 dark:text-red-400">
+          <div className="rounded-[4px] border-2 border-red-500 bg-red-50 p-3 text-sm font-bold text-red-700 dark:bg-red-900/20 dark:text-red-400">
             {error}
           </div>
         )}

@@ -1,34 +1,52 @@
 package com.kaddy.autoapply.service;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 @Service
 public class TokenBlacklistService {
 
     private static final Logger log = LoggerFactory.getLogger(TokenBlacklistService.class);
-    private static final String KEY_PREFIX         = "blacklist:token:";
+    private static final String KEY_PREFIX = "blacklist:token:";
     private static final String USER_REVOKE_PREFIX = "blacklist:user:";
-    private static final Duration USER_REVOKE_TTL  = Duration.ofDays(30);
+    private static final Duration USER_REVOKE_TTL = Duration.ofDays(30);
 
     private final StringRedisTemplate redisTemplate;
 
     /**
-     * In-memory fallback cache used when Redis is unavailable.
-     * Ensures recently blacklisted tokens and revoked users are still rejected
-     * within the same JVM instance, even during Redis outages.
-     * TTL matches the maximum access-token lifetime (1 hour) so entries self-expire.
+     * Positive-only fallback: stores TRUE for blacklisted tokens / revoked users.
+     * Used as the safety net when Redis is fully unavailable (outage).
+     * TTL = 1 hour (matches max access-token lifetime).
      */
     private final Cache<String, Boolean> localFallback = Caffeine.newBuilder()
             .maximumSize(20_000)
             .expireAfterWrite(1, TimeUnit.HOURS)
+            .build();
+
+    /**
+     * Short-term read cache (30 s) storing both TRUE and FALSE results.
+     * Eliminates the Redis round-trip on every authenticated request for the
+     * overwhelmingly common case where the token/user is NOT blacklisted.
+     *
+     * 30 s is short enough that a logout or revoke takes effect within one TTL
+     * window, yet long enough to collapse thousands of per-request Redis calls
+     * per user into a single lookup.
+     *
+     * When a token IS blacklisted or a user IS revoked, this cache is updated
+     * immediately with TRUE so the protection is instant even before the 30 s
+     * expire.
+     */
+    private final Cache<String, Boolean> shortTermCache = Caffeine.newBuilder()
+            .maximumSize(50_000)
+            .expireAfterWrite(30, TimeUnit.SECONDS)
             .build();
 
     public TokenBlacklistService(StringRedisTemplate redisTemplate) {
@@ -36,10 +54,13 @@ public class TokenBlacklistService {
     }
 
     public void blacklist(String token, long ttlSeconds) {
-        if (ttlSeconds <= 0) return;
-        localFallback.put(KEY_PREFIX + token, Boolean.TRUE);
+        if (ttlSeconds <= 0)
+            return;
+        String key = KEY_PREFIX + token;
+        localFallback.put(key, Boolean.TRUE);
+        shortTermCache.put(key, Boolean.TRUE);
         try {
-            redisTemplate.opsForValue().set(KEY_PREFIX + token, "1", ttlSeconds, TimeUnit.SECONDS);
+            redisTemplate.opsForValue().set(key, "1", ttlSeconds, TimeUnit.SECONDS);
         } catch (Exception e) {
             log.error("Redis unavailable — token blacklisted in local cache only (logout best-effort): {}",
                     e.getMessage());
@@ -47,20 +68,29 @@ public class TokenBlacklistService {
     }
 
     public boolean isBlacklisted(String token) {
+        String key = KEY_PREFIX + token;
+        Boolean cached = shortTermCache.getIfPresent(key);
+        if (cached != null)
+            return cached;
         try {
-            return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + token));
+            boolean result = Boolean.TRUE.equals(redisTemplate.hasKey(key));
+            shortTermCache.put(key, result);
+            if (result)
+                localFallback.put(key, Boolean.TRUE);
+            return result;
         } catch (Exception e) {
             log.error("Redis unavailable for blacklist check — falling back to local cache: {}",
                     e.getMessage());
-            return Boolean.TRUE.equals(localFallback.getIfPresent(KEY_PREFIX + token));
+            return Boolean.TRUE.equals(localFallback.getIfPresent(key));
         }
     }
 
     public void revokeAllForUser(String userId) {
-        localFallback.put(USER_REVOKE_PREFIX + userId, Boolean.TRUE);
+        String key = USER_REVOKE_PREFIX + userId;
+        localFallback.put(key, Boolean.TRUE);
+        shortTermCache.put(key, Boolean.TRUE);
         try {
-            String marker = String.valueOf(System.currentTimeMillis());
-            redisTemplate.opsForValue().set(USER_REVOKE_PREFIX + userId, marker, USER_REVOKE_TTL);
+            redisTemplate.opsForValue().set(key, String.valueOf(System.currentTimeMillis()), USER_REVOKE_TTL);
             log.info("All tokens revoked for user {}", userId);
         } catch (Exception e) {
             log.error("Redis unavailable — user revocation stored in local cache only for user {}: {}",
@@ -69,12 +99,20 @@ public class TokenBlacklistService {
     }
 
     public boolean isUserRevoked(String userId) {
+        String key = USER_REVOKE_PREFIX + userId;
+        Boolean cached = shortTermCache.getIfPresent(key);
+        if (cached != null)
+            return cached;
         try {
-            return Boolean.TRUE.equals(redisTemplate.hasKey(USER_REVOKE_PREFIX + userId));
+            boolean result = Boolean.TRUE.equals(redisTemplate.hasKey(key));
+            shortTermCache.put(key, result);
+            if (result)
+                localFallback.put(key, Boolean.TRUE);
+            return result;
         } catch (Exception e) {
             log.error("Redis unavailable for user revocation check — falling back to local cache for user {}: {}",
                     userId, e.getMessage());
-            return Boolean.TRUE.equals(localFallback.getIfPresent(USER_REVOKE_PREFIX + userId));
+            return Boolean.TRUE.equals(localFallback.getIfPresent(key));
         }
     }
 }

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import api from "@/lib/api";
-import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { Zap, Mail, ArrowLeft, Send } from "@/components/ui/icons";
+import { ArrowLeft, Mail, Send, Zap } from "@/components/ui/icons";
+import Input from "@/components/ui/Input";
+import api from "@/lib/api";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -28,34 +28,39 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f5f2ea] dark:bg-[#0d1117] p-8">
+    <div className="flex min-h-screen items-center justify-center bg-[#f5f2ea] p-8 dark:bg-[#0d1117]">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="mb-8 flex items-center justify-center gap-2">
           <div
-            className="flex h-10 w-10 items-center justify-center rounded-[4px] bg-indigo-600 border-2 border-black"
+            className="flex h-10 w-10 items-center justify-center rounded-[4px] border-2 border-black bg-indigo-600"
             style={{ boxShadow: "3px 3px 0 #000" }}
           >
             <Zap className="h-6 w-6 text-white" />
           </div>
-          <span className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Rolevo</span>
+          <span className="text-2xl font-black tracking-tight text-black uppercase dark:text-white">
+            Rolevo
+          </span>
         </div>
 
         <div
-          className="rounded-[4px] border-2 border-black dark:border-white bg-white dark:bg-[#161b22] p-8"
+          className="rounded-[4px] border-2 border-black bg-white p-8 dark:border-white dark:bg-[#161b22]"
           style={{ boxShadow: "6px 6px 0 #000" }}
         >
           {sent ? (
-            <div className="text-center space-y-4">
+            <div className="space-y-4 text-center">
               <div
-                className="flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-green-500 bg-green-50 dark:bg-green-900/20 mx-auto"
+                className="mx-auto flex h-16 w-16 items-center justify-center rounded-[4px] border-2 border-green-500 bg-green-50 dark:bg-green-900/20"
                 style={{ boxShadow: "3px 3px 0 #22c55e" }}
               >
                 <Mail className="h-8 w-8 text-green-600 dark:text-green-400" />
               </div>
-              <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight">Check Your Email</h1>
+              <h1 className="text-2xl font-black tracking-tight text-black uppercase dark:text-white">
+                Check Your Email
+              </h1>
               <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e]">
-                If an account exists with <strong className="text-black dark:text-white">{email}</strong>, we&apos;ve sent a
+                If an account exists with{" "}
+                <strong className="text-black dark:text-white">{email}</strong>, we&apos;ve sent a
                 password reset link. Check your inbox (and spam folder).
               </p>
               <Link href="/login">
@@ -66,15 +71,15 @@ export default function ForgotPasswordPage() {
             </div>
           ) : (
             <>
-              <h1 className="text-2xl font-black text-black dark:text-white uppercase tracking-tight mb-2">
+              <h1 className="mb-2 text-2xl font-black tracking-tight text-black uppercase dark:text-white">
                 Forgot your password?
               </h1>
-              <p className="text-sm font-medium text-gray-500 dark:text-[#8b949e] mb-6">
+              <p className="mb-6 text-sm font-medium text-gray-500 dark:text-[#8b949e]">
                 Enter your email and we&apos;ll send you a reset link.
               </p>
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
-                  <div className="rounded-[4px] border-2 border-red-500 bg-red-50 dark:bg-red-900/20 p-3 text-sm font-bold text-red-700 dark:text-red-400">
+                  <div className="rounded-[4px] border-2 border-red-500 bg-red-50 p-3 text-sm font-bold text-red-700 dark:bg-red-900/20 dark:text-red-400">
                     {error}
                   </div>
                 )}
@@ -93,9 +98,9 @@ export default function ForgotPasswordPage() {
                 <p className="text-center text-sm font-medium text-gray-500 dark:text-[#8b949e]">
                   <Link
                     href="/login"
-                    className="font-black text-indigo-600 dark:text-indigo-400 hover:underline"
+                    className="font-black text-indigo-600 hover:underline dark:text-indigo-400"
                   >
-                    <ArrowLeft className="h-3 w-3 inline mr-1" />
+                    <ArrowLeft className="mr-1 inline h-3 w-3" />
                     Back to Sign In
                   </Link>
                 </p>

@@ -35,13 +35,7 @@ interface Particle {
 }
 
 function generateParticles(count: number): Particle[] {
-  const shapes = [
-    "50%",
-    "50% 0 50% 0",
-    "50% 5% 50% 5%",
-    "40% 10% 40% 10%",
-    "30% 30% 50% 50%",
-  ];
+  const shapes = ["50%", "50% 0 50% 0", "50% 5% 50% 5%", "40% 10% 40% 10%", "30% 30% 50% 50%"];
   return Array.from({ length: count }, (_, i) => ({
     id: i,
     left: Math.random() * 100,
@@ -89,63 +83,62 @@ export default function FarewellScreen({ userName, onComplete }: FarewellScreenP
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden"
       style={{
-        background:
-          "linear-gradient(135deg, #0f0a1e 0%, #1a0f35 35%, #100f25 65%, #0a0f1e 100%)",
+        background: "linear-gradient(135deg, #0f0a1e 0%, #1a0f35 35%, #100f25 65%, #0a0f1e 100%)",
         opacity: fadeOut ? 0 : 1,
         transition: "opacity 0.6s ease-out",
         pointerEvents: fadeOut ? "none" : "auto",
       }}
     >
       {/* Ascending particles */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {particles.map((p) => (
           <div
             key={p.id}
             className="absolute bottom-[-20px]"
-            style={{
-              left: `${p.left}%`,
-              width: p.size,
-              height: p.size,
-              backgroundColor: p.color,
-              borderRadius: p.borderRadius,
-              opacity: p.opacity,
-              animation: `particleRise ${p.duration}s ${p.delay}s ease-in-out infinite`,
-              "--drift": `${p.drift}px`,
-            } as React.CSSProperties}
+            style={
+              {
+                left: `${p.left}%`,
+                width: p.size,
+                height: p.size,
+                backgroundColor: p.color,
+                borderRadius: p.borderRadius,
+                opacity: p.opacity,
+                animation: `particleRise ${p.duration}s ${p.delay}s ease-in-out infinite`,
+                "--drift": `${p.drift}px`,
+              } as React.CSSProperties
+            }
           />
         ))}
       </div>
 
       {/* Radial glow blobs */}
       <div
-        className="absolute pointer-events-none"
+        className="pointer-events-none absolute"
         style={{
           top: "25%",
           left: "15%",
           width: 480,
           height: 480,
           borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 70%)",
           animation: "welcomeGlow 5s ease-in-out infinite",
         }}
       />
       <div
-        className="absolute pointer-events-none"
+        className="pointer-events-none absolute"
         style={{
           bottom: "20%",
           right: "12%",
           width: 340,
           height: 340,
           borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(244,114,182,0.12) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(244,114,182,0.12) 0%, transparent 70%)",
           animation: "welcomeGlow 4s 1.5s ease-in-out infinite",
         }}
       />
 
       {/* Content */}
-      <div className="relative z-10 text-center px-8 max-w-xl mx-auto select-none">
+      <div className="relative z-10 mx-auto max-w-xl px-8 text-center select-none">
         {/* Waving hand */}
         <div
           className="mx-auto mb-8 flex h-20 w-20 items-center justify-center text-5xl"
@@ -153,8 +146,7 @@ export default function FarewellScreen({ userName, onComplete }: FarewellScreenP
             background: "rgba(139,92,246,0.15)",
             border: "2px solid rgba(167,139,250,0.45)",
             borderRadius: "50%",
-            boxShadow:
-              "0 0 50px rgba(139,92,246,0.35), 0 0 100px rgba(139,92,246,0.15)",
+            boxShadow: "0 0 50px rgba(139,92,246,0.35), 0 0 100px rgba(139,92,246,0.15)",
             animation:
               "waveHand 1s ease-in-out 0s 2 forwards, welcomeFadeSlideUp 0.5s ease-out both",
           }}
@@ -205,7 +197,7 @@ export default function FarewellScreen({ userName, onComplete }: FarewellScreenP
         </p>
 
         {/* Dot indicators */}
-        <div className="flex items-center justify-center gap-2 mt-10">
+        <div className="mt-10 flex items-center justify-center gap-2">
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}

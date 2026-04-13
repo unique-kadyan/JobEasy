@@ -40,7 +40,10 @@ interface Props {
 
 function loadRazorpay(): Promise<boolean> {
   return new Promise((resolve) => {
-    if (window.Razorpay) { resolve(true); return; }
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
     const s = document.createElement("script");
     s.src = "https://checkout.razorpay.com/v1/checkout.js";
     s.onload = () => resolve(true);
@@ -90,7 +93,12 @@ function cycleTotal(monthlyPrice: number, cycle: BillingCycle) {
   return `₹${monthlyPrice * months}/${label}`;
 }
 
-export default function UpgradeModal({ open, onClose, targetTier, billingCycle = "ANNUAL" }: Props) {
+export default function UpgradeModal({
+  open,
+  onClose,
+  targetTier,
+  billingCycle = "ANNUAL",
+}: Props) {
   const { user, setUser } = useAuthStore();
   const [cycle, setCycle] = useState<BillingCycle>(billingCycle);
   const [paying, setPaying] = useState<"GOLD" | "PLATINUM" | null>(null);
@@ -98,7 +106,9 @@ export default function UpgradeModal({ open, onClose, targetTier, billingCycle =
 
   const createOrderMutation = useMutation({
     mutationFn: ({ tier, billingCycle: bc }: { tier: string; billingCycle: string }) =>
-      api.post("/subscriptions/create-order", null, { params: { tier, billingCycle: bc } }).then((r) => r.data),
+      api
+        .post("/subscriptions/create-order", null, { params: { tier, billingCycle: bc } })
+        .then((r) => r.data),
   });
 
   const verifyMutation = useMutation({
@@ -125,7 +135,10 @@ export default function UpgradeModal({ open, onClose, targetTier, billingCycle =
       }
 
       const ok = await loadRazorpay();
-      if (!ok) { setError("Payment gateway failed to load."); return; }
+      if (!ok) {
+        setError("Payment gateway failed to load.");
+        return;
+      }
 
       const plan = PLANS.find((p) => p.tier === tier)!;
       const rzp = new window.Razorpay({
@@ -234,7 +247,9 @@ export default function UpgradeModal({ open, onClose, targetTier, billingCycle =
                   "&::before": {
                     content: '""',
                     position: "absolute",
-                    top: 0, left: 0, right: 0,
+                    top: 0,
+                    left: 0,
+                    right: 0,
                     height: 3,
                     background: plan.gradient,
                   },
@@ -275,7 +290,9 @@ export default function UpgradeModal({ open, onClose, targetTier, billingCycle =
                 <Stack spacing={1} mb={2}>
                   {plan.features.map((f) => (
                     <Stack key={f} direction="row" alignItems="flex-start" spacing={1}>
-                      <CheckCircle style={{ fontSize: 14, color: "#22c55e", marginTop: 2, flexShrink: 0 }} />
+                      <CheckCircle
+                        style={{ fontSize: 14, color: "#22c55e", marginTop: 2, flexShrink: 0 }}
+                      />
                       <Typography variant="caption" color="text.secondary" lineHeight={1.5}>
                         {f}
                       </Typography>
@@ -323,7 +340,12 @@ export default function UpgradeModal({ open, onClose, targetTier, billingCycle =
         </Box>
 
         {error && (
-          <Alert severity="error" variant="outlined" sx={{ borderRadius: 2 }} icon={<AlertCircle style={{ fontSize: 18 }} />}>
+          <Alert
+            severity="error"
+            variant="outlined"
+            sx={{ borderRadius: 2 }}
+            icon={<AlertCircle style={{ fontSize: 18 }} />}
+          >
             {error}
           </Alert>
         )}

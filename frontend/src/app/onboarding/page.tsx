@@ -75,25 +75,20 @@ function suggestRoles(parsed: ParsedResume | null): string[] {
   const all = Object.values(parsed.skills)
     .flat()
     .map((s) => s.toLowerCase());
-  const has = (...terms: string[]) =>
-    terms.some((t) => all.some((s) => s.includes(t)));
+  const has = (...terms: string[]) => terms.some((t) => all.some((s) => s.includes(t)));
   const out: string[] = [];
   if (parsed.title) out.push(parsed.title);
   if (has("react")) out.push("React Developer", "Frontend Developer");
   if (has("vue")) out.push("Vue Developer", "Frontend Developer");
   if (has("angular")) out.push("Angular Developer", "Frontend Developer");
-  if (has("node", "express", "nestjs"))
-    out.push("Node.js Developer", "Backend Developer");
+  if (has("node", "express", "nestjs")) out.push("Node.js Developer", "Backend Developer");
   if (has("python", "django", "fastapi", "flask"))
     out.push("Python Developer", "Backend Developer");
   if (has("java", "spring")) out.push("Java Developer", "Backend Engineer");
-  if (has("kotlin", "android"))
-    out.push("Android Developer", "Mobile Developer");
+  if (has("kotlin", "android")) out.push("Android Developer", "Mobile Developer");
   if (has("swift", "ios")) out.push("iOS Developer", "Mobile Developer");
-  if (has("docker", "kubernetes", "terraform"))
-    out.push("DevOps Engineer", "Cloud Engineer");
-  if (has("tensorflow", "pytorch", "sklearn"))
-    out.push("ML Engineer", "Data Scientist");
+  if (has("docker", "kubernetes", "terraform")) out.push("DevOps Engineer", "Cloud Engineer");
+  if (has("tensorflow", "pytorch", "sklearn")) out.push("ML Engineer", "Data Scientist");
   if (has("spark", "kafka", "airflow")) out.push("Data Engineer");
   if (has("typescript", "javascript") && has("node") && has("react"))
     out.push("Full Stack Developer");
@@ -184,10 +179,8 @@ export default function OnboardingPage() {
   const runParseAnim = useCallback((data: ParsedResume) => {
     const msgs: string[] = ["Reading document structure…"];
     const allSkills = data.skills ? Object.values(data.skills).flat() : [];
-    if (allSkills.length)
-      msgs.push(`Detected ${allSkills.length} skills & technologies…`);
-    if (data.experienceYears)
-      msgs.push(`Found ${data.experienceYears} years of experience…`);
+    if (allSkills.length) msgs.push(`Detected ${allSkills.length} skills & technologies…`);
+    if (data.experienceYears) msgs.push(`Found ${data.experienceYears} years of experience…`);
     if (data.title) msgs.push(`Identified role: ${data.title}`);
     msgs.push("Pre-filling your job preferences…");
 
@@ -230,7 +223,7 @@ export default function OnboardingPage() {
         setUploadError("Upload failed. Check the file and try again.");
       }
     },
-    [runParseAnim],
+    [runParseAnim]
   );
 
   const handleDrop = useCallback(
@@ -240,7 +233,7 @@ export default function OnboardingPage() {
       const file = e.dataTransfer.files[0];
       if (file) handleFile(file);
     },
-    [handleFile],
+    [handleFile]
   );
 
   // ── Save preferences ─────────────────────────────────────────────────────────
@@ -349,12 +342,7 @@ export default function OnboardingPage() {
           >
             <Zap className="h-5 w-5 text-white" />
           </Box>
-          <Typography
-            variant="h6"
-            fontWeight={700}
-            color="white"
-            letterSpacing={-0.5}
-          >
+          <Typography variant="h6" fontWeight={700} color="white" letterSpacing={-0.5}>
             Rolevo
           </Typography>
         </Stack>
@@ -427,11 +415,7 @@ export default function OnboardingPage() {
         </AnimatePresence>
 
         {/* Step dots */}
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{ position: "absolute", bottom: 40, left: 56 }}
-        >
+        <Stack direction="row" spacing={1} sx={{ position: "absolute", bottom: 40, left: 56 }}>
           {PANELS.map((_, i) => (
             <Box
               key={i}
@@ -488,17 +472,8 @@ export default function OnboardingPage() {
 
         {/* Progress */}
         <Box sx={{ width: "100%", maxWidth: 460, mb: 5 }}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={1}
-          >
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight={500}
-            >
+          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+            <Typography variant="caption" color="text.secondary" fontWeight={500}>
               Step {step + 1} of {PANELS.length}
             </Typography>
             <Typography variant="caption" color="primary.main" fontWeight={700}>
@@ -636,8 +611,8 @@ function StepUpload({
           Hey {firstName}, let&apos;s start with your resume
         </Typography>
         <Typography variant="body2" color="text.secondary" lineHeight={1.6}>
-          Upload once — we power everything from it. Your cover letters, job
-          matching, and smart resume all read from this file.
+          Upload once — we power everything from it. Your cover letters, job matching, and smart
+          resume all read from this file.
         </Typography>
       </Box>
 
@@ -680,17 +655,11 @@ function StepUpload({
               transition: "all 0.2s ease",
             }}
           />
-          <Typography
-            variant="body1"
-            fontWeight={600}
-            color="text.primary"
-            mb={0.5}
-          >
+          <Typography variant="body1" fontWeight={600} color="text.primary" mb={0.5}>
             {drag ? "Drop it here!" : "Drag & drop your resume"}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            or click to browse &nbsp;·&nbsp; PDF, DOC, DOCX &nbsp;·&nbsp; up to
-            10 MB
+            or click to browse &nbsp;·&nbsp; PDF, DOC, DOCX &nbsp;·&nbsp; up to 10 MB
           </Typography>
           <input
             ref={fileRef}
@@ -714,11 +683,7 @@ function StepUpload({
             bgcolor: "action.hover",
           }}
         >
-          <CircularProgress
-            size={36}
-            thickness={3.5}
-            sx={{ mb: 2, color: "primary.main" }}
-          />
+          <CircularProgress size={36} thickness={3.5} sx={{ mb: 2, color: "primary.main" }} />
           <Typography variant="body2" color="text.secondary">
             Uploading your resume…
           </Typography>
@@ -733,8 +698,7 @@ function StepUpload({
             borderColor: uploadState === "done" ? "success.light" : "divider",
             borderRadius: 3,
             p: 3,
-            bgcolor:
-              uploadState === "done" ? "rgba(34,197,94,0.04)" : "action.hover",
+            bgcolor: uploadState === "done" ? "rgba(34,197,94,0.04)" : "action.hover",
             transition: "border-color 0.4s ease, background-color 0.4s ease",
           }}
         >
@@ -758,11 +722,7 @@ function StepUpload({
                         }}
                       />
                     ) : (
-                      <CircularProgress
-                        size={14}
-                        thickness={4}
-                        sx={{ flexShrink: 0 }}
-                      />
+                      <CircularProgress size={14} thickness={4} sx={{ flexShrink: 0 }} />
                     )}
                     <Typography
                       variant="body2"
@@ -827,11 +787,7 @@ function StepUpload({
           disabled={busy}
           disableElevation
           endIcon={
-            busy ? (
-              <CircularProgress size={16} color="inherit" />
-            ) : (
-              <ChevronRightRoundedIcon />
-            )
+            busy ? <CircularProgress size={16} color="inherit" /> : <ChevronRightRoundedIcon />
           }
           sx={{
             flex: 1,
@@ -846,11 +802,7 @@ function StepUpload({
             },
           }}
         >
-          {busy
-            ? "Processing…"
-            : uploadState === "done"
-              ? "Continue →"
-              : "Continue without resume"}
+          {busy ? "Processing…" : uploadState === "done" ? "Continue →" : "Continue without resume"}
         </MuiButton>
       </Stack>
     </Stack>
@@ -887,9 +839,7 @@ function StepPreferences({
   onContinue,
 }: StepPrefsProps) {
   const toggle = (role: string) =>
-    setRoles(
-      roles.includes(role) ? roles.filter((r) => r !== role) : [...roles, role],
-    );
+    setRoles(roles.includes(role) ? roles.filter((r) => r !== role) : [...roles, role]);
 
   const addCustom = () => {
     const v = customRole.trim();
@@ -974,9 +924,7 @@ function StepPreferences({
               input: {
                 startAdornment: (
                   <InputAdornment position="start">
-                    <DescriptionRoundedIcon
-                      sx={{ fontSize: 16, color: "text.secondary" }}
-                    />
+                    <DescriptionRoundedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
                   </InputAdornment>
                 ),
               },
@@ -1056,9 +1004,7 @@ function StepPreferences({
           input: {
             startAdornment: (
               <InputAdornment position="start">
-                <LocationOnRoundedIcon
-                  sx={{ fontSize: 18, color: "text.secondary" }}
-                />
+                <LocationOnRoundedIcon sx={{ fontSize: 18, color: "text.secondary" }} />
               </InputAdornment>
             ),
           },
@@ -1091,11 +1037,7 @@ function StepPreferences({
           disabled={saving}
           disableElevation
           endIcon={
-            saving ? (
-              <CircularProgress size={16} color="inherit" />
-            ) : (
-              <ChevronRightRoundedIcon />
-            )
+            saving ? <CircularProgress size={16} color="inherit" /> : <ChevronRightRoundedIcon />
           }
           sx={{
             borderRadius: 2,
@@ -1164,8 +1106,7 @@ function StepComplete({
             width: 80,
             height: 80,
             borderRadius: "50%",
-            background:
-              "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))",
+            background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))",
             border: "2px solid rgba(99,102,241,0.2)",
             display: "flex",
             alignItems: "center",
@@ -1173,27 +1114,16 @@ function StepComplete({
             boxShadow: "0 0 40px rgba(99,102,241,0.18)",
           }}
         >
-          <RocketLaunchRoundedIcon
-            sx={{ fontSize: 40, color: "primary.main" }}
-          />
+          <RocketLaunchRoundedIcon sx={{ fontSize: 40, color: "primary.main" }} />
         </Box>
       </motion.div>
 
       {/* Headline */}
       <Box textAlign="center">
-        <Typography
-          variant="h5"
-          fontWeight={700}
-          color="text.primary"
-          mb={0.75}
-        >
+        <Typography variant="h5" fontWeight={700} color="text.primary" mb={0.75}>
           You&apos;re all set, {firstName}!
         </Typography>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ maxWidth: 360, lineHeight: 1.7 }}
-        >
+        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 360, lineHeight: 1.7 }}>
           Your AI job search assistant is ready. Where do you want to start?
         </Typography>
       </Box>
@@ -1253,11 +1183,7 @@ function StepComplete({
                 <Icon sx={{ fontSize: 22, color }} />
               </Box>
               <Box flex={1}>
-                <Typography
-                  variant="body2"
-                  fontWeight={600}
-                  color="text.primary"
-                >
+                <Typography variant="body2" fontWeight={600} color="text.primary">
                   {label}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">

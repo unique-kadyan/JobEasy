@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import FarewellScreen from "@/components/layout/FarewellScreen";
+import Navbar from "@/components/layout/Navbar";
+import WelcomeScreen from "@/components/layout/WelcomeScreen";
+import type { ServerStatus } from "@/hooks/useKeepAlive";
+import { useKeepAlive } from "@/hooks/useKeepAlive";
+import { clearSessionCookie } from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
 import { useThemeStore } from "@/store/theme-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Navbar from "@/components/layout/Navbar";
-import WelcomeScreen from "@/components/layout/WelcomeScreen";
-import FarewellScreen from "@/components/layout/FarewellScreen";
-import { useKeepAlive } from "@/hooks/useKeepAlive";
-import { clearSessionCookie } from "@/lib/api";
-import type { ServerStatus } from "@/hooks/useKeepAlive";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,13 +18,17 @@ const queryClient = new QueryClient({
   },
 });
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { isAuthenticated, user, welcomeScreen, setWelcomeScreen, farewellScreen, setFarewellScreen, logout: clearAuth } = useAuthStore();
+  const {
+    isAuthenticated,
+    user,
+    welcomeScreen,
+    setWelcomeScreen,
+    farewellScreen,
+    setFarewellScreen,
+    logout: clearAuth,
+  } = useAuthStore();
   const { theme } = useThemeStore();
   const [hydrated, setHydrated] = useState(false);
   const serverStatus = useKeepAlive();
@@ -46,12 +50,7 @@ export default function DashboardLayout({
   }, [hydrated, isAuthenticated, router]);
 
   useEffect(() => {
-    if (
-      hydrated &&
-      isAuthenticated &&
-      user &&
-      user.onboardingCompleted === false
-    ) {
+    if (hydrated && isAuthenticated && user && user.onboardingCompleted === false) {
       router.replace("/onboarding");
     }
   }, [hydrated, isAuthenticated, user, router]);
@@ -63,7 +62,7 @@ export default function DashboardLayout({
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-[#f2f2f7] dark:bg-[#0a0a0f]">
         {user && !user.emailVerified && (
-          <div className="fixed top-12 left-0 right-0 z-30 bg-amber-900/80 border-b border-amber-700 px-4 py-2 text-center text-sm text-amber-200">
+          <div className="fixed top-12 right-0 left-0 z-30 border-b border-amber-700 bg-amber-900/80 px-4 py-2 text-center text-sm text-amber-200">
             Please verify your email to unlock all features.{" "}
             <button
               onClick={() =>
@@ -73,10 +72,10 @@ export default function DashboardLayout({
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email: user.email }),
-                  },
+                  }
                 )
               }
-              className="underline font-medium hover:text-amber-100"
+              className="font-medium underline hover:text-amber-100"
             >
               Resend verification email
             </button>
@@ -85,8 +84,8 @@ export default function DashboardLayout({
 
         <WarmUpBanner status={serverStatus} />
         <Navbar serverStatus={serverStatus} />
-        <main className="pt-12 min-h-screen">
-          <div className="max-w-[1400px] mx-auto px-6 py-6">{children}</div>
+        <main className="min-h-screen pt-12">
+          <div className="mx-auto max-w-[1400px] px-6 py-6">{children}</div>
         </main>
       </div>
 
@@ -132,13 +131,13 @@ function WarmUpBanner({ status }: { status: ServerStatus }) {
   if (!visible) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 bg-indigo-700 px-4 py-2 text-sm text-white shadow-md">
-      <span className="flex h-2 w-2 relative">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+    <div className="fixed top-0 right-0 left-0 z-50 flex items-center justify-center gap-3 bg-indigo-700 px-4 py-2 text-sm text-white shadow-md">
+      <span className="relative flex h-2 w-2">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
       </span>
-      Server is starting up — this takes 30–50 seconds on first load. Page will
-      refresh automatically.
+      Server is starting up — this takes 30–50 seconds on first load. Page will refresh
+      automatically.
     </div>
   );
 }

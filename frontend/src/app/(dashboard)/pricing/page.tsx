@@ -34,7 +34,8 @@ const TIERS = [
     iconBg: "bg-amber-50 dark:bg-amber-900/20",
     iconColor: "text-amber-600 dark:text-yellow-400",
     accentText: "text-amber-600 dark:text-yellow-400",
-    cardClass: "border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-900/10",
+    cardClass:
+      "border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-900/10",
     features: [
       "Up to 10 job results per search",
       "All job sources (Indeed, LinkedIn, JSearch...)",
@@ -53,7 +54,8 @@ const TIERS = [
     iconBg: "bg-indigo-50 dark:bg-indigo-900/30",
     iconColor: "text-indigo-600 dark:text-indigo-400",
     accentText: "text-indigo-600 dark:text-indigo-400",
-    cardClass: "border border-indigo-200/80 dark:border-indigo-900/40 bg-indigo-50/50 dark:bg-indigo-900/10",
+    cardClass:
+      "border border-indigo-200/80 dark:border-indigo-900/40 bg-indigo-50/50 dark:bg-indigo-900/10",
     features: [
       "Unlimited job results",
       "Auto-apply — AI fills & submits forms",
@@ -76,34 +78,44 @@ export default function PricingPage() {
   const { user } = useAuthStore();
   const currentTier = user?.subscriptionTier ?? "FREE";
   const [cycle, setCycle] = useState<BillingCycle>("ANNUAL");
-  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; targetTier?: PaidTier; cycle?: BillingCycle }>({ open: false });
+  const [upgradeModal, setUpgradeModal] = useState<{
+    open: boolean;
+    targetTier?: PaidTier;
+    cycle?: BillingCycle;
+  }>({ open: false });
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-semibold text-[#1d1d1f] dark:text-white">Simple, Transparent Pricing</h1>
-        <p className="text-sm text-[#86868b] dark:text-[#8e8e93]">Start free. Upgrade when you&apos;re ready to land your dream job faster.</p>
+    <div className="mx-auto max-w-5xl space-y-8">
+      <div className="space-y-2 text-center">
+        <h1 className="text-3xl font-semibold text-[#1d1d1f] dark:text-white">
+          Simple, Transparent Pricing
+        </h1>
+        <p className="text-sm text-[#86868b] dark:text-[#8e8e93]">
+          Start free. Upgrade when you&apos;re ready to land your dream job faster.
+        </p>
       </div>
 
       <div className="flex items-center justify-center">
-        <div className="flex items-center gap-1 bg-[#f2f2f7] dark:bg-[#1c1c1e] border border-black/[0.06] dark:border-white/[0.08] rounded-xl p-1">
+        <div className="flex items-center gap-1 rounded-xl border border-black/[0.06] bg-[#f2f2f7] p-1 dark:border-white/[0.08] dark:bg-[#1c1c1e]">
           <button
             onClick={() => setCycle("ANNUAL")}
-            className={`px-5 py-2 rounded-lg text-xs font-medium transition-all ${
+            className={`rounded-lg px-5 py-2 text-xs font-medium transition-all ${
               cycle === "ANNUAL"
-                ? "bg-white dark:bg-[#2c2c2e] text-[#1d1d1f] dark:text-white shadow-sm"
-                : "text-[#86868b] dark:text-[#8e8e93] hover:text-[#1d1d1f] dark:hover:text-white"
+                ? "bg-white text-[#1d1d1f] shadow-sm dark:bg-[#2c2c2e] dark:text-white"
+                : "text-[#86868b] hover:text-[#1d1d1f] dark:text-[#8e8e93] dark:hover:text-white"
             }`}
           >
             Annual
-            <span className="ml-1.5 text-[10px] text-green-600 dark:text-green-400 font-medium">Save 2 mo</span>
+            <span className="ml-1.5 text-[10px] font-medium text-green-600 dark:text-green-400">
+              Save 2 mo
+            </span>
           </button>
           <button
             onClick={() => setCycle("SEMI_ANNUAL")}
-            className={`px-5 py-2 rounded-lg text-xs font-medium transition-all ${
+            className={`rounded-lg px-5 py-2 text-xs font-medium transition-all ${
               cycle === "SEMI_ANNUAL"
-                ? "bg-white dark:bg-[#2c2c2e] text-[#1d1d1f] dark:text-white shadow-sm"
-                : "text-[#86868b] dark:text-[#8e8e93] hover:text-[#1d1d1f] dark:hover:text-white"
+                ? "bg-white text-[#1d1d1f] shadow-sm dark:bg-[#2c2c2e] dark:text-white"
+                : "text-[#86868b] hover:text-[#1d1d1f] dark:text-[#8e8e93] dark:hover:text-white"
             }`}
           >
             Semi-Annual
@@ -127,22 +139,26 @@ export default function PricingPage() {
           return (
             <div
               key={plan.name}
-              className={`relative rounded-2xl p-6 space-y-5 flex flex-col shadow-sm ${plan.cardClass}`}
+              className={`relative flex flex-col space-y-5 rounded-2xl p-6 shadow-sm ${plan.cardClass}`}
             >
               {plan.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[10px] font-medium px-3 py-1 rounded-full">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo-600 px-3 py-1 text-[10px] font-medium text-white">
                   Most Popular
                 </span>
               )}
 
               <div className="flex items-center gap-3">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${plan.iconBg}`}>
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${plan.iconBg}`}
+                >
                   <Icon className={`h-5 w-5 ${plan.iconColor}`} />
                 </div>
                 <div>
-                  <h2 className={`font-semibold text-lg ${plan.accentText}`}>{plan.name}</h2>
+                  <h2 className={`text-lg font-semibold ${plan.accentText}`}>{plan.name}</h2>
                   {pricing ? (
-                    <p className="text-xs text-[#86868b] dark:text-[#8e8e93]">{pricing.total} billed</p>
+                    <p className="text-xs text-[#86868b] dark:text-[#8e8e93]">
+                      {pricing.total} billed
+                    </p>
                   ) : (
                     <p className="text-xs text-[#86868b] dark:text-[#8e8e93]">forever free</p>
                   )}
@@ -152,10 +168,13 @@ export default function PricingPage() {
                 </span>
               </div>
 
-              <ul className="space-y-2 flex-1">
+              <ul className="flex-1 space-y-2">
                 {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-[#3c3c43] dark:text-[#c9d1d9]">
-                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                  <li
+                    key={f}
+                    className="flex items-start gap-2 text-sm text-[#3c3c43] dark:text-[#c9d1d9]"
+                  >
+                    <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
                     {f}
                   </li>
                 ))}

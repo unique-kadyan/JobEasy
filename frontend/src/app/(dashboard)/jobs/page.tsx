@@ -10,9 +10,20 @@ import { STATUS_COLORS, STATUS_LABELS, SOURCE_COLORS } from "@/lib/constants";
 import { formatDate, timeAgo, toCamelCase } from "@/lib/utils";
 import PageTransition, { StaggerList, StaggerItem } from "@/components/ui/PageTransition";
 import {
-  Briefcase, CheckCircle2, XCircle, Bookmark,
-  Loader2, ExternalLink, Building2, MapPin, Clock,
-  Send, Search, RotateCcw, FileText, Inbox,
+  Briefcase,
+  CheckCircle2,
+  XCircle,
+  Bookmark,
+  Loader2,
+  ExternalLink,
+  Building2,
+  MapPin,
+  Clock,
+  Send,
+  Search,
+  RotateCcw,
+  FileText,
+  Inbox,
 } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import type { Application } from "@/types";
@@ -51,7 +62,7 @@ export default function JobsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">Jobs</h1>
-            <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-0.5">
+            <p className="mt-0.5 text-sm text-[#86868b] dark:text-[#8e8e93]">
               Track all positions across every stage
             </p>
           </div>
@@ -73,16 +84,37 @@ export default function JobsPage() {
                     "rounded-2xl border p-4 text-left transition-all",
                     activeTab === tab.key
                       ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
-                      : "border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1c1c1e] hover:border-indigo-300"
+                      : "border-black/[0.06] bg-white hover:border-indigo-300 dark:border-white/[0.08] dark:bg-[#1c1c1e]"
                   )}
                 >
-                  <div className="flex items-center gap-2 mb-1">
-                    <Icon className={cn("h-4 w-4", activeTab === tab.key ? "text-indigo-600 dark:text-indigo-400" : "text-[#86868b] dark:text-[#8e8e93]")} />
-                    <span className={cn("text-xs font-semibold", activeTab === tab.key ? "text-indigo-600 dark:text-indigo-400" : "text-[#86868b] dark:text-[#8e8e93]")}>
+                  <div className="mb-1 flex items-center gap-2">
+                    <Icon
+                      className={cn(
+                        "h-4 w-4",
+                        activeTab === tab.key
+                          ? "text-indigo-600 dark:text-indigo-400"
+                          : "text-[#86868b] dark:text-[#8e8e93]"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "text-xs font-semibold",
+                        activeTab === tab.key
+                          ? "text-indigo-600 dark:text-indigo-400"
+                          : "text-[#86868b] dark:text-[#8e8e93]"
+                      )}
+                    >
                       {tab.label}
                     </span>
                   </div>
-                  <p className={cn("text-2xl font-bold", activeTab === tab.key ? "text-indigo-700 dark:text-indigo-300" : "text-[#1d1d1f] dark:text-white")}>
+                  <p
+                    className={cn(
+                      "text-2xl font-bold",
+                      activeTab === tab.key
+                        ? "text-indigo-700 dark:text-indigo-300"
+                        : "text-[#1d1d1f] dark:text-white"
+                    )}
+                  >
                     {tab.count}
                   </p>
                 </button>
@@ -100,10 +132,10 @@ export default function JobsPage() {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors",
+                  "flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
                   activeTab === tab.key
                     ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-                    : "border-transparent text-[#86868b] dark:text-[#8e8e93] hover:text-[#1d1d1f] dark:hover:text-white"
+                    : "border-transparent text-[#86868b] hover:text-[#1d1d1f] dark:text-[#8e8e93] dark:hover:text-white"
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -111,10 +143,10 @@ export default function JobsPage() {
                 {tab.count > 0 && (
                   <span
                     className={cn(
-                      "text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
+                      "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
                       activeTab === tab.key
-                        ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400"
-                        : "bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#86868b] dark:text-[#8e8e93]"
+                        ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
+                        : "bg-[#f2f2f7] text-[#86868b] dark:bg-[#2c2c2e] dark:text-[#8e8e93]"
                     )}
                   >
                     {tab.count}
@@ -154,7 +186,10 @@ export default function JobsPage() {
 // ── Empty state per tab ────────────────────────────────────────────────────────
 
 function EmptyTabState({ tab, onSearch }: { tab: Tab; onSearch: () => void }) {
-  const config: Record<Tab, { title: string; desc: string; icon: React.ComponentType<{ className?: string }> }> = {
+  const config: Record<
+    Tab,
+    { title: string; desc: string; icon: React.ComponentType<{ className?: string }> }
+  > = {
     saved: {
       title: "No saved jobs yet",
       desc: "Bookmark jobs from the Search page and they will appear here.",
@@ -174,13 +209,13 @@ function EmptyTabState({ tab, onSearch }: { tab: Tab; onSearch: () => void }) {
   const { title, desc, icon: Icon } = config[tab];
 
   return (
-    <div className="flex flex-col items-center py-16 gap-4 text-center">
+    <div className="flex flex-col items-center gap-4 py-16 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#f2f2f7] dark:bg-[#2c2c2e]">
         <Icon className="h-8 w-8 text-gray-400 dark:text-[#8b949e]" />
       </div>
       <div>
         <h3 className="text-lg font-semibold text-[#1d1d1f] dark:text-white">{title}</h3>
-        <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-1 max-w-sm">{desc}</p>
+        <p className="mt-1 max-w-sm text-sm text-[#86868b] dark:text-[#8e8e93]">{desc}</p>
       </div>
       <Button onClick={onSearch} size="sm">
         <Search className="h-4 w-4" /> Search Jobs
@@ -210,19 +245,24 @@ function AppCard({
     <Card>
       <CardContent className="py-4">
         <div className="flex items-start gap-3">
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             {/* Title row */}
-            <div className="flex items-center gap-2 flex-wrap mb-1">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
               <Link
                 href={`/jobs/${job.id}`}
-                className="text-sm font-semibold text-[#1d1d1f] dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400"
+                className="text-sm font-semibold text-[#1d1d1f] hover:text-indigo-600 dark:text-white dark:hover:text-indigo-400"
               >
                 {job.title}
               </Link>
               <Badge className={SOURCE_COLORS[job.source] ?? "bg-gray-100 text-gray-700"}>
                 {job.source}
               </Badge>
-              <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full border", statusColor)}>
+              <span
+                className={cn(
+                  "rounded-full border px-2 py-0.5 text-[10px] font-medium",
+                  statusColor
+                )}
+              >
                 {statusLabel}
               </span>
             </div>
@@ -244,7 +284,7 @@ function AppCard({
                   : timeAgo(app.appliedAt)}
               </span>
               {app.matchScore != null && (
-                <span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-semibold">
+                <span className="flex items-center gap-1 font-semibold text-indigo-600 dark:text-indigo-400">
                   <FileText className="h-3.5 w-3.5" /> {Math.round(app.matchScore)}% match
                 </span>
               )}
@@ -252,11 +292,11 @@ function AppCard({
 
             {/* Tags */}
             {job.tags && job.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
+              <div className="mt-2 flex flex-wrap gap-1">
                 {job.tags.slice(0, 5).map((tag) => (
                   <span
                     key={tag}
-                    className="text-[10px] font-medium bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#6e6e73] dark:text-[#8e8e93] px-2 py-0.5 rounded-full"
+                    className="rounded-full bg-[#f2f2f7] px-2 py-0.5 text-[10px] font-medium text-[#6e6e73] dark:bg-[#2c2c2e] dark:text-[#8e8e93]"
                   >
                     {toCamelCase(tag)}
                   </span>
@@ -266,12 +306,14 @@ function AppCard({
 
             {/* Notes */}
             {app.notes && (
-              <p className="text-xs italic text-[#86868b] dark:text-[#8e8e93] mt-1.5 line-clamp-2">{app.notes}</p>
+              <p className="mt-1.5 line-clamp-2 text-xs text-[#86868b] italic dark:text-[#8e8e93]">
+                {app.notes}
+              </p>
             )}
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col gap-2 shrink-0">
+          <div className="flex shrink-0 flex-col gap-2">
             <a href={job.url} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm" className="w-full">
                 <ExternalLink className="h-3.5 w-3.5" /> View
@@ -279,11 +321,7 @@ function AppCard({
             </a>
 
             {tab === "saved" && (
-              <Button
-                size="sm"
-                onClick={() => onUpdateStatus("APPLIED")}
-                loading={isUpdating}
-              >
+              <Button size="sm" onClick={() => onUpdateStatus("APPLIED")} loading={isUpdating}>
                 <Send className="h-3.5 w-3.5" /> Mark Applied
               </Button>
             )}
@@ -305,7 +343,7 @@ function AppCard({
                 variant="outline"
                 onClick={() => onUpdateStatus("WITHDRAWN")}
                 loading={isUpdating}
-                className="text-red-500 dark:text-red-400 border-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                className="border-red-400 text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
               >
                 <XCircle className="h-3.5 w-3.5" /> Withdraw
               </Button>

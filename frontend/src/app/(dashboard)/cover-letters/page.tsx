@@ -8,7 +8,16 @@ import { Card, CardContent } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
-import { Mail, Loader2, Eye, Trash2, ChevronLeft, ChevronRight, Copy, Download } from "@/components/ui/icons";
+import {
+  Mail,
+  Loader2,
+  Eye,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Download,
+} from "@/components/ui/icons";
 import { formatDate } from "@/lib/utils";
 import type { CoverLetter } from "@/types";
 import Link from "next/link";
@@ -51,18 +60,15 @@ export default function CoverLettersPage() {
     mutationFn: async (id: string) => {
       await api.delete(`/cover-letters/${id}`);
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["cover-letters"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cover-letters"] }),
   });
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">
-            Cover Letters
-          </h1>
-          <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-0.5">
+          <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">Cover Letters</h1>
+          <p className="mt-0.5 text-sm text-[#86868b] dark:text-[#8e8e93]">
             AI-generated cover letters for your applications
           </p>
         </div>
@@ -85,43 +91,40 @@ export default function CoverLettersPage() {
               <Card key={cl.id}>
                 <CardContent className="py-4">
                   <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
                         <h3 className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
                           {cl.jobTitle || "Untitled"}
                         </h3>
-                        <Badge className="bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#86868b] dark:text-[#8e8e93] text-[10px]">
+                        <Badge className="bg-[#f2f2f7] text-[10px] text-[#86868b] dark:bg-[#2c2c2e] dark:text-[#8e8e93]">
                           {cl.aiProvider}
                         </Badge>
                       </div>
                       <p className="text-xs text-[#86868b] dark:text-[#8e8e93]">
                         {cl.company} · {formatDate(cl.createdAt)}
                       </p>
-                      <p className="text-xs text-[#6e6e73] dark:text-[#8e8e93] mt-2 line-clamp-2">
+                      <p className="mt-2 line-clamp-2 text-xs text-[#6e6e73] dark:text-[#8e8e93]">
                         {cl.content.substring(0, 200)}...
                       </p>
                     </div>
-                    <div className="flex gap-2 shrink-0">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setViewing(cl)}
-                      >
+                    <div className="flex shrink-0 gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setViewing(cl)}>
                         <Eye className="h-4 w-4" />
                         View
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCopy(cl.content)}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => handleCopy(cl.content)}>
                         <Copy className="h-3.5 w-3.5" />
                         {copied ? "Copied!" : "Copy"}
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => downloadCoverLetterPDF(cl.content, `cover-letter-${(cl.company ?? "").toLowerCase().replace(/\s+/g, "-")}.pdf`)}
+                        onClick={() =>
+                          downloadCoverLetterPDF(
+                            cl.content,
+                            `cover-letter-${(cl.company ?? "").toLowerCase().replace(/\s+/g, "-")}.pdf`
+                          )
+                        }
                       >
                         <Download className="h-3.5 w-3.5" />
                         PDF
@@ -140,7 +143,7 @@ export default function CoverLettersPage() {
             ))}
           </div>
           {data.totalPages > 1 && (
-            <div className="flex justify-center items-center gap-3 pt-4">
+            <div className="flex items-center justify-center gap-3 pt-4">
               <Button
                 variant="outline"
                 size="sm"
@@ -150,7 +153,7 @@ export default function CoverLettersPage() {
                 <ChevronLeft className="h-3.5 w-3.5" />
                 Previous
               </Button>
-              <span className="px-3 py-1.5 text-xs font-medium text-[#86868b] dark:text-[#8e8e93] bg-[#f2f2f7] dark:bg-[#2c2c2e] rounded-full">
+              <span className="rounded-full bg-[#f2f2f7] px-3 py-1.5 text-xs font-medium text-[#86868b] dark:bg-[#2c2c2e] dark:text-[#8e8e93]">
                 {page + 1} / {data.totalPages}
               </span>
               <Button
@@ -166,7 +169,7 @@ export default function CoverLettersPage() {
           )}
         </>
       ) : (
-        <div className="flex flex-col items-center py-16 gap-4 text-center">
+        <div className="flex flex-col items-center gap-4 py-16 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-600/10">
             <Mail className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
           </div>
@@ -174,7 +177,7 @@ export default function CoverLettersPage() {
             <h3 className="text-lg font-semibold text-[#1d1d1f] dark:text-white">
               No cover letters yet
             </h3>
-            <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-1 max-w-xs">
+            <p className="mt-1 max-w-xs text-sm text-[#86868b] dark:text-[#8e8e93]">
               Generate one by finding a job and clicking &ldquo;Quick Apply&rdquo;
             </p>
           </div>
@@ -197,13 +200,18 @@ export default function CoverLettersPage() {
             <p className="text-xs text-[#86868b] dark:text-[#8e8e93]">
               {viewing.company} · Generated by {viewing.aiProvider}
             </p>
-            <div className="rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-[#f9f9f9] dark:bg-[#1c1c1e] p-4 max-h-80 overflow-y-auto text-sm text-[#1d1d1f] dark:text-[#e5e5ea] whitespace-pre-line leading-relaxed">
+            <div className="max-h-80 overflow-y-auto rounded-xl border border-black/[0.06] bg-[#f9f9f9] p-4 text-sm leading-relaxed whitespace-pre-line text-[#1d1d1f] dark:border-white/[0.08] dark:bg-[#1c1c1e] dark:text-[#e5e5ea]">
               {viewing.content}
             </div>
-            <div className="flex gap-3 justify-end">
+            <div className="flex justify-end gap-3">
               <Button
                 variant="outline"
-                onClick={() => downloadCoverLetterPDF(viewing.content, `cover-letter-${(viewing.company ?? "").toLowerCase().replace(/\s+/g, "-")}.pdf`)}
+                onClick={() =>
+                  downloadCoverLetterPDF(
+                    viewing.content,
+                    `cover-letter-${(viewing.company ?? "").toLowerCase().replace(/\s+/g, "-")}.pdf`
+                  )
+                }
               >
                 <Download className="h-4 w-4" />
                 Download PDF

@@ -1,19 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import NextLink from "next/link";
+import { Eye, Lock, Mail, User } from "@/components/ui/icons";
 import { useAuth } from "@/hooks/useAuth";
-import TextField from "@mui/material/TextField";
-import MuiButton from "@mui/material/Button";
-import Alert from "@mui/material/Alert";
-import CircularProgress from "@mui/material/CircularProgress";
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
-import Link from "@mui/material/Link";
-import InputAdornment from "@mui/material/InputAdornment";
-import IconButton from "@mui/material/IconButton";
-import { Eye, Mail, Lock, User } from "@/components/ui/icons";
 import EyeOffIcon from "@mui/icons-material/VisibilityOff";
+import Alert from "@mui/material/Alert";
+import MuiButton from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import Link from "@mui/material/Link";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import NextLink from "next/link";
+import { useState } from "react";
 
 export default function SignupForm() {
   const { signup } = useAuth();
@@ -31,9 +31,7 @@ export default function SignupForm() {
     try {
       await signup(name, email, password);
     } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : "Signup failed. Please try again."
-      );
+      setError(err instanceof Error ? err.message : "Signup failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -146,27 +144,14 @@ export default function SignupForm() {
             background: "linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)",
           },
         }}
-        startIcon={
-          loading ? <CircularProgress size={18} color="inherit" /> : null
-        }
+        startIcon={loading ? <CircularProgress size={18} color="inherit" /> : null}
       >
         {loading ? "Creating account…" : "Create Account"}
       </MuiButton>
 
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        textAlign="center"
-        mt={1}
-      >
+      <Typography variant="body2" color="text.secondary" textAlign="center" mt={1}>
         Already have an account?{" "}
-        <Link
-          component={NextLink}
-          href="/login"
-          fontWeight={600}
-          underline="hover"
-          color="primary"
-        >
+        <Link component={NextLink} href="/login" fontWeight={600} underline="hover" color="primary">
           Sign in
         </Link>
       </Typography>

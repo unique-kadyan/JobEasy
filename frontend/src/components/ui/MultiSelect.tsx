@@ -50,9 +50,7 @@ export default function MultiSelect({
               key={key}
               label={option.label}
               size="small"
-              deleteIcon={
-                <CloseRoundedIcon sx={{ fontSize: "14px !important" }} />
-              }
+              deleteIcon={<CloseRoundedIcon sx={{ fontSize: "14px !important" }} />}
               sx={{
                 height: 24,
                 fontSize: "0.75rem",

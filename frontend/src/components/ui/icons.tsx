@@ -95,98 +95,88 @@ type WrappedIconProps = Omit<SvgIconProps, "fontSize"> & {
 };
 
 function wrap(MuiIcon: React.ComponentType<SvgIconProps>) {
-  const WrappedIcon = ({
-    size,
-    strokeWidth: _sw,
-    style,
-    className,
-    ...rest
-  }: WrappedIconProps) => (
-    <MuiIcon
-      className={className}
-      style={size ? { fontSize: size, ...style } : style}
-      {...rest}
-    />
+  const WrappedIcon = ({ size, strokeWidth: _sw, style, className, ...rest }: WrappedIconProps) => (
+    <MuiIcon className={className} style={size ? { fontSize: size, ...style } : style} {...rest} />
   );
   WrappedIcon.displayName = MuiIcon.displayName;
   return WrappedIcon;
 }
 
 // ─── Named exports (lucide-compatible names) ───────────────────────────────
-export const Zap            = wrap(BoltRoundedIcon);
-export const Sparkles       = wrap(AutoAwesomeIcon);
-export const Send           = wrap(SendIcon);
-export const TrendingUp     = wrap(TrendingUpIcon);
-export const CheckCircle    = wrap(CheckCircleIcon);
-export const CheckCircle2   = wrap(CheckCircleOutlineIcon);
-export const CheckCheck     = wrap(DoneAllIcon);
-export const Mail           = wrap(MailIcon);
-export const FileText       = wrap(DescriptionIcon);
-export const Briefcase      = wrap(WorkIcon);
-export const Settings       = wrap(SettingsIcon);
-export const Moon           = wrap(DarkModeIcon);
-export const Sun            = wrap(LightModeIcon);
-export const ChevronDown    = wrap(KeyboardArrowDownIcon);
-export const ChevronLeft    = wrap(ChevronLeftIcon);
-export const ChevronRight   = wrap(ChevronRightIcon);
-export const Bell           = wrap(NotificationsIcon);
-export const Shield         = wrap(SecurityIcon);
-export const CreditCard     = wrap(CreditCardIcon);
+export const Zap = wrap(BoltRoundedIcon);
+export const Sparkles = wrap(AutoAwesomeIcon);
+export const Send = wrap(SendIcon);
+export const TrendingUp = wrap(TrendingUpIcon);
+export const CheckCircle = wrap(CheckCircleIcon);
+export const CheckCircle2 = wrap(CheckCircleOutlineIcon);
+export const CheckCheck = wrap(DoneAllIcon);
+export const Mail = wrap(MailIcon);
+export const FileText = wrap(DescriptionIcon);
+export const Briefcase = wrap(WorkIcon);
+export const Settings = wrap(SettingsIcon);
+export const Moon = wrap(DarkModeIcon);
+export const Sun = wrap(LightModeIcon);
+export const ChevronDown = wrap(KeyboardArrowDownIcon);
+export const ChevronLeft = wrap(ChevronLeftIcon);
+export const ChevronRight = wrap(ChevronRightIcon);
+export const Bell = wrap(NotificationsIcon);
+export const Shield = wrap(SecurityIcon);
+export const CreditCard = wrap(CreditCardIcon);
 export const LayoutDashboard = wrap(DashboardIcon);
-export const Search         = wrap(SearchIcon);
-export const MessageSquare  = wrap(ForumIcon);
-export const Crown          = wrap(WorkspacePremiumIcon);
-export const LogOut         = wrap(LogoutIcon);
-export const User           = wrap(PersonIcon);
-export const MapPin         = wrap(LocationOnIcon);
-export const Building2      = wrap(BusinessIcon);
-export const Clock          = wrap(AccessTimeIcon);
-export const DollarSign     = wrap(AttachMoneyIcon);
-export const ExternalLink   = wrap(OpenInNewIcon);
-export const Bookmark       = wrap(BookmarkIcon);
-export const BookmarkCheck  = wrap(BookmarkAddedIcon);
-export const Star           = wrap(StarIcon);
-export const Upload         = wrap(CloudUploadIcon);
-export const Trash2         = wrap(DeleteIcon);
-export const Eye            = wrap(VisibilityIcon);
-export const X              = wrap(CloseIcon);
-export const ArrowRight     = wrap(ArrowForwardIcon);
-export const Lock           = wrap(LockIcon);
-export const AlertCircle    = wrap(ErrorOutlineIcon);
-export const Trophy         = wrap(EmojiEventsIcon);
-export const XCircle        = wrap(HighlightOffIcon);
-export const BarChart3      = wrap(BarChartIcon);
-export const Target         = wrap(TrackChangesIcon);
-export const Rocket         = wrap(RocketLaunchIcon);
-export const ChevronUp     = wrap(KeyboardArrowUpIcon);
-export const ArrowLeft     = wrap(ArrowBackIcon);
-export const KeyRound      = wrap(VpnKeyIcon);
-export const BookOpen      = wrap(MenuBookIcon);
-export const Plus          = wrap(AddIcon);
-export const Edit2         = wrap(EditIcon);
-export const Play          = wrap(PlayArrowIcon);
-export const IndianRupee   = wrap(CurrencyRupeeIcon);
-export const Save          = wrap(SaveIcon);
-export const Link2         = wrap(InsertLinkIcon);
-export const GitBranch     = wrap(AccountTreeIcon);
-export const Globe         = wrap(LanguageIcon);
+export const Search = wrap(SearchIcon);
+export const MessageSquare = wrap(ForumIcon);
+export const Crown = wrap(WorkspacePremiumIcon);
+export const LogOut = wrap(LogoutIcon);
+export const User = wrap(PersonIcon);
+export const MapPin = wrap(LocationOnIcon);
+export const Building2 = wrap(BusinessIcon);
+export const Clock = wrap(AccessTimeIcon);
+export const DollarSign = wrap(AttachMoneyIcon);
+export const ExternalLink = wrap(OpenInNewIcon);
+export const Bookmark = wrap(BookmarkIcon);
+export const BookmarkCheck = wrap(BookmarkAddedIcon);
+export const Star = wrap(StarIcon);
+export const Upload = wrap(CloudUploadIcon);
+export const Trash2 = wrap(DeleteIcon);
+export const Eye = wrap(VisibilityIcon);
+export const X = wrap(CloseIcon);
+export const ArrowRight = wrap(ArrowForwardIcon);
+export const Lock = wrap(LockIcon);
+export const AlertCircle = wrap(ErrorOutlineIcon);
+export const Trophy = wrap(EmojiEventsIcon);
+export const XCircle = wrap(HighlightOffIcon);
+export const BarChart3 = wrap(BarChartIcon);
+export const Target = wrap(TrackChangesIcon);
+export const Rocket = wrap(RocketLaunchIcon);
+export const ChevronUp = wrap(KeyboardArrowUpIcon);
+export const ArrowLeft = wrap(ArrowBackIcon);
+export const KeyRound = wrap(VpnKeyIcon);
+export const BookOpen = wrap(MenuBookIcon);
+export const Plus = wrap(AddIcon);
+export const Edit2 = wrap(EditIcon);
+export const Play = wrap(PlayArrowIcon);
+export const IndianRupee = wrap(CurrencyRupeeIcon);
+export const Save = wrap(SaveIcon);
+export const Link2 = wrap(InsertLinkIcon);
+export const GitBranch = wrap(AccountTreeIcon);
+export const Globe = wrap(LanguageIcon);
 export const GraduationCap = wrap(SchoolIcon);
-export const Code2         = wrap(CodeIcon);
-export const Info          = wrap(InfoOutlinedIcon);
-export const Download      = wrap(DownloadIcon);
-export const RefreshCw     = wrap(RefreshIcon);
-export const ReceiptText   = wrap(ReceiptLongIcon);
-export const Mic           = wrap(MicIcon);
-export const MicOff        = wrap(MicOffIcon);
-export const Video         = wrap(VideocamIcon);
-export const VideoOff      = wrap(VideocamOffIcon);
-export const Keyboard      = wrap(KeyboardIcon);
-export const ListChecks    = wrap(PlaylistAddCheckIcon);
+export const Code2 = wrap(CodeIcon);
+export const Info = wrap(InfoOutlinedIcon);
+export const Download = wrap(DownloadIcon);
+export const RefreshCw = wrap(RefreshIcon);
+export const ReceiptText = wrap(ReceiptLongIcon);
+export const Mic = wrap(MicIcon);
+export const MicOff = wrap(MicOffIcon);
+export const Video = wrap(VideocamIcon);
+export const VideoOff = wrap(VideocamOffIcon);
+export const Keyboard = wrap(KeyboardIcon);
+export const ListChecks = wrap(PlaylistAddCheckIcon);
 export const AlertTriangle = wrap(WarningAmberIcon);
-export const Copy          = wrap(ContentCopyRoundedIcon);
-export const Inbox         = wrap(InboxRoundedIcon);
-export const RotateCcw     = wrap(RotateLeftIcon);
-export const Newspaper     = wrap(ArticleRoundedIcon);
+export const Copy = wrap(ContentCopyRoundedIcon);
+export const Inbox = wrap(InboxRoundedIcon);
+export const RotateCcw = wrap(RotateLeftIcon);
+export const Newspaper = wrap(ArticleRoundedIcon);
 
 // ─── LucideIcon type compat — used as prop type in EmptyState etc. ─────────
 export type LucideIcon = React.ComponentType<WrappedIconProps>;
@@ -197,13 +187,7 @@ export type LucideIcon = React.ComponentType<WrappedIconProps>;
  *     or: <Loader2 size={16} />
  * `animate-spin` is kept as a className for compat but MUI spins natively.
  */
-export function Loader2({
-  size,
-  className,
-}: {
-  size?: number;
-  className?: string;
-}) {
+export function Loader2({ size, className }: { size?: number; className?: string }) {
   const px = size ?? (className?.includes("h-3") ? 12 : className?.includes("h-5") ? 20 : 16);
   return (
     <CircularProgress

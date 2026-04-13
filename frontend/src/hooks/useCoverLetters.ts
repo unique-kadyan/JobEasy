@@ -15,11 +15,7 @@ export function useCoverLetters(page = 0) {
 export function useGenerateCoverLetter() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: {
-      jobId: string;
-      templateId?: string;
-      provider?: string;
-    }) => {
+    mutationFn: async (data: { jobId: string; templateId?: string; provider?: string }) => {
       const res = await api.post<CoverLetter>("/cover-letters/generate", data);
       return res.data;
     },

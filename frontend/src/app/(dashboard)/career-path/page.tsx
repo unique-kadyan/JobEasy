@@ -36,47 +36,41 @@ const LEVEL_LABELS: Record<string, string> = {
 const LEVEL_COLORS: Record<string, string> = {
   JUNIOR: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
   MID: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  SENIOR:
-    "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400",
+  SENIOR: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400",
   LEAD: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
   STAFF: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
-  PRINCIPAL:
-    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
+  PRINCIPAL: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
 };
 
 function UpgradeGate() {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center px-4">
-      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-900/20 mb-6">
+    <div className="flex flex-col items-center justify-center px-4 py-24 text-center">
+      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-900/20">
         <Lock className="h-9 w-9 text-amber-500" />
       </div>
-      <h2 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white mb-3">
+      <h2 className="mb-3 text-2xl font-semibold text-[#1d1d1f] dark:text-white">
         Career Path Analysis
       </h2>
-      <p className="text-[#86868b] dark:text-[#8e8e93] max-w-md mb-2">
-        Unlock AI-powered career path recommendations, role progression
-        checkpoints, and mandatory skill plans.
+      <p className="mb-2 max-w-md text-[#86868b] dark:text-[#8e8e93]">
+        Unlock AI-powered career path recommendations, role progression checkpoints, and mandatory
+        skill plans.
       </p>
-      <p className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-8">
+      <p className="mb-8 text-sm font-medium text-amber-600 dark:text-amber-400">
         Available on Gold and Platinum plans
       </p>
-      <div className="flex gap-4 justify-center flex-wrap">
-        <div className="rounded-2xl border border-amber-200/60 dark:border-amber-900/30 bg-amber-50 dark:bg-yellow-900/20 px-6 py-4 text-left min-w-[180px]">
-          <p className="font-semibold text-amber-700 dark:text-yellow-400 mb-2 text-sm">
-            Gold
-          </p>
-          <ul className="text-sm text-[#3c3c43] dark:text-[#8e8e93] space-y-1">
+      <div className="flex flex-wrap justify-center gap-4">
+        <div className="min-w-[180px] rounded-2xl border border-amber-200/60 bg-amber-50 px-6 py-4 text-left dark:border-amber-900/30 dark:bg-yellow-900/20">
+          <p className="mb-2 text-sm font-semibold text-amber-700 dark:text-yellow-400">Gold</p>
+          <ul className="space-y-1 text-sm text-[#3c3c43] dark:text-[#8e8e93]">
             <li>✓ Career path analysis</li>
             <li>✓ 10 job results</li>
             <li>✓ Smart resume</li>
             <li>✓ 25 cover letters/day</li>
           </ul>
         </div>
-        <div className="rounded-2xl border border-slate-200/60 dark:border-slate-700/40 bg-slate-50 dark:bg-slate-800/40 px-6 py-4 text-left min-w-[180px]">
-          <p className="font-semibold text-slate-600 dark:text-slate-300 mb-2 text-sm">
-            Platinum
-          </p>
-          <ul className="text-sm text-[#3c3c43] dark:text-[#8e8e93] space-y-1">
+        <div className="min-w-[180px] rounded-2xl border border-slate-200/60 bg-slate-50 px-6 py-4 text-left dark:border-slate-700/40 dark:bg-slate-800/40">
+          <p className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-300">Platinum</p>
+          <ul className="space-y-1 text-sm text-[#3c3c43] dark:text-[#8e8e93]">
             <li>✓ Everything in Gold</li>
             <li>✓ Unlimited job results</li>
             <li>✓ Auto-apply</li>
@@ -94,27 +88,24 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
   return (
     <Card>
       <CardContent className="py-4">
-        <button
-          className="w-full text-left"
-          onClick={() => setExpanded((e) => !e)}
-        >
+        <button className="w-full text-left" onClick={() => setExpanded((e) => !e)}>
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-900/30">
                 <Target className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-[#1d1d1f] dark:text-white text-sm truncate">
+                <p className="truncate text-sm font-semibold text-[#1d1d1f] dark:text-white">
                   {role}
                 </p>
-                <p className="text-xs text-[#86868b] dark:text-[#8e8e93] truncate">
+                <p className="truncate text-xs text-[#86868b] dark:text-[#8e8e93]">
                   {path.description}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <Badge className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 whitespace-nowrap">
-                <Clock className="h-3 w-3 mr-1" />~{path.estimatedYears}y
+            <div className="flex shrink-0 items-center gap-3">
+              <Badge className="bg-indigo-50 whitespace-nowrap text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
+                <Clock className="mr-1 h-3 w-3" />~{path.estimatedYears}y
               </Badge>
               {expanded ? (
                 <ChevronUp className="h-4 w-4 text-[#86868b] dark:text-[#8e8e93]" />
@@ -126,12 +117,12 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
         </button>
 
         {expanded && (
-          <div className="mt-4 space-y-4 border-t border-black/[0.06] dark:border-white/[0.08] pt-4">
+          <div className="mt-4 space-y-4 border-t border-black/[0.06] pt-4 dark:border-white/[0.08]">
             {(path.mandatorySkills.length > 0 || (path.skillGaps && path.skillGaps.length > 0)) && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {path.mandatorySkills.length > 0 && (
-                  <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 p-3">
-                    <div className="flex items-center gap-1.5 mb-2">
+                  <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 dark:border-emerald-900/30 dark:bg-emerald-900/20">
+                    <div className="mb-2 flex items-center gap-1.5">
                       <CheckCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                       <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                         Required Skills
@@ -141,7 +132,7 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
                       {path.mandatorySkills.map((skill) => (
                         <Badge
                           key={skill}
-                          className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+                          className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
                         >
                           {toCamelCase(skill)}
                         </Badge>
@@ -151,8 +142,8 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
                 )}
 
                 {path.skillGaps && path.skillGaps.length > 0 && (
-                  <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 p-3">
-                    <div className="flex items-center gap-1.5 mb-2">
+                  <div className="rounded-xl border border-amber-100 bg-amber-50 p-3 dark:border-amber-900/30 dark:bg-amber-900/20">
+                    <div className="mb-2 flex items-center gap-1.5">
                       <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                       <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
                         Skills to Develop
@@ -162,7 +153,7 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
                       {path.skillGaps.map((skill) => (
                         <Badge
                           key={skill}
-                          className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
+                          className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
                         >
                           {toCamelCase(skill)}
                         </Badge>
@@ -175,10 +166,10 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
 
             {path.checkpoints.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-3">
+                <p className="mb-3 text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">
                   Checkpoints
                 </p>
-                <ol className="relative border-l-2 border-indigo-300 dark:border-indigo-800 ml-2 space-y-4">
+                <ol className="relative ml-2 space-y-4 border-l-2 border-indigo-300 dark:border-indigo-800">
                   {path.checkpoints.map((cp, i) => (
                     <li key={i} className="ml-5">
                       <span className="absolute -left-[9px] flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600">
@@ -186,18 +177,18 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
                       </span>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-semibold text-[#1d1d1f] dark:text-white text-sm">
+                          <p className="text-sm font-semibold text-[#1d1d1f] dark:text-white">
                             {cp.milestone}
                           </p>
-                          <p className="text-xs text-[#86868b] dark:text-[#8e8e93] mt-0.5">
+                          <p className="mt-0.5 text-xs text-[#86868b] dark:text-[#8e8e93]">
                             {cp.description}
                           </p>
                           {cp.skills.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1.5">
+                            <div className="mt-1.5 flex flex-wrap gap-1">
                               {cp.skills.map((s) => (
                                 <Badge
                                   key={s}
-                                  className="bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#6e6e73] dark:text-[#8e8e93] text-[10px]"
+                                  className="bg-[#f2f2f7] text-[10px] text-[#6e6e73] dark:bg-[#2c2c2e] dark:text-[#8e8e93]"
                                 >
                                   {toCamelCase(s)}
                                 </Badge>
@@ -205,8 +196,8 @@ function RolePathCard({ role, path }: { role: string; path: CareerRolePath }) {
                             </div>
                           )}
                         </div>
-                        <Badge className="bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#86868b] dark:text-[#8e8e93] whitespace-nowrap shrink-0 text-[10px]">
-                          <BookOpen className="h-3 w-3 mr-1" />
+                        <Badge className="shrink-0 bg-[#f2f2f7] text-[10px] whitespace-nowrap text-[#86868b] dark:bg-[#2c2c2e] dark:text-[#8e8e93]">
+                          <BookOpen className="mr-1 h-3 w-3" />
                           {cp.timelineMonths}mo
                         </Badge>
                       </div>
@@ -241,10 +232,8 @@ export default function CareerPathPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">
-            Career Path
-          </h1>
-          <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-0.5">
+          <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">Career Path</h1>
+          <p className="mt-0.5 text-sm text-[#86868b] dark:text-[#8e8e93]">
             AI-powered career progression analysis
           </p>
         </div>
@@ -257,10 +246,8 @@ export default function CareerPathPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">
-            Career Path
-          </h1>
-          <p className="text-sm text-[#86868b] dark:text-[#8e8e93] mt-0.5">
+          <h1 className="text-2xl font-semibold text-[#1d1d1f] dark:text-white">Career Path</h1>
+          <p className="mt-0.5 text-sm text-[#86868b] dark:text-[#8e8e93]">
             AI-powered analysis of your next career moves
           </p>
         </div>
@@ -277,14 +264,14 @@ export default function CareerPathPage() {
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 p-4 text-sm text-red-700 dark:text-red-400">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-400">
           {(error as Error).message ||
             "Analysis failed. Please ensure your resume and profile are complete, then try again."}
         </div>
       )}
 
       {!data && !isLoading && !error && (
-        <div className="flex flex-col items-center py-16 gap-4 text-center">
+        <div className="flex flex-col items-center gap-4 py-16 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-900/20">
             <TrendingUp className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
           </div>
@@ -292,9 +279,9 @@ export default function CareerPathPage() {
             <h3 className="text-lg font-semibold text-[#1d1d1f] dark:text-white">
               Ready to map your career
             </h3>
-            <p className="text-sm text-[#86868b] dark:text-[#8e8e93] max-w-md mx-auto mt-1">
-              Upload your resume and complete your profile for the most accurate
-              analysis. Click &ldquo;Analyse My Career&rdquo; to start.
+            <p className="mx-auto mt-1 max-w-md text-sm text-[#86868b] dark:text-[#8e8e93]">
+              Upload your resume and complete your profile for the most accurate analysis. Click
+              &ldquo;Analyse My Career&rdquo; to start.
             </p>
           </div>
         </div>
@@ -303,13 +290,11 @@ export default function CareerPathPage() {
       {data && (
         <div className="space-y-6">
           <div className="flex items-center gap-3">
-            <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">
-              Current level:
-            </p>
+            <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">Current level:</p>
             <Badge
               className={
                 LEVEL_COLORS[data.currentLevel] ??
-                "bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#1d1d1f] dark:text-white"
+                "bg-[#f2f2f7] text-[#1d1d1f] dark:bg-[#2c2c2e] dark:text-white"
               }
             >
               {LEVEL_LABELS[data.currentLevel] ?? data.currentLevel}
@@ -319,14 +304,14 @@ export default function CareerPathPage() {
           {data.suggestedRoles.length > 0 && (
             <Card>
               <CardContent className="py-4">
-                <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-3">
+                <p className="mb-3 text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">
                   Suggested Next Roles
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {data.suggestedRoles.map((role) => (
                     <Badge
                       key={role}
-                      className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                      className="bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
                     >
                       {role}
                     </Badge>
@@ -337,7 +322,7 @@ export default function CareerPathPage() {
           )}
 
           <div>
-            <p className="text-xs font-medium text-[#86868b] dark:text-[#8e8e93] mb-3">
+            <p className="mb-3 text-xs font-medium text-[#86868b] dark:text-[#8e8e93]">
               Career Paths
             </p>
             <div className="space-y-3">

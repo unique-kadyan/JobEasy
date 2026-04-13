@@ -19,15 +19,15 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 
 const TIER_BADGE: Record<string, { label: string; color: "default" | "warning" | "primary" }> = {
-  FREE:     { label: "Free",     color: "default" },
-  GOLD:     { label: "Gold",     color: "warning" },
+  FREE: { label: "Free", color: "default" },
+  GOLD: { label: "Gold", color: "warning" },
   PLATINUM: { label: "Platinum", color: "primary" },
 };
 
 const STATUS_CONFIG: Record<ServerStatus, { color: string; pulse: boolean; label: string }> = {
-  up:         { color: "#22c55e", pulse: false, label: "Server online" },
-  down:       { color: "#ef4444", pulse: true,  label: "Server offline — reconnecting…" },
-  connecting: { color: "#f59e0b", pulse: true,  label: "Connecting to server…" },
+  up: { color: "#22c55e", pulse: false, label: "Server online" },
+  down: { color: "#ef4444", pulse: true, label: "Server offline — reconnecting…" },
+  connecting: { color: "#f59e0b", pulse: true, label: "Connecting to server…" },
 };
 
 export default function Topbar({ serverStatus = "connecting" }: { serverStatus?: ServerStatus }) {

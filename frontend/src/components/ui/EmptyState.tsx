@@ -64,12 +64,7 @@ export default function EmptyState({
         <Icon style={{ fontSize: 32, color: "#6366f1" }} />
       </Box>
 
-      <Typography
-        variant="h6"
-        fontWeight={700}
-        color="text.primary"
-        mb={0.75}
-      >
+      <Typography variant="h6" fontWeight={700} color="text.primary" mb={0.75}>
         {title}
       </Typography>
 

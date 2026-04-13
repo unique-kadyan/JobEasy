@@ -5,8 +5,15 @@ import type { AuthResponse } from "@/types";
 
 export function useAuth() {
   const router = useRouter();
-  const { setAuth, logout: clearAuth, setWelcomeScreen, setFarewellScreen, user, isAuthenticated, hasRole } =
-    useAuthStore();
+  const {
+    setAuth,
+    logout: clearAuth,
+    setWelcomeScreen,
+    setFarewellScreen,
+    user,
+    isAuthenticated,
+    hasRole,
+  } = useAuthStore();
 
   const login = async (email: string, password: string, rememberMe = false): Promise<void> => {
     // Set the flag BEFORE calling setAuth so the dynamic storage picks up the
@@ -25,11 +32,7 @@ export function useAuth() {
     router.push("/dashboard");
   };
 
-  const signup = async (
-    name: string,
-    email: string,
-    password: string
-  ): Promise<void> => {
+  const signup = async (name: string, email: string, password: string): Promise<void> => {
     const res = await api.post<AuthResponse>("/auth/signup", {
       name,
       email,

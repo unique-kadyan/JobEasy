@@ -8,7 +8,13 @@
 }
 
 body {
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Inter', Arial, sans-serif;
+  font-family:
+    var(--font-geist-sans),
+    -apple-system,
+    BlinkMacSystemFont,
+    "Inter",
+    Arial,
+    sans-serif;
   background-color: #f2f2f7;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -26,43 +32,50 @@ html.dark body {
 
 /* ─── Design token system ────────────────────────────────────────────────── */
 :root {
-  --shadow-xs:    0 1px 2px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04);
-  --shadow-sm:    0 2px 8px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04);
-  --shadow-md:    0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
-  --shadow-lg:    0 8px 32px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
-  --shadow-xl:    0 20px 60px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.07);
-  --shadow-focus: 0 0 0 3px rgba(99,102,241,0.30);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.07);
+  --shadow-focus: 0 0 0 3px rgba(99, 102, 241, 0.3);
 
   /* Legacy aliases — keeps existing nb-* classes working across all pages */
-  --nb-shadow:       var(--shadow-sm);
-  --nb-shadow-sm:    var(--shadow-xs);
-  --nb-shadow-lg:    var(--shadow-md);
+  --nb-shadow: var(--shadow-sm);
+  --nb-shadow-sm: var(--shadow-xs);
+  --nb-shadow-lg: var(--shadow-md);
   --nb-shadow-focus: var(--shadow-focus);
 }
 
 html.dark {
-  --shadow-xs:    0 1px 2px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.20);
-  --shadow-sm:    0 2px 8px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.25);
-  --shadow-md:    0 4px 16px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.30);
-  --shadow-lg:    0 8px 32px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.35);
-  --shadow-xl:    0 20px 60px rgba(0,0,0,0.70), 0 8px 24px rgba(0,0,0,0.45);
-  --shadow-focus: 0 0 0 3px rgba(129,140,248,0.35);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.7), 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-focus: 0 0 0 3px rgba(129, 140, 248, 0.35);
 
-  --nb-shadow:       var(--shadow-sm);
-  --nb-shadow-sm:    var(--shadow-xs);
-  --nb-shadow-lg:    var(--shadow-md);
+  --nb-shadow: var(--shadow-sm);
+  --nb-shadow-sm: var(--shadow-xs);
+  --nb-shadow-lg: var(--shadow-md);
   --nb-shadow-focus: var(--shadow-focus);
 }
 
 /* ─── Shadow utilities ───────────────────────────────────────────────────── */
-.nb-shadow    { box-shadow: var(--shadow-sm); }
-.nb-shadow-sm { box-shadow: var(--shadow-xs); }
-.nb-shadow-lg { box-shadow: var(--shadow-md); }
+.nb-shadow {
+  box-shadow: var(--shadow-sm);
+}
+.nb-shadow-sm {
+  box-shadow: var(--shadow-xs);
+}
+.nb-shadow-lg {
+  box-shadow: var(--shadow-md);
+}
 
 /* ─── Lift interaction — smooth, not brutalist ───────────────────────────── */
 .nb-lift {
-  transition: transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              box-shadow 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition:
+    transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .nb-lift:hover:not(:disabled):not([data-disabled]) {
   transform: translateY(-1px);
@@ -87,47 +100,106 @@ html.dark {
 
 /* ─── Preserved animation keyframes ─────────────────────────────────────── */
 @keyframes petalFall {
-  0%   { transform: translateY(-40px) rotate(0deg) scale(1); opacity: 0; }
-  5%   { opacity: 0.85; }
-  85%  { opacity: 0.7; }
-  100% { transform: translateY(110vh) rotate(800deg) scale(0.6); opacity: 0; }
+  0% {
+    transform: translateY(-40px) rotate(0deg) scale(1);
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.85;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(110vh) rotate(800deg) scale(0.6);
+    opacity: 0;
+  }
 }
 
 @keyframes welcomeFadeSlideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes welcomePulse {
-  0%, 80%, 100% { transform: scale(0.55); opacity: 0.35; }
-  40%           { transform: scale(1); opacity: 1; }
+  0%,
+  80%,
+  100% {
+    transform: scale(0.55);
+    opacity: 0.35;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes welcomeGlow {
-  0%, 100% { opacity: 0.15; }
-  50%      { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 /* ─── Farewell screen animations ────────────────────────────────────────── */
 @keyframes particleRise {
-  0%   { transform: translateY(0) translateX(0) rotate(0deg) scale(1); opacity: 0; }
-  8%   { opacity: 0.85; }
-  80%  { opacity: 0.6; }
-  100% { transform: translateY(-110vh) translateX(var(--drift, 30px)) rotate(720deg) scale(0.5); opacity: 0; }
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.85;
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-110vh) translateX(var(--drift, 30px)) rotate(720deg) scale(0.5);
+    opacity: 0;
+  }
 }
 
 @keyframes waveHand {
-  0%   { transform: rotate(0deg); }
-  15%  { transform: rotate(-25deg); }
-  30%  { transform: rotate(20deg); }
-  45%  { transform: rotate(-15deg); }
-  60%  { transform: rotate(10deg); }
-  75%  { transform: rotate(-5deg); }
-  100% { transform: rotate(0deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(-25deg);
+  }
+  30% {
+    transform: rotate(20deg);
+  }
+  45% {
+    transform: rotate(-15deg);
+  }
+  60% {
+    transform: rotate(10deg);
+  }
+  75% {
+    transform: rotate(-5deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 /* ─── Framer-motion page transition fallback ─────────────────────────────── */
 @keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

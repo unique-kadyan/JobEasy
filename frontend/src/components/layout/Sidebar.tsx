@@ -24,23 +24,26 @@ import {
 } from "@/components/ui/icons";
 
 const navItems = [
-  { href: "/dashboard",     label: "Dashboard",     icon: LayoutDashboard },
-  { href: "/jobs",          label: "Find Jobs",      icon: Search },
-  { href: "/applications",  label: "Applications",   icon: Send },
-  { href: "/smart-resume",  label: "Smart Resume",   icon: Sparkles },
-  { href: "/cover-letters", label: "Cover Letters",  icon: Mail },
-  { href: "/career-path",   label: "Career Path",    icon: TrendingUp },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/jobs", label: "Find Jobs", icon: Search },
+  { href: "/applications", label: "Applications", icon: Send },
+  { href: "/smart-resume", label: "Smart Resume", icon: Sparkles },
+  { href: "/cover-letters", label: "Cover Letters", icon: Mail },
+  { href: "/career-path", label: "Career Path", icon: TrendingUp },
   { href: "/interview-prep", label: "Interview Prep", icon: MessageSquare },
-  { href: "/profile",       label: "Profile",        icon: User },
-  { href: "/settings",      label: "Settings",       icon: Settings },
+  { href: "/profile", label: "Profile", icon: User },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-const TIER_CONFIG: Record<string, {
-  label: string;
-  gradient: string;
-  upgradeLabel?: string;
-  upgradeHint?: string;
-}> = {
+const TIER_CONFIG: Record<
+  string,
+  {
+    label: string;
+    gradient: string;
+    upgradeLabel?: string;
+    upgradeHint?: string;
+  }
+> = {
   FREE: {
     label: "Free Plan",
     gradient: "linear-gradient(135deg, #6b7280 0%, #9ca3af 100%)",
@@ -111,12 +114,7 @@ export default function Sidebar() {
         >
           <Zap style={{ fontSize: 18, color: "white" }} />
         </Box>
-        <Typography
-          variant="h6"
-          fontWeight={700}
-          color="text.primary"
-          letterSpacing={-0.5}
-        >
+        <Typography variant="h6" fontWeight={700} color="text.primary" letterSpacing={-0.5}>
           Rolevo
         </Typography>
       </Stack>
@@ -170,9 +168,7 @@ export default function Sidebar() {
                 fontSize: "0.875rem",
                 bgcolor: isActive ? "rgba(99,102,241,0.08)" : "transparent",
                 "&:hover": {
-                  bgcolor: isActive
-                    ? "rgba(99,102,241,0.12)"
-                    : "action.hover",
+                  bgcolor: isActive ? "rgba(99,102,241,0.12)" : "action.hover",
                   color: isActive ? "primary.main" : "text.primary",
                   transform: "translateX(2px)",
                 },
@@ -294,7 +290,10 @@ export default function Sidebar() {
           }}
         >
           <CreditCard style={{ fontSize: 16 }} />
-          <Typography component="span" sx={{ fontSize: "inherit", fontWeight: "inherit", color: "inherit" }}>
+          <Typography
+            component="span"
+            sx={{ fontSize: "inherit", fontWeight: "inherit", color: "inherit" }}
+          >
             Pricing
           </Typography>
         </Box>

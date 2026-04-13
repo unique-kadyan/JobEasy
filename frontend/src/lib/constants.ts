@@ -1,20 +1,20 @@
 export const STATUS_COLORS: Record<string, string> = {
-  SAVED:          "bg-gray-100 text-gray-700 dark:bg-gray-500/15 dark:text-gray-400",
-  APPLIED:        "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400",
-  INTERVIEWING:   "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400",
-  OFFERED:        "bg-green-100 text-green-700 dark:bg-emerald-500/15 dark:text-emerald-400",
-  REJECTED:       "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400",
-  WITHDRAWN:      "bg-gray-100 text-gray-500 dark:bg-gray-500/10 dark:text-gray-500",
+  SAVED: "bg-gray-100 text-gray-700 dark:bg-gray-500/15 dark:text-gray-400",
+  APPLIED: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400",
+  INTERVIEWING: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400",
+  OFFERED: "bg-green-100 text-green-700 dark:bg-emerald-500/15 dark:text-emerald-400",
+  REJECTED: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400",
+  WITHDRAWN: "bg-gray-100 text-gray-500 dark:bg-gray-500/10 dark:text-gray-500",
   NOT_INTERESTED: "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-400",
 };
 
 export const STATUS_LABELS: Record<string, string> = {
-  SAVED:          "Saved",
-  APPLIED:        "Applied",
-  INTERVIEWING:   "Interviewing",
-  OFFERED:        "Offer Received",
-  REJECTED:       "Rejected",
-  WITHDRAWN:      "Withdrawn",
+  SAVED: "Saved",
+  APPLIED: "Applied",
+  INTERVIEWING: "Interviewing",
+  OFFERED: "Offer Received",
+  REJECTED: "Rejected",
+  WITHDRAWN: "Withdrawn",
   NOT_INTERESTED: "Skipped",
 };
 

@@ -1,20 +1,19 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Zap } from "@/components/ui/icons";
 import api from "@/lib/api";
-import Link from "next/link";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
-import Chip from "@mui/material/Chip";
-import MuiButton from "@mui/material/Button";
-import Alert from "@mui/material/Alert";
-import CircularProgress from "@mui/material/CircularProgress";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
-import { Zap } from "@/components/ui/icons";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import MuiButton from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
@@ -206,7 +205,9 @@ export default function VerifyEmailPage() {
             fallback={
               <Stack spacing={2} alignItems="center">
                 <CircularProgress size={48} thickness={3} sx={{ color: "primary.main" }} />
-                <Typography variant="body2" color="text.secondary">Loading…</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Loading…
+                </Typography>
               </Stack>
             }
           >

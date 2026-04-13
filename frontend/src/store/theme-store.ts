@@ -13,8 +13,7 @@ export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
       theme: "dark",
-      toggleTheme: () =>
-        set({ theme: get().theme === "dark" ? "light" : "dark" }),
+      toggleTheme: () => set({ theme: get().theme === "dark" ? "light" : "dark" }),
       setTheme: (theme) => set({ theme }),
     }),
     { name: "kaddy-theme" }
