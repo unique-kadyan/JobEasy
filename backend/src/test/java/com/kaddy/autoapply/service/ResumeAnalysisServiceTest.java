@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -95,7 +96,7 @@ class ResumeAnalysisServiceTest {
         assertTrue(result.atsScore() < 50, "Empty resume should score below 50");
         assertFalse(result.missingFields().isEmpty(), "Empty resume should have missing fields");
         assertTrue(result.missingFields().contains("Email address"));
-        assertTrue(result.missingFields().contains("Professional summary / objective"));
+        assertTrue(result.missingFields().contains("Professional summary"));
         assertTrue(result.missingFields().contains("Work experience section"));
     }
 
@@ -214,25 +215,49 @@ class ResumeAnalysisServiceTest {
 
     private String fullText() {
         return """
-                John Doe | john@example.com | +1-555-000-0000
+                John Doe | linkedin.com/in/johndoe | github.com/johndoe
 
-                Summary: Experienced software engineer with 8 years building scalable systems.
+                SUMMARY
+                Experienced backend engineer with 8 years architecting and scaling distributed systems
+                across fintech and e-commerce domains. Led cross-functional teams delivering
+                mission-critical services handling 2M+ requests per day.
 
-                Experience:
-                Led a team of 5 engineers. Built microservices that improved performance by 40%.
-                Developed REST APIs using Spring Boot. Increased user retention by 25%.
-                Managed cloud infrastructure on AWS. Reduced costs by 30%.
+                EXPERIENCE
 
-                Education:
-                Bachelor of Computer Science, University of Technology, 2015
+                Senior Software Engineer — Acme Corp          2020–Present
+                • Architected microservices platform that reduced deployment time by 40%
+                • Led migration from monolith to event-driven architecture; system now handles 1M+ requests
+                • Built distributed caching layer with Redis cutting p99 latency from 800ms to 120ms
+                • Mentored 4 junior engineers, improving team velocity by 30%
+                • Deployed automated CI/CD pipelines, reducing release cycles by 50%
+                • Scaled backend services to 5x traffic without additional infrastructure
 
-                Skills: Java, Python, Spring Boot, AWS, Docker, Kubernetes
+                Software Engineer — Beta Systems              2018–2020
+                • Developed REST APIs with Spring Boot serving 500k daily sessions
+                • Optimized PostgreSQL queries reducing average response time by 60%
+                • Implemented containerised services on AWS ECS reducing costs by 35%
+                • Collaborated with product team to deliver 3 major features on schedule
+                • Engineered event-driven notification system processing 100k+ events per hour
+                • Resolved critical production incidents reducing error rate by 25%
 
-                Projects: E-commerce platform, Analytics dashboard, CI/CD pipeline
+                Junior Software Engineer — Gamma Tech         2016–2018
+                • Built RESTful services in Java with Spring Framework
+                • Integrated payment APIs handling 10k+ daily transactions
+                • Automated data pipelines cutting manual processing by 70%
+                • Increased unit test coverage from 20% to 80%
 
-                Certifications: AWS Solutions Architect
+                EDUCATION
+                Bachelor of Science in Computer Science
+                University of Technology, 2016
 
-                LinkedIn: linkedin.com/in/johndoe
+                PROJECTS
+                • Event-Driven Order System: Kafka pipeline with 99% delivery guarantee
+                • Real-Time Dashboard: Apache Flink analytics for live metrics
+                • Internal CI/CD Framework: adopted by 3 engineering teams
+
+                CERTIFICATIONS
+                • AWS Solutions Architect — Associate (2022)
+                • Certified Kubernetes Administrator (2023)
                 """;
     }
 
@@ -241,15 +266,26 @@ class ResumeAnalysisServiceTest {
     }
 
     private Map<String, Object> fullParsedData() {
-        return Map.of(
-                "email", "john@example.com",
-                "phone", "+1-555-000-0000",
-                "skills", List.of("java", "python", "aws", "docker"),
-                "hasExperience", true,
-                "hasEducation", true,
-                "hasProjects", true,
-                "hasCertifications", true,
-                "wordCount", 520
-        );
+        Map<String, Object> contact = new HashMap<>();
+        contact.put("email", "john@example.com");
+        contact.put("phone", "+1-555-000-0000");
+        contact.put("linkedin", "linkedin.com/in/johndoe");
+        contact.put("github", "github.com/johndoe");
+
+        Map<String, Object> skills = new HashMap<>();
+        skills.put("languages", List.of("Java", "Python", "Go", "TypeScript"));
+        skills.put("frameworks", List.of("Spring Boot", "React", "Node.js", "FastAPI"));
+        skills.put("databases", List.of("PostgreSQL", "Redis", "MongoDB", "Elasticsearch"));
+        skills.put("cloud", List.of("AWS", "Docker", "Kubernetes", "Terraform"));
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("contact", contact);
+        data.put("skills", skills);
+        data.put("hasExperience", true);
+        data.put("hasEducation", true);
+        data.put("projects", List.of("Event-Driven Order System", "Real-Time Dashboard", "CI/CD Framework"));
+        data.put("certifications", List.of("AWS Solutions Architect", "Kubernetes Administrator"));
+        data.put("wordCount", 750);
+        return data;
     }
 }
