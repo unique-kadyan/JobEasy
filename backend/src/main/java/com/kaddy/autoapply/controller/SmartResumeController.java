@@ -1,6 +1,7 @@
 package com.kaddy.autoapply.controller;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,8 +56,24 @@ public class SmartResumeController {
         // 100-second emitter timeout — slightly more than MAX_GENERATION_TIME (90s)
         SseEmitter emitter = new SseEmitter(100_000L);
         String userId = (String) auth.getPrincipal();
+        AtomicBoolean done = new AtomicBoolean(false);
 
-        // Run on a virtual thread so this request thread is not blocked.
+        // Keepalive: send a comment ping every 20s so Render.com's nginx
+        // proxy_read_timeout (60s default) never fires between progress events.
+        Thread.startVirtualThread(() -> {
+            try {
+                while (!done.get()) {
+                    Thread.sleep(20_000);
+                    if (!done.get()) {
+                        emitter.send(SseEmitter.event().comment("keepalive"));
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        });
+
+        // Generation runs on a separate virtual thread so this request thread is not
+        // blocked.
         Thread.startVirtualThread(() -> {
             try {
                 emitter.send(SseEmitter.event()
@@ -88,6 +105,8 @@ public class SmartResumeController {
                 } catch (IOException ignored) {
                 }
                 emitter.completeWithError(e);
+            } finally {
+                done.set(true);
             }
         });
 

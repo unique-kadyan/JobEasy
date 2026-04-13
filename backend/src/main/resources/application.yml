@@ -22,6 +22,10 @@ spring:
     uri: ${MONGODB_URI}
 
   data:
+    mongodb:
+      # Ensures @Indexed / @CompoundIndex annotations are applied on startup.
+      # Safe for our scale — index builds on small collections take milliseconds.
+      auto-index-creation: true
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}

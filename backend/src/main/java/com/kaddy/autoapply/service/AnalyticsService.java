@@ -1,90 +1,87 @@
 package com.kaddy.autoapply.service;
 
-import com.kaddy.autoapply.dto.response.AnalyticsResponse;
-import com.kaddy.autoapply.model.enums.ApplicationStatus;
-import com.kaddy.autoapply.repository.ApplicationRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
+import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Service;
+
+import com.kaddy.autoapply.dto.response.AnalyticsResponse;
+
+/**
+ * One aggregation pipeline replaces the previous 6 parallel
+ * countByUserIdAndStatus
+ * queries. The pipeline does a single collection scan (or index seek when the
+ * user_status compound index is present) and groups by status in one
+ * round-trip:
+ *
+ * db.applications.aggregate([
+ * { $match: { userId: <id> } },
+ * { $group: { _id: "$status", count: { $sum: 1 } } }
+ * ])
+ *
+ * With the (userId, status) compound index this runs in O(log n) instead of
+ * O(n).
+ */
 @Service
 public class AnalyticsService {
 
     private static final Logger log = LoggerFactory.getLogger(AnalyticsService.class);
 
-    private static final long QUERY_TIMEOUT_SECONDS = 5;
+    private final MongoTemplate mongoTemplate;
 
-    private final ApplicationRepository applicationRepository;
-    private final Executor executor;
-
-    public AnalyticsService(ApplicationRepository applicationRepository,
-                            @Qualifier("virtualThreadExecutor") Executor executor) {
-        this.applicationRepository = applicationRepository;
-        this.executor = executor;
+    public AnalyticsService(MongoTemplate mongoTemplate) {
+        this.mongoTemplate = mongoTemplate;
     }
 
-    @Transactional(readOnly = true)
     @PreAuthorize("isAuthenticated()")
     public AnalyticsResponse getSummary(String userId) {
-
-        CompletableFuture<Long> totalF        = supplyCount(() -> applicationRepository.countByUserId(userId));
-        CompletableFuture<Long> appliedF      = supplyCount(() -> applicationRepository.countByUserIdAndStatus(userId, ApplicationStatus.APPLIED));
-        CompletableFuture<Long> interviewingF = supplyCount(() -> applicationRepository.countByUserIdAndStatus(userId, ApplicationStatus.INTERVIEWING));
-        CompletableFuture<Long> offeredF      = supplyCount(() -> applicationRepository.countByUserIdAndStatus(userId, ApplicationStatus.OFFERED));
-        CompletableFuture<Long> rejectedF     = supplyCount(() -> applicationRepository.countByUserIdAndStatus(userId, ApplicationStatus.REJECTED));
-        CompletableFuture<Long> withdrawnF    = supplyCount(() -> applicationRepository.countByUserIdAndStatus(userId, ApplicationStatus.WITHDRAWN));
-
+        Map<String, Long> counts = new LinkedHashMap<>();
         try {
-            CompletableFuture.allOf(totalF, appliedF, interviewingF, offeredF, rejectedF, withdrawnF)
-                    .get(QUERY_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            log.warn("Analytics queries timed out for user {} — returning partial results", userId);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } catch (ExecutionException e) {
-            log.error("Analytics query failed for user {}: {}", userId, e.getCause().getMessage());
+            Aggregation agg = Aggregation.newAggregation(
+                    Aggregation.match(Criteria.where("userId").is(userId)),
+                    Aggregation.group("status").count().as("count"));
+            AggregationResults<Document> results = mongoTemplate.aggregate(agg, "applications", Document.class);
+
+            for (Document doc : results.getMappedResults()) {
+                String status = doc.getString("_id");
+                Number count = (Number) doc.get("count");
+                if (status != null && count != null) {
+                    counts.put(status, count.longValue());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Analytics aggregation failed for user {} — returning zeros: {}", userId, e.getMessage());
         }
 
-        long total        = totalF.getNow(0L);
-        long applied      = appliedF.getNow(0L);
-        long interviewing = interviewingF.getNow(0L);
-        long offered      = offeredF.getNow(0L);
-        long rejected     = rejectedF.getNow(0L);
-        long withdrawn    = withdrawnF.getNow(0L);
+        long applied = counts.getOrDefault("APPLIED", 0L);
+        long interviewing = counts.getOrDefault("INTERVIEWING", 0L);
+        long offered = counts.getOrDefault("OFFERED", 0L);
+        long rejected = counts.getOrDefault("REJECTED", 0L);
+        long withdrawn = counts.getOrDefault("WITHDRAWN", 0L);
+        long total = counts.values().stream().mapToLong(Long::longValue).sum();
 
         double responseRate = total > 0
                 ? (double) (interviewing + offered + rejected) / total * 100
                 : 0;
 
         Map<String, Long> byStatus = new LinkedHashMap<>();
-        byStatus.put("APPLIED",      applied);
+        byStatus.put("APPLIED", applied);
         byStatus.put("INTERVIEWING", interviewing);
-        byStatus.put("OFFERED",      offered);
-        byStatus.put("REJECTED",     rejected);
-        byStatus.put("WITHDRAWN",    withdrawn);
+        byStatus.put("OFFERED", offered);
+        byStatus.put("REJECTED", rejected);
+        byStatus.put("WITHDRAWN", withdrawn);
 
         return new AnalyticsResponse(
                 total, applied, interviewing, offered, rejected,
                 Math.round(responseRate * 100.0) / 100.0,
                 byStatus);
-    }
-
-    private CompletableFuture<Long> supplyCount(java.util.function.Supplier<Long> supplier) {
-        return CompletableFuture.supplyAsync(supplier, executor)
-                .exceptionally(ex -> {
-                    log.warn("Count query failed: {}", ex.getMessage());
-                    return 0L;
-                });
     }
 }

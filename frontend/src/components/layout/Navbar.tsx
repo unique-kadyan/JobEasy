@@ -1,36 +1,36 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import {
+  Bell,
+  Briefcase,
+  ChevronDown,
+  CreditCard,
+  Crown,
+  GraduationCap,
+  LayoutDashboard,
+  LogOut,
+  Mail,
+  MessageSquare,
+  Moon,
+  Search,
+  Send,
+  Settings,
+  Shield,
+  Sparkles,
+  Sun,
+  TrendingUp,
+  User,
+  Zap,
+} from "@/components/ui/icons";
 import { useAuth } from "@/hooks/useAuth";
+import type { ServerStatus } from "@/hooks/useKeepAlive";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { useThemeStore } from "@/store/theme-store";
-import { cn } from "@/lib/utils";
 import Tooltip from "@mui/material/Tooltip";
-import {
-  Zap,
-  Crown,
-  LogOut,
-  User,
-  Briefcase,
-  Settings,
-  Moon,
-  Sun,
-  ChevronDown,
-  Bell,
-  Shield,
-  CreditCard,
-  LayoutDashboard,
-  Search,
-  Mail,
-  Sparkles,
-  TrendingUp,
-  Send,
-  MessageSquare,
-  GraduationCap,
-} from "@/components/ui/icons";
-import type { ServerStatus } from "@/hooks/useKeepAlive";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -44,21 +44,27 @@ const NAV_LINKS = [
   { href: "/skill-hub", label: "Skill Hub", icon: GraduationCap },
 ];
 
-const TIER_BADGE: Record<string, { label: string; className: string }> = {
+const TIER_BADGE: Record<
+  string,
+  { label: string; className: string; iconClass: string }
+> = {
   FREE: {
     label: "Free",
     className:
       "bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#86868b] dark:text-[#8e8e93]",
+    iconClass: "text-[#86868b] dark:text-[#8e8e93]",
   },
   GOLD: {
     label: "Gold",
     className:
       "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-yellow-400",
+    iconClass: "text-amber-500 dark:text-yellow-400",
   },
   PLATINUM: {
     label: "Platinum",
     className:
       "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300",
+    iconClass: "text-indigo-500 dark:text-indigo-300",
   },
 };
 
@@ -85,6 +91,11 @@ export default function Navbar({
       .join("")
       .slice(0, 2)
       .toUpperCase() ?? "?";
+  const nameParts = user?.name?.split(" ") ?? [];
+  const displayName =
+    nameParts.length > 1
+      ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}`
+      : (user?.name ?? "");
   const avatarUrl = storeUser?.avatarUrl ?? user?.avatarUrl;
 
   useEffect(() => {
@@ -123,25 +134,25 @@ export default function Navbar({
         </span>
       </Link>
 
-      <nav className="flex items-center gap-0.5 flex-1 overflow-x-auto scrollbar-none">
+      <nav className="flex items-center gap-0.5 flex-1">
         {NAV_LINKS.map((link) => {
           const isActive =
             pathname === link.href ||
             (link.href !== "/dashboard" && pathname.startsWith(link.href));
           return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap",
-                isActive
-                  ? "bg-[#f2f2f7] dark:bg-white/10 text-[#1d1d1f] dark:text-white"
-                  : "text-[#86868b] dark:text-[#8e8e93] hover:text-[#1d1d1f] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]",
-              )}
-            >
-              <link.icon className="h-3.5 w-3.5 shrink-0" />
-              {link.label}
-            </Link>
+            <Tooltip key={link.href} title={link.label} placement="bottom">
+              <Link
+                href={link.href}
+                className={cn(
+                  "flex items-center justify-center h-8 w-8 rounded-lg transition-colors",
+                  isActive
+                    ? "bg-[#f2f2f7] dark:bg-white/10 text-[#1d1d1f] dark:text-white"
+                    : "text-[#86868b] dark:text-[#8e8e93] hover:text-[#1d1d1f] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]",
+                )}
+              >
+                <link.icon className="h-4 w-4 shrink-0" />
+              </Link>
+            </Tooltip>
           );
         })}
       </nav>
@@ -157,14 +168,20 @@ export default function Navbar({
           </Link>
         )}
 
-        <span
-          className={cn(
-            "text-[10px] font-medium px-2 py-0.5 rounded-full",
-            tierBadge.className,
-          )}
-        >
-          {tierBadge.label}
-        </span>
+        {tier === "GOLD" && (
+          <Tooltip title="Gold Plan">
+            <span className={cn("flex items-center", tierBadge.iconClass)}>
+              <Crown className="h-4 w-4" />
+            </span>
+          </Tooltip>
+        )}
+        {tier === "PLATINUM" && (
+          <Tooltip title="Platinum Plan">
+            <span className={cn("flex items-center", tierBadge.iconClass)}>
+              <Sparkles className="h-4 w-4" />
+            </span>
+          </Tooltip>
+        )}
 
         <ServerDot status={serverStatus} />
 
@@ -179,15 +196,19 @@ export default function Navbar({
             <div className="h-7 w-7 rounded-xl overflow-hidden shrink-0 ring-1 ring-black/10 dark:ring-white/10">
               {avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={avatarUrl} alt={user?.name ?? "Avatar"} className="h-full w-full object-cover" />
+                <img
+                  src={avatarUrl}
+                  alt={user?.name ?? "Avatar"}
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-indigo-600 text-white text-xs font-semibold">
                   {initials}
                 </div>
               )}
             </div>
-            <span className="text-sm font-medium text-[#1d1d1f] dark:text-[#c9d1d9] hidden lg:block max-w-[120px] truncate">
-              {user?.name}
+            <span className="text-sm font-medium text-[#1d1d1f] dark:text-[#c9d1d9] hidden lg:block max-w-[100px] truncate">
+              {displayName}
             </span>
             <ChevronDown
               className={cn(
@@ -204,7 +225,11 @@ export default function Navbar({
                   <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 ring-1 ring-black/10 dark:ring-white/10">
                     {avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={avatarUrl} alt={user?.name ?? "Avatar"} className="h-full w-full object-cover" />
+                      <img
+                        src={avatarUrl}
+                        alt={user?.name ?? "Avatar"}
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-indigo-600 text-white text-sm font-semibold">
                         {initials}
