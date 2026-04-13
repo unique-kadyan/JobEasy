@@ -1,43 +1,39 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import api from "@/lib/api";
-import { useAuthStore } from "@/store/auth-store";
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
-import Badge from "@/components/ui/Badge";
 import PaymentModal from "@/components/resume/PaymentModal";
+import Button from "@/components/ui/Button";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import {
-  Sparkles,
-  Loader2,
-  CheckCircle,
   AlertCircle,
-  Info,
-  Lock,
-  Download,
-  RefreshCw,
   ChevronRight,
-  FileText,
-  Upload,
-  Star,
-  Trash2,
+  Info,
+  Loader2,
+  RefreshCw,
 } from "@/components/ui/icons";
-import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
-import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
+import api from "@/lib/api";
+import { formatDate, toCamelCase } from "@/lib/utils";
+import { useAuthStore } from "@/store/auth-store";
+import type {
+  GeneratedResume,
+  Resume,
+  ResumeAnalysis,
+  ResumeData,
+} from "@/types";
 import AnalyticsRoundedIcon from "@mui/icons-material/AnalyticsRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import AutoFixHighRoundedIcon from "@mui/icons-material/AutoFixHighRounded";
-import CreditCardRoundedIcon from "@mui/icons-material/CreditCardRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
+import CreditCardRoundedIcon from "@mui/icons-material/CreditCardRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
-import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
-import { formatDate, toCamelCase } from "@/lib/utils";
-import type { ResumeAnalysis, GeneratedResume, ResumeData, Resume } from "@/types";
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 export default function SmartResumePage() {
   const queryClient = useQueryClient();
@@ -49,6 +45,8 @@ export default function SmartResumePage() {
   const [generated, setGenerated] = useState<GeneratedResume | null>(null);
   const [payModal, setPayModal] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [progressSteps, setProgressSteps] = useState<string[]>([]);
   const resumeRef = useRef<HTMLDivElement>(null);
 
   // ── Uploaded resumes ─────────────────────────────────────────────────────
@@ -132,22 +130,81 @@ export default function SmartResumePage() {
       toast.success(`ATS Score: ${data.atsScore}/100 — ${data.scoreLabel}`);
     },
     onError: () =>
-      toast.error(
-        "Analysis failed. Make sure you have a resume uploaded."
-      ),
+      toast.error("Analysis failed. Make sure you have a resume uploaded."),
   });
 
-  const generateMutation = useMutation({
-    mutationFn: async (): Promise<GeneratedResume> => {
-      const res = await api.post("/smart-resume/generate");
-      return res.data;
-    },
-    onSuccess: (data) => {
-      setGenerated(data);
-      toast.success("Resume generated successfully!");
-    },
-    onError: () => toast.error("Generation failed. Please try again."),
-  });
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    setProgressSteps(["Starting resume generation..."]);
+    try {
+      const token = api.defaults.headers.common["Authorization"] as
+        | string
+        | undefined;
+      const apiBase =
+        process.env.NEXT_PUBLIC_API_URL !== null &&
+        process.env.NEXT_PUBLIC_API_URL !== ""
+          ? process.env.NEXT_PUBLIC_API_URL
+          : "https://kaddy-backend.onrender.com/api";
+
+      const response = await fetch(`${apiBase}/smart-resume/generate/stream`, {
+        method: "POST",
+        headers: {
+          Authorization: token ?? "",
+          Accept: "text/event-stream",
+        },
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.body) throw new Error("No response body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // SSE events are separated by double newlines
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop() ?? "";
+
+        for (const block of parts) {
+          let eventType = "message";
+          let eventData = "";
+          for (const line of block.split("\n")) {
+            if (line.startsWith("event: ")) eventType = line.slice(7).trim();
+            if (line.startsWith("data: ")) eventData = line.slice(6).trim();
+          }
+          if (!eventData) continue;
+
+          if (eventType === "pass") {
+            const d = JSON.parse(eventData) as {
+              pass: number;
+              total: number;
+              score: number;
+              message: string;
+            };
+            setProgressSteps((prev) => [...prev, d.message]);
+          } else if (eventType === "complete") {
+            const d = JSON.parse(eventData) as GeneratedResume;
+            setGenerated(d);
+            toast.success("Resume generated successfully!");
+          } else if (eventType === "error") {
+            const d = JSON.parse(eventData) as { message: string };
+            throw new Error(d.message);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("SSE generation failed:", err);
+      toast.error("Generation failed. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handlePaySuccess = async () => {
     if (!generated) return;
@@ -196,7 +253,6 @@ export default function SmartResumePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div className="text-center space-y-1">
         <div className="flex items-center justify-center gap-2 mb-2">
@@ -208,7 +264,8 @@ export default function SmartResumePage() {
           Smart Resume
         </h1>
         <p className="text-sm text-[#86868b] dark:text-[#8e8e93]">
-          Upload your resume · get an ATS score · generate an AI-optimized version
+          Upload your resume · get an ATS score · generate an AI-optimized
+          version
         </p>
       </div>
 
@@ -217,7 +274,9 @@ export default function SmartResumePage() {
         <div className="rounded-[15px] bg-gradient-to-r from-indigo-950/90 via-violet-950/90 to-purple-950/90 px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10">
-              <WorkspacePremiumRoundedIcon sx={{ fontSize: 26, color: "#c4b5fd" }} />
+              <WorkspacePremiumRoundedIcon
+                sx={{ fontSize: 26, color: "#c4b5fd" }}
+              />
             </div>
             <div>
               <p className="text-sm font-semibold text-white">
@@ -229,11 +288,7 @@ export default function SmartResumePage() {
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            {[
-              "ATS-optimized",
-              "PDF export",
-              "AI rewrite",
-            ].map((f) => (
+            {["ATS-optimized", "PDF export", "AI rewrite"].map((f) => (
               <span
                 key={f}
                 className="hidden sm:flex items-center gap-1 text-[10px] font-semibold text-indigo-200 bg-white/10 rounded-full px-2.5 py-1"
@@ -329,7 +384,7 @@ export default function SmartResumePage() {
                     {resume.parsedData?.skills &&
                       (() => {
                         const allSkills = Object.values(
-                          resume.parsedData.skills!
+                          resume.parsedData.skills!,
                         )
                           .flat()
                           .filter(Boolean) as string[];
@@ -408,7 +463,6 @@ export default function SmartResumePage() {
 
       {/* ── Step cards row ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
         {/* Step 1 — ATS Analysis */}
         <Card className="flex flex-col">
           <CardHeader>
@@ -528,9 +582,7 @@ export default function SmartResumePage() {
 
             {!analysis && !analyzeMutation.isPending && (
               <div className="flex flex-col items-center py-8 gap-2 text-center">
-                <AnalyticsRoundedIcon
-                  sx={{ fontSize: 36, color: "#c7d2fe" }}
-                />
+                <AnalyticsRoundedIcon sx={{ fontSize: 36, color: "#c7d2fe" }} />
                 <p className="text-xs text-[#86868b] dark:text-[#8e8e93] max-w-[200px]">
                   Scan your primary resume for ATS compatibility issues
                 </p>
@@ -558,32 +610,43 @@ export default function SmartResumePage() {
                   Generate Optimized
                 </h2>
               </div>
-              <Button
-                size="sm"
-                onClick={() => generateMutation.mutate()}
-                loading={generateMutation.isPending}
-              >
+              <Button size="sm" onClick={handleGenerate} loading={isGenerating}>
                 <AutoFixHighRoundedIcon sx={{ fontSize: 15 }} />
                 {generated ? "Regenerate" : "Generate"}
               </Button>
             </div>
           </CardHeader>
           <CardContent className="flex-1">
-            {generateMutation.isPending && (
-              <div className="flex flex-col items-center justify-center py-8 gap-3">
-                <Loader2 className="h-7 w-7 animate-spin text-violet-600" />
-                <div className="text-center">
+            {isGenerating && (
+              <div className="flex flex-col py-5 gap-3">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-violet-600 shrink-0" />
                   <p className="text-xs font-medium text-[#1d1d1f] dark:text-white">
-                    Generating optimized resume…
+                    Optimizing with AI…
                   </p>
-                  <p className="text-[10px] text-[#86868b] dark:text-[#8e8e93] mt-0.5">
-                    This may take 15–30 seconds
-                  </p>
+                </div>
+                <div className="space-y-1.5 pl-1">
+                  {progressSteps.map((step, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />
+                      <p className="text-[11px] text-[#3c3c43] dark:text-[#aeaeb2]">
+                        {step}
+                      </p>
+                    </div>
+                  ))}
+                  {progressSteps.length > 0 && (
+                    <div className="flex items-center gap-2 opacity-50">
+                      <div className="w-1.5 h-1.5 rounded-full bg-violet-300 animate-pulse shrink-0" />
+                      <p className="text-[11px] text-[#86868b] dark:text-[#636366]">
+                        Working…
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {generated && !generateMutation.isPending && (
+            {generated && !isGenerating && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="flex items-center gap-1 text-xs font-semibold text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-full px-2.5 py-1">
@@ -619,7 +682,7 @@ export default function SmartResumePage() {
               </div>
             )}
 
-            {!generated && !generateMutation.isPending && (
+            {!generated && !isGenerating && (
               <div className="flex flex-col items-center py-8 gap-2 text-center">
                 <AutoFixHighRoundedIcon
                   sx={{ fontSize: 36, color: "#ddd6fe" }}
@@ -634,7 +697,7 @@ export default function SmartResumePage() {
       </div>
 
       {/* ── Resume preview (full width below step cards) ─────────────────── */}
-      {generated && !generateMutation.isPending && (
+      {generated && !isGenerating && (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -751,8 +814,8 @@ function AnimatedGauge({ score }: { score: number }) {
     score >= 70
       ? "text-indigo-600"
       : score >= 50
-      ? "text-amber-500"
-      : "text-red-500";
+        ? "text-amber-500"
+        : "text-red-500";
 
   return (
     <div className="relative w-20 h-20 shrink-0">
@@ -810,10 +873,7 @@ function ResumePreview({
               d.contact.location,
               d.contact.linkedin &&
                 `linkedin.com/in/${d.contact.linkedin
-                  .replace(
-                    /^https?:\/\/(www\.)?linkedin\.com\/(in\/)?/,
-                    ""
-                  )
+                  .replace(/^https?:\/\/(www\.)?linkedin\.com\/(in\/)?/, "")
                   .replace(/\/$/, "")}`,
               d.contact.github &&
                 `github.com/${d.contact.github

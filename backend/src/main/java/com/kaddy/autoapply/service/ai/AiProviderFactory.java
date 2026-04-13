@@ -1,16 +1,17 @@
 package com.kaddy.autoapply.service.ai;
 
-import com.kaddy.autoapply.exception.AiServiceException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import com.kaddy.autoapply.exception.AiServiceException;
 
 @Component
 public class AiProviderFactory {
@@ -22,10 +23,9 @@ public class AiProviderFactory {
 
     public enum TaskType {
         RESUME_GENERATION(List.of(
-                "GROQ", "SAMBANOVA",
-                "TOGETHER_QWEN3_CODER", "TOGETHER_KIMI_K2",
+                "SAMBANOVA", "TOGETHER_QWEN3_CODER",
                 "CEREBRAS", "MISTRAL", "NOVITA",
-                "GEMINI", "CLAUDE", "OPENAI")),
+                "TOGETHER", "GEMINI", "CLAUDE", "OPENAI")),
 
         REASONING(List.of(
                 "SAMBANOVA", "MISTRAL",
@@ -82,12 +82,16 @@ public class AiProviderFactory {
         return generate(systemPrompt, userPrompt, taskType, Set.of());
     }
 
-    /** Like {@link #generate(String, String, TaskType)} but skips any provider in {@code excluded}. */
+    /**
+     * Like {@link #generate(String, String, TaskType)} but skips any provider in
+     * {@code excluded}.
+     */
     public GenerationResult generate(String systemPrompt, String userPrompt, TaskType taskType,
-                                     Set<String> excluded) {
+            Set<String> excluded) {
         if (taskType != null && taskType != TaskType.GENERAL) {
             for (String name : taskType.preferredProviders()) {
-                if (excluded.contains(name.toUpperCase())) continue;
+                if (excluded.contains(name.toUpperCase()))
+                    continue;
                 AiProvider p = providerMap.get(name);
                 if (p == null || !p.isAvailable())
                     continue;
@@ -125,9 +129,10 @@ public class AiProviderFactory {
     }
 
     private GenerationResult generateFromCascade(String systemPrompt, String userPrompt,
-                                                  Set<String> excluded) {
+            Set<String> excluded) {
         for (String name : freeProviderOrder) {
-            if (excluded.contains(name.toUpperCase())) continue;
+            if (excluded.contains(name.toUpperCase()))
+                continue;
             AiProvider p = providerMap.get(name);
             if (p == null || !p.isAvailable())
                 continue;
@@ -143,7 +148,8 @@ public class AiProviderFactory {
         log.warn("All free AI providers failed. Falling back to premium providers.");
 
         for (String name : premiumProviderOrder) {
-            if (excluded.contains(name.toUpperCase())) continue;
+            if (excluded.contains(name.toUpperCase()))
+                continue;
             AiProvider p = providerMap.get(name);
             if (p == null || !p.isAvailable())
                 continue;

@@ -1,33 +1,33 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { useAuthStore } from "@/store/auth-store";
 import api from "@/lib/api";
+import { useAuthStore } from "@/store/auth-store";
+import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useCallback, useRef, useState } from "react";
 
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
-import Chip from "@mui/material/Chip";
-import TextField from "@mui/material/TextField";
-import InputAdornment from "@mui/material/InputAdornment";
-import LinearProgress from "@mui/material/LinearProgress";
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import MuiButton from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Divider from "@mui/material/Divider";
+import InputAdornment from "@mui/material/InputAdornment";
+import LinearProgress from "@mui/material/LinearProgress";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 
-import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
+import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
+import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
+import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import RocketLaunchRoundedIcon from "@mui/icons-material/RocketLaunchRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
-import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
-import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 
 import { Zap } from "@/components/ui/icons";
 
@@ -42,39 +42,61 @@ interface ParsedResume {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const COMMON_ROLES = [
-  "Software Engineer", "Full Stack Developer", "Frontend Developer",
-  "Backend Developer", "React Developer", "Node.js Developer",
-  "Python Developer", "Java Developer", "DevOps Engineer",
-  "Data Engineer", "ML Engineer", "Mobile Developer",
-  "Android Developer", "iOS Developer", "Data Scientist",
-  "Cloud Engineer", "Product Manager", "QA Engineer", "Tech Lead",
+  "Software Engineer",
+  "Full Stack Developer",
+  "Frontend Developer",
+  "Backend Developer",
+  "React Developer",
+  "Node.js Developer",
+  "Python Developer",
+  "Java Developer",
+  "DevOps Engineer",
+  "Data Engineer",
+  "ML Engineer",
+  "Mobile Developer",
+  "Android Developer",
+  "iOS Developer",
+  "Data Scientist",
+  "Cloud Engineer",
+  "Product Manager",
+  "QA Engineer",
+  "Tech Lead",
 ];
 
 const WORK_PREFS = [
-  { value: "REMOTE",  label: "Remote" },
-  { value: "HYBRID",  label: "Hybrid" },
-  { value: "ONSITE",  label: "On-site" },
+  { value: "REMOTE", label: "Remote" },
+  { value: "HYBRID", label: "Hybrid" },
+  { value: "ONSITE", label: "On-site" },
 ];
 
 // Derive role suggestions from parsed resume skills
 function suggestRoles(parsed: ParsedResume | null): string[] {
   if (!parsed?.skills) return [];
-  const all = Object.values(parsed.skills).flat().map((s) => s.toLowerCase());
-  const has = (...terms: string[]) => terms.some((t) => all.some((s) => s.includes(t)));
+  const all = Object.values(parsed.skills)
+    .flat()
+    .map((s) => s.toLowerCase());
+  const has = (...terms: string[]) =>
+    terms.some((t) => all.some((s) => s.includes(t)));
   const out: string[] = [];
   if (parsed.title) out.push(parsed.title);
   if (has("react")) out.push("React Developer", "Frontend Developer");
-  if (has("vue"))   out.push("Vue Developer", "Frontend Developer");
+  if (has("vue")) out.push("Vue Developer", "Frontend Developer");
   if (has("angular")) out.push("Angular Developer", "Frontend Developer");
-  if (has("node", "express", "nestjs")) out.push("Node.js Developer", "Backend Developer");
-  if (has("python", "django", "fastapi", "flask")) out.push("Python Developer", "Backend Developer");
+  if (has("node", "express", "nestjs"))
+    out.push("Node.js Developer", "Backend Developer");
+  if (has("python", "django", "fastapi", "flask"))
+    out.push("Python Developer", "Backend Developer");
   if (has("java", "spring")) out.push("Java Developer", "Backend Engineer");
-  if (has("kotlin", "android")) out.push("Android Developer", "Mobile Developer");
+  if (has("kotlin", "android"))
+    out.push("Android Developer", "Mobile Developer");
   if (has("swift", "ios")) out.push("iOS Developer", "Mobile Developer");
-  if (has("docker", "kubernetes", "terraform")) out.push("DevOps Engineer", "Cloud Engineer");
-  if (has("tensorflow", "pytorch", "sklearn")) out.push("ML Engineer", "Data Scientist");
+  if (has("docker", "kubernetes", "terraform"))
+    out.push("DevOps Engineer", "Cloud Engineer");
+  if (has("tensorflow", "pytorch", "sklearn"))
+    out.push("ML Engineer", "Data Scientist");
   if (has("spark", "kafka", "airflow")) out.push("Data Engineer");
-  if (has("typescript", "javascript") && has("node") && has("react")) out.push("Full Stack Developer");
+  if (has("typescript", "javascript") && has("node") && has("react"))
+    out.push("Full Stack Developer");
   // de-duplicate
   return [...new Set(out)].slice(0, 6);
 }
@@ -119,7 +141,7 @@ const PANELS = [
 const slide = {
   enter: (d: number) => ({ x: d > 0 ? 44 : -44, opacity: 0 }),
   center: { x: 0, opacity: 1 },
-  exit:  (d: number) => ({ x: d > 0 ? -44 : 44, opacity: 0 }),
+  exit: (d: number) => ({ x: d > 0 ? -44 : 44, opacity: 0 }),
 };
 
 const transition = { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const };
@@ -132,35 +154,40 @@ export default function OnboardingPage() {
   const firstName = user?.name?.split(" ")[0] ?? "there";
 
   const [step, setStep] = useState(0);
-  const [dir,  setDir]  = useState(1);
+  const [dir, setDir] = useState(1);
 
   // Step 0 — Resume upload state
-  const [drag,        setDrag]        = useState(false);
-  const [uploadState, setUploadState] = useState<"idle" | "uploading" | "parsing" | "done" | "error">("idle");
+  const [drag, setDrag] = useState(false);
+  const [uploadState, setUploadState] = useState<
+    "idle" | "uploading" | "parsing" | "done" | "error"
+  >("idle");
   const [uploadError, setUploadError] = useState("");
-  const [parseLog,    setParseLog]    = useState<string[]>([]);
-  const [parsed,      setParsed]      = useState<ParsedResume | null>(null);
+  const [parseLog, setParseLog] = useState<string[]>([]);
+  const [parsed, setParsed] = useState<ParsedResume | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Step 1 — Preferences state
-  const [roles,      setRoles]      = useState<string[]>([]);
+  const [roles, setRoles] = useState<string[]>([]);
   const [customRole, setCustomRole] = useState("");
-  const [location,   setLocation]   = useState(user?.location ?? "");
-  const [workPref,   setWorkPref]   = useState<string | null>(null);
-  const [savingPrefs, setSavingPrefs] = useState(false);
+  const [location, setLocation] = useState(user?.location ?? "");
+  const [workPref, setWorkPref] = useState<string | null>(null);
 
   // Step 2 — Complete state
-  const [completing, setCompleting] = useState(false);
 
-  const go = (next: number) => { setDir(next > step ? 1 : -1); setStep(next); };
+  const go = (next: number) => {
+    setDir(next > step ? 1 : -1);
+    setStep(next);
+  };
 
   // ── Resume upload ────────────────────────────────────────────────────────────
 
   const runParseAnim = useCallback((data: ParsedResume) => {
     const msgs: string[] = ["Reading document structure…"];
     const allSkills = data.skills ? Object.values(data.skills).flat() : [];
-    if (allSkills.length) msgs.push(`Detected ${allSkills.length} skills & technologies…`);
-    if (data.experienceYears) msgs.push(`Found ${data.experienceYears} years of experience…`);
+    if (allSkills.length)
+      msgs.push(`Detected ${allSkills.length} skills & technologies…`);
+    if (data.experienceYears)
+      msgs.push(`Found ${data.experienceYears} years of experience…`);
     if (data.title) msgs.push(`Identified role: ${data.title}`);
     msgs.push("Pre-filling your job preferences…");
 
@@ -179,73 +206,89 @@ export default function OnboardingPage() {
     tick();
   }, []);
 
-  const handleFile = useCallback(async (file: File) => {
-    setUploadState("uploading");
-    setUploadError("");
-    setParseLog([]);
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await api.post("/resumes/upload", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      const data: ParsedResume = {
-        title:           res.data?.parsedData?.experience?.[0]?.title,
-        experienceYears: res.data?.parsedData?.experienceYears,
-        skills:          res.data?.parsedData?.skills,
-      };
-      setParsed(data);
-      setUploadState("parsing");
-      runParseAnim(data);
-    } catch {
-      setUploadState("error");
-      setUploadError("Upload failed. Check the file and try again.");
-    }
-  }, [runParseAnim]);
+  const handleFile = useCallback(
+    async (file: File) => {
+      setUploadState("uploading");
+      setUploadError("");
+      setParseLog([]);
+      try {
+        const form = new FormData();
+        form.append("file", file);
+        const res = await api.post("/resumes/upload", form, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        const data: ParsedResume = {
+          title: res.data?.parsedData?.experience?.[0]?.title,
+          experienceYears: res.data?.parsedData?.experienceYears,
+          skills: res.data?.parsedData?.skills,
+        };
+        setParsed(data);
+        setUploadState("parsing");
+        runParseAnim(data);
+      } catch {
+        setUploadState("error");
+        setUploadError("Upload failed. Check the file and try again.");
+      }
+    },
+    [runParseAnim],
+  );
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDrag(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  }, [handleFile]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDrag(false);
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    },
+    [handleFile],
+  );
 
   // ── Save preferences ─────────────────────────────────────────────────────────
 
-  const handleSavePrefs = async () => {
-    setSavingPrefs(true);
-    try {
-      const body: Record<string, unknown> = {};
-      if (roles.length)         body.targetRoles    = roles;
-      if (location.trim())      body.location       = location.trim();
-      if (workPref)             body.workPreference = workPref;
-      await api.put("/users/profile", body);
-    } catch { /* non-critical */ } finally {
-      setSavingPrefs(false);
-      go(2);
-    }
+  const handleSavePrefs = () => {
+    // Advance immediately — the profile save is non-critical background work.
+    // User should never wait 3-4s watching a spinner just to see the "all set" screen.
+    go(2);
+
+    const body: Record<string, unknown> = {};
+    if (roles.length) body.targetRoles = roles;
+    if (location.trim()) body.location = location.trim();
+    if (workPref) body.workPreference = workPref;
+    api.put("/users/profile", body).catch(() => {
+      /* non-critical */
+    });
   };
 
   // ── Complete onboarding ───────────────────────────────────────────────────────
 
-  const handleComplete = async (dest = "/dashboard") => {
-    setCompleting(true);
-    try {
-      const res = await api.post("/users/onboarding/complete");
-      if (user) setUser({ ...user, ...res.data, onboardingCompleted: true });
-    } catch {
-      if (user) setUser({ ...user, onboardingCompleted: true });
-    } finally {
-      router.push(dest);
-    }
+  const handleComplete = (dest = "/dashboard") => {
+    // Optimistically mark onboarding complete in the auth store and navigate now.
+    // The API call fires in the background — the flag is already set locally so
+    // the dashboard won't redirect the user back to onboarding.
+    if (user) setUser({ ...user, onboardingCompleted: true });
+    router.push(dest);
+
+    api
+      .post("/users/onboarding/complete")
+      .then((res) => {
+        if (user) setUser({ ...user, ...res.data, onboardingCompleted: true });
+      })
+      .catch(() => {
+        /* already optimistically set */
+      });
   };
 
   const panel = PANELS[step];
   const progress = ((step + 1) / PANELS.length) * 100;
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
-
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        bgcolor: "background.default",
+      }}
+    >
       {/* ── Left brand panel ──────────────────────────────────────────────── */}
       <Box
         sx={{
@@ -264,15 +307,56 @@ export default function OnboardingPage() {
         }}
       >
         {/* Decorative blobs */}
-        <Box sx={{ position: "absolute", width: 380, height: 380, borderRadius: "50%", background: "rgba(255,255,255,0.06)", top: -80, right: -60, pointerEvents: "none" }} />
-        <Box sx={{ position: "absolute", width: 240, height: 240, borderRadius: "50%", background: "rgba(255,255,255,0.05)", bottom: -50, left: -30, pointerEvents: "none" }} />
+        <Box
+          sx={{
+            position: "absolute",
+            width: 380,
+            height: 380,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.06)",
+            top: -80,
+            right: -60,
+            pointerEvents: "none",
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            width: 240,
+            height: 240,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.05)",
+            bottom: -50,
+            left: -30,
+            pointerEvents: "none",
+          }}
+        />
 
         {/* Logo */}
         <Stack direction="row" alignItems="center" spacing={1.5} mb={7}>
-          <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 2,
+              bgcolor: "rgba(255,255,255,0.15)",
+              backdropFilter: "blur(8px)",
+              border: "1px solid rgba(255,255,255,0.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Zap className="h-5 w-5 text-white" />
           </Box>
-          <Typography variant="h6" fontWeight={700} color="white" letterSpacing={-0.5}>Rolevo</Typography>
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            color="white"
+            letterSpacing={-0.5}
+          >
+            Rolevo
+          </Typography>
         </Stack>
 
         {/* Per-step content — animates in/out */}
@@ -285,10 +369,25 @@ export default function OnboardingPage() {
             transition={transition}
             style={{ width: "100%" }}
           >
-            <Typography variant="h3" fontWeight={800} color="white" lineHeight={1.15} mb={1.5} sx={{ maxWidth: 380 }}>
+            <Typography
+              variant="h3"
+              fontWeight={800}
+              color="white"
+              lineHeight={1.15}
+              mb={1.5}
+              sx={{ maxWidth: 380 }}
+            >
               {panel.headline}
             </Typography>
-            <Typography variant="body1" sx={{ color: "rgba(255,255,255,0.75)", maxWidth: 360, mb: 5, lineHeight: 1.7 }}>
+            <Typography
+              variant="body1"
+              sx={{
+                color: "rgba(255,255,255,0.75)",
+                maxWidth: 360,
+                mb: 5,
+                lineHeight: 1.7,
+              }}
+            >
               {panel.sub}
             </Typography>
             <Stack spacing={1.5} sx={{ maxWidth: 360 }}>
@@ -299,9 +398,27 @@ export default function OnboardingPage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.08 + i * 0.07, ...transition }}
                 >
-                  <Stack direction="row" alignItems="center" spacing={1.5} sx={{ p: 1.5, borderRadius: 2, bgcolor: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.14)" }}>
-                    <CheckCircleRoundedIcon sx={{ fontSize: 16, color: "rgba(255,255,255,0.85)", flexShrink: 0 }} />
-                    <Typography variant="body2" fontWeight={500} color="white">{b}</Typography>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={1.5}
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      bgcolor: "rgba(255,255,255,0.09)",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                    }}
+                  >
+                    <CheckCircleRoundedIcon
+                      sx={{
+                        fontSize: 16,
+                        color: "rgba(255,255,255,0.85)",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography variant="body2" fontWeight={500} color="white">
+                      {b}
+                    </Typography>
                   </Stack>
                 </motion.div>
               ))}
@@ -310,7 +427,11 @@ export default function OnboardingPage() {
         </AnimatePresence>
 
         {/* Step dots */}
-        <Stack direction="row" spacing={1} sx={{ position: "absolute", bottom: 40, left: 56 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{ position: "absolute", bottom: 40, left: 56 }}
+        >
           {PANELS.map((_, i) => (
             <Box
               key={i}
@@ -340,17 +461,44 @@ export default function OnboardingPage() {
         }}
       >
         {/* Mobile logo */}
-        <Stack direction="row" alignItems="center" spacing={1} mb={4} sx={{ display: { lg: "none" } }}>
-          <Box sx={{ width: 32, height: 32, borderRadius: 1.5, background: "linear-gradient(135deg, #4f46e5, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={1}
+          mb={4}
+          sx={{ display: { lg: "none" } }}
+        >
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: 1.5,
+              background: "linear-gradient(135deg, #4f46e5, #6366f1)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Zap style={{ fontSize: 16, color: "white" }} />
           </Box>
-          <Typography variant="h6" fontWeight={700} color="text.primary">Rolevo</Typography>
+          <Typography variant="h6" fontWeight={700} color="text.primary">
+            Rolevo
+          </Typography>
         </Stack>
 
         {/* Progress */}
         <Box sx={{ width: "100%", maxWidth: 460, mb: 5 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-            <Typography variant="caption" color="text.secondary" fontWeight={500}>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={1}
+          >
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              fontWeight={500}
+            >
               Step {step + 1} of {PANELS.length}
             </Typography>
             <Typography variant="caption" color="primary.main" fontWeight={700}>
@@ -377,7 +525,15 @@ export default function OnboardingPage() {
         <Box sx={{ width: "100%", maxWidth: 460 }}>
           <AnimatePresence mode="wait" custom={dir}>
             {step === 0 && (
-              <motion.div key="upload" custom={dir} variants={slide} initial="enter" animate="center" exit="exit" transition={transition}>
+              <motion.div
+                key="upload"
+                custom={dir}
+                variants={slide}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={transition}
+              >
                 <StepUpload
                   firstName={firstName}
                   drag={drag}
@@ -394,7 +550,15 @@ export default function OnboardingPage() {
               </motion.div>
             )}
             {step === 1 && (
-              <motion.div key="prefs" custom={dir} variants={slide} initial="enter" animate="center" exit="exit" transition={transition}>
+              <motion.div
+                key="prefs"
+                custom={dir}
+                variants={slide}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={transition}
+              >
                 <StepPreferences
                   roles={roles}
                   setRoles={setRoles}
@@ -404,17 +568,25 @@ export default function OnboardingPage() {
                   setLocation={setLocation}
                   workPref={workPref}
                   setWorkPref={setWorkPref}
-                  saving={savingPrefs}
+                  saving={false}
                   onBack={() => go(0)}
                   onContinue={handleSavePrefs}
                 />
               </motion.div>
             )}
             {step === 2 && (
-              <motion.div key="done" custom={dir} variants={slide} initial="enter" animate="center" exit="exit" transition={transition}>
+              <motion.div
+                key="done"
+                custom={dir}
+                variants={slide}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={transition}
+              >
                 <StepComplete
                   firstName={firstName}
-                  completing={completing}
+                  completing={false}
                   onNavigate={handleComplete}
                 />
               </motion.div>
@@ -442,7 +614,19 @@ interface StepUploadProps {
   onContinue: () => void;
 }
 
-function StepUpload({ firstName, drag, setDrag, uploadState, uploadError, parseLog, parsed, fileRef, onFile, onDrop, onContinue }: StepUploadProps) {
+function StepUpload({
+  firstName,
+  drag,
+  setDrag,
+  uploadState,
+  uploadError,
+  parseLog,
+  parsed,
+  fileRef,
+  onFile,
+  onDrop,
+  onContinue,
+}: StepUploadProps) {
   const busy = uploadState === "uploading" || uploadState === "parsing";
 
   return (
@@ -452,14 +636,18 @@ function StepUpload({ firstName, drag, setDrag, uploadState, uploadError, parseL
           Hey {firstName}, let&apos;s start with your resume
         </Typography>
         <Typography variant="body2" color="text.secondary" lineHeight={1.6}>
-          Upload once — we power everything from it. Your cover letters, job matching, and smart resume all read from this file.
+          Upload once — we power everything from it. Your cover letters, job
+          matching, and smart resume all read from this file.
         </Typography>
       </Box>
 
       {/* Drop zone — shown when idle or error */}
       {(uploadState === "idle" || uploadState === "error") && (
         <Box
-          onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDrag(true);
+          }}
           onDragLeave={() => setDrag(false)}
           onDrop={onDrop}
           onClick={() => fileRef.current?.click()}
@@ -476,19 +664,33 @@ function StepUpload({ firstName, drag, setDrag, uploadState, uploadError, parseL
             "&:hover": {
               borderColor: "primary.main",
               bgcolor: "rgba(99,102,241,0.05)",
-              "& .upload-icon": { color: "primary.main", transform: "translateY(-3px)" },
+              "& .upload-icon": {
+                color: "primary.main",
+                transform: "translateY(-3px)",
+              },
             },
           }}
         >
           <CloudUploadRoundedIcon
             className="upload-icon"
-            sx={{ fontSize: 44, color: drag ? "primary.main" : "text.disabled", mb: 1.5, transition: "all 0.2s ease" }}
+            sx={{
+              fontSize: 44,
+              color: drag ? "primary.main" : "text.disabled",
+              mb: 1.5,
+              transition: "all 0.2s ease",
+            }}
           />
-          <Typography variant="body1" fontWeight={600} color="text.primary" mb={0.5}>
+          <Typography
+            variant="body1"
+            fontWeight={600}
+            color="text.primary"
+            mb={0.5}
+          >
             {drag ? "Drop it here!" : "Drag & drop your resume"}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            or click to browse &nbsp;·&nbsp; PDF, DOC, DOCX &nbsp;·&nbsp; up to 10 MB
+            or click to browse &nbsp;·&nbsp; PDF, DOC, DOCX &nbsp;·&nbsp; up to
+            10 MB
           </Typography>
           <input
             ref={fileRef}
@@ -502,9 +704,24 @@ function StepUpload({ firstName, drag, setDrag, uploadState, uploadError, parseL
 
       {/* Uploading spinner */}
       {uploadState === "uploading" && (
-        <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3, p: 4, textAlign: "center", bgcolor: "action.hover" }}>
-          <CircularProgress size={36} thickness={3.5} sx={{ mb: 2, color: "primary.main" }} />
-          <Typography variant="body2" color="text.secondary">Uploading your resume…</Typography>
+        <Box
+          sx={{
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 3,
+            p: 4,
+            textAlign: "center",
+            bgcolor: "action.hover",
+          }}
+        >
+          <CircularProgress
+            size={36}
+            thickness={3.5}
+            sx={{ mb: 2, color: "primary.main" }}
+          />
+          <Typography variant="body2" color="text.secondary">
+            Uploading your resume…
+          </Typography>
         </Box>
       )}
 
@@ -516,7 +733,8 @@ function StepUpload({ firstName, drag, setDrag, uploadState, uploadError, parseL
             borderColor: uploadState === "done" ? "success.light" : "divider",
             borderRadius: 3,
             p: 3,
-            bgcolor: uploadState === "done" ? "rgba(34,197,94,0.04)" : "action.hover",
+            bgcolor:
+              uploadState === "done" ? "rgba(34,197,94,0.04)" : "action.hover",
             transition: "border-color 0.4s ease, background-color 0.4s ease",
           }}
         >
@@ -531,11 +749,26 @@ function StepUpload({ firstName, drag, setDrag, uploadState, uploadError, parseL
                   transition={{ duration: 0.22 }}
                 >
                   <Stack direction="row" alignItems="center" spacing={1.5}>
-                    {isDone
-                      ? <CheckCircleRoundedIcon sx={{ fontSize: 16, color: "success.main", flexShrink: 0 }} />
-                      : <CircularProgress size={14} thickness={4} sx={{ flexShrink: 0 }} />
-                    }
-                    <Typography variant="body2" color={isDone ? "text.primary" : "text.secondary"} fontWeight={isDone ? 500 : 400}>
+                    {isDone ? (
+                      <CheckCircleRoundedIcon
+                        sx={{
+                          fontSize: 16,
+                          color: "success.main",
+                          flexShrink: 0,
+                        }}
+                      />
+                    ) : (
+                      <CircularProgress
+                        size={14}
+                        thickness={4}
+                        sx={{ flexShrink: 0 }}
+                      />
+                    )}
+                    <Typography
+                      variant="body2"
+                      color={isDone ? "text.primary" : "text.secondary"}
+                      fontWeight={isDone ? 500 : 400}
+                    >
                       {msg}
                     </Typography>
                   </Stack>
@@ -544,7 +777,11 @@ function StepUpload({ firstName, drag, setDrag, uploadState, uploadError, parseL
             })}
 
             {uploadState === "done" && (
-              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+              >
                 <Divider sx={{ my: 0.5 }} />
                 <Alert
                   severity="success"
@@ -563,7 +800,9 @@ function StepUpload({ firstName, drag, setDrag, uploadState, uploadError, parseL
       )}
 
       {uploadError && (
-        <Alert severity="error" variant="outlined" sx={{ borderRadius: 2 }}>{uploadError}</Alert>
+        <Alert severity="error" variant="outlined" sx={{ borderRadius: 2 }}>
+          {uploadError}
+        </Alert>
       )}
 
       {/* Actions */}
@@ -572,7 +811,12 @@ function StepUpload({ firstName, drag, setDrag, uploadState, uploadError, parseL
           <MuiButton
             variant="text"
             onClick={onContinue}
-            sx={{ borderRadius: 2, textTransform: "none", color: "text.secondary", fontWeight: 500 }}
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              color: "text.secondary",
+              fontWeight: 500,
+            }}
           >
             Skip for now
           </MuiButton>
@@ -582,7 +826,13 @@ function StepUpload({ firstName, drag, setDrag, uploadState, uploadError, parseL
           onClick={onContinue}
           disabled={busy}
           disableElevation
-          endIcon={busy ? <CircularProgress size={16} color="inherit" /> : <ChevronRightRoundedIcon />}
+          endIcon={
+            busy ? (
+              <CircularProgress size={16} color="inherit" />
+            ) : (
+              <ChevronRightRoundedIcon />
+            )
+          }
           sx={{
             flex: 1,
             borderRadius: 2,
@@ -591,10 +841,16 @@ function StepUpload({ firstName, drag, setDrag, uploadState, uploadError, parseL
             fontWeight: 600,
             fontSize: "0.9375rem",
             background: "linear-gradient(135deg, #4f46e5, #6366f1)",
-            "&:hover": { background: "linear-gradient(135deg, #4338ca, #4f46e5)" },
+            "&:hover": {
+              background: "linear-gradient(135deg, #4338ca, #4f46e5)",
+            },
           }}
         >
-          {busy ? "Processing…" : uploadState === "done" ? "Continue →" : "Continue without resume"}
+          {busy
+            ? "Processing…"
+            : uploadState === "done"
+              ? "Continue →"
+              : "Continue without resume"}
         </MuiButton>
       </Stack>
     </Stack>
@@ -617,9 +873,23 @@ interface StepPrefsProps {
   onContinue: () => void;
 }
 
-function StepPreferences({ roles, setRoles, customRole, setCustomRole, location, setLocation, workPref, setWorkPref, saving, onBack, onContinue }: StepPrefsProps) {
+function StepPreferences({
+  roles,
+  setRoles,
+  customRole,
+  setCustomRole,
+  location,
+  setLocation,
+  workPref,
+  setWorkPref,
+  saving,
+  onBack,
+  onContinue,
+}: StepPrefsProps) {
   const toggle = (role: string) =>
-    setRoles(roles.includes(role) ? roles.filter((r) => r !== role) : [...roles, role]);
+    setRoles(
+      roles.includes(role) ? roles.filter((r) => r !== role) : [...roles, role],
+    );
 
   const addCustom = () => {
     const v = customRole.trim();
@@ -645,7 +915,17 @@ function StepPreferences({ roles, setRoles, customRole, setCustomRole, location,
 
       {/* Role chips */}
       <Box>
-        <Typography variant="caption" color="text.disabled" fontWeight={700} sx={{ display: "block", mb: 1.5, letterSpacing: 0.8, fontSize: "0.65rem" }}>
+        <Typography
+          variant="caption"
+          color="text.disabled"
+          fontWeight={700}
+          sx={{
+            display: "block",
+            mb: 1.5,
+            letterSpacing: 0.8,
+            fontSize: "0.65rem",
+          }}
+        >
           ROLES {roles.length > 0 && `· ${roles.length} selected`}
         </Typography>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
@@ -683,15 +963,38 @@ function StepPreferences({ roles, setRoles, customRole, setCustomRole, location,
             placeholder="Add a custom role…"
             value={customRole}
             onChange={(e) => setCustomRole(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addCustom();
+              }
+            }}
             sx={{ flex: 1, "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-            slotProps={{ input: { startAdornment: <InputAdornment position="start"><DescriptionRoundedIcon sx={{ fontSize: 16, color: "text.secondary" }} /></InputAdornment> } }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <DescriptionRoundedIcon
+                      sx={{ fontSize: 16, color: "text.secondary" }}
+                    />
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
           <MuiButton
             variant="outlined"
             onClick={addCustom}
             disabled={!customRole.trim()}
-            sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600, minWidth: 64, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "primary.main", color: "primary.main" } }}
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 600,
+              minWidth: 64,
+              borderColor: "divider",
+              color: "text.secondary",
+              "&:hover": { borderColor: "primary.main", color: "primary.main" },
+            }}
           >
             Add
           </MuiButton>
@@ -700,7 +1003,17 @@ function StepPreferences({ roles, setRoles, customRole, setCustomRole, location,
 
       {/* Work preference chips */}
       <Box>
-        <Typography variant="caption" color="text.disabled" fontWeight={700} sx={{ display: "block", mb: 1.5, letterSpacing: 0.8, fontSize: "0.65rem" }}>
+        <Typography
+          variant="caption"
+          color="text.disabled"
+          fontWeight={700}
+          sx={{
+            display: "block",
+            mb: 1.5,
+            letterSpacing: 0.8,
+            fontSize: "0.65rem",
+          }}
+        >
           WORK PREFERENCE
         </Typography>
         <Stack direction="row" spacing={1}>
@@ -720,7 +1033,10 @@ function StepPreferences({ roles, setRoles, customRole, setCustomRole, location,
                   bgcolor: active ? "primary.main" : "transparent",
                   color: active ? "white" : "text.secondary",
                   borderColor: active ? "primary.main" : "divider",
-                  "&:hover": { borderColor: "primary.main", color: active ? "white" : "primary.main" },
+                  "&:hover": {
+                    borderColor: "primary.main",
+                    color: active ? "white" : "primary.main",
+                  },
                 }}
               />
             );
@@ -740,7 +1056,9 @@ function StepPreferences({ roles, setRoles, customRole, setCustomRole, location,
           input: {
             startAdornment: (
               <InputAdornment position="start">
-                <LocationOnRoundedIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+                <LocationOnRoundedIcon
+                  sx={{ fontSize: 18, color: "text.secondary" }}
+                />
               </InputAdornment>
             ),
           },
@@ -754,7 +1072,15 @@ function StepPreferences({ roles, setRoles, customRole, setCustomRole, location,
           variant="outlined"
           startIcon={<ChevronLeftRoundedIcon />}
           onClick={onBack}
-          sx={{ borderRadius: 2, py: 1.25, textTransform: "none", fontWeight: 600, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "primary.main", color: "primary.main" } }}
+          sx={{
+            borderRadius: 2,
+            py: 1.25,
+            textTransform: "none",
+            fontWeight: 600,
+            borderColor: "divider",
+            color: "text.secondary",
+            "&:hover": { borderColor: "primary.main", color: "primary.main" },
+          }}
         >
           Back
         </MuiButton>
@@ -764,12 +1090,23 @@ function StepPreferences({ roles, setRoles, customRole, setCustomRole, location,
           onClick={onContinue}
           disabled={saving}
           disableElevation
-          endIcon={saving ? <CircularProgress size={16} color="inherit" /> : <ChevronRightRoundedIcon />}
+          endIcon={
+            saving ? (
+              <CircularProgress size={16} color="inherit" />
+            ) : (
+              <ChevronRightRoundedIcon />
+            )
+          }
           sx={{
-            borderRadius: 2, py: 1.4,
-            textTransform: "none", fontWeight: 600, fontSize: "0.9375rem",
+            borderRadius: 2,
+            py: 1.4,
+            textTransform: "none",
+            fontWeight: 600,
+            fontSize: "0.9375rem",
             background: "linear-gradient(135deg, #4f46e5, #6366f1)",
-            "&:hover": { background: "linear-gradient(135deg, #4338ca, #4f46e5)" },
+            "&:hover": {
+              background: "linear-gradient(135deg, #4338ca, #4f46e5)",
+            },
           }}
         >
           {saving ? "Saving…" : "Save & Continue"}
@@ -782,12 +1119,38 @@ function StepPreferences({ roles, setRoles, customRole, setCustomRole, location,
 // ─── Step 2: Celebration + launch ────────────────────────────────────────────
 
 const QUICK_ACTIONS = [
-  { label: "Search Jobs",    desc: "Browse 50+ job boards now",         href: "/jobs",         Icon: SearchRoundedIcon,      color: "#3b82f6" },
-  { label: "Smart Resume",   desc: "Let AI optimise your resume",        href: "/smart-resume", Icon: AutoAwesomeRoundedIcon, color: "#8b5cf6" },
-  { label: "Dashboard",      desc: "See your overview & analytics",      href: "/dashboard",    Icon: DashboardRoundedIcon,   color: "#10b981" },
+  {
+    label: "Search Jobs",
+    desc: "Browse 50+ job boards now",
+    href: "/jobs",
+    Icon: SearchRoundedIcon,
+    color: "#3b82f6",
+  },
+  {
+    label: "Smart Resume",
+    desc: "Let AI optimise your resume",
+    href: "/smart-resume",
+    Icon: AutoAwesomeRoundedIcon,
+    color: "#8b5cf6",
+  },
+  {
+    label: "Dashboard",
+    desc: "See your overview & analytics",
+    href: "/dashboard",
+    Icon: DashboardRoundedIcon,
+    color: "#10b981",
+  },
 ];
 
-function StepComplete({ firstName, completing, onNavigate }: { firstName: string; completing: boolean; onNavigate: (href: string) => void }) {
+function StepComplete({
+  firstName,
+  completing,
+  onNavigate,
+}: {
+  firstName: string;
+  completing: boolean;
+  onNavigate: (href: string) => void;
+}) {
   return (
     <Stack spacing={4} alignItems="center">
       {/* Icon */}
@@ -798,23 +1161,39 @@ function StepComplete({ firstName, completing, onNavigate }: { firstName: string
       >
         <Box
           sx={{
-            width: 80, height: 80, borderRadius: "50%",
-            background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))",
+            width: 80,
+            height: 80,
+            borderRadius: "50%",
+            background:
+              "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))",
             border: "2px solid rgba(99,102,241,0.2)",
-            display: "flex", alignItems: "center", justifyContent: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             boxShadow: "0 0 40px rgba(99,102,241,0.18)",
           }}
         >
-          <RocketLaunchRoundedIcon sx={{ fontSize: 40, color: "primary.main" }} />
+          <RocketLaunchRoundedIcon
+            sx={{ fontSize: 40, color: "primary.main" }}
+          />
         </Box>
       </motion.div>
 
       {/* Headline */}
       <Box textAlign="center">
-        <Typography variant="h5" fontWeight={700} color="text.primary" mb={0.75}>
+        <Typography
+          variant="h5"
+          fontWeight={700}
+          color="text.primary"
+          mb={0.75}
+        >
           You&apos;re all set, {firstName}!
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 360, lineHeight: 1.7 }}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ maxWidth: 360, lineHeight: 1.7 }}
+        >
           Your AI job search assistant is ready. Where do you want to start?
         </Typography>
       </Box>
@@ -826,7 +1205,11 @@ function StepComplete({ firstName, completing, onNavigate }: { firstName: string
             key={href}
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + i * 0.09, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            transition={{
+              delay: 0.1 + i * 0.09,
+              duration: 0.3,
+              ease: [0.22, 1, 0.36, 1],
+            }}
           >
             <Box
               component="button"
@@ -834,9 +1217,13 @@ function StepComplete({ firstName, completing, onNavigate }: { firstName: string
               disabled={completing}
               sx={{
                 width: "100%",
-                display: "flex", alignItems: "center", gap: 2,
-                p: 2, borderRadius: 2.5,
-                border: "1px solid", borderColor: "divider",
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                p: 2,
+                borderRadius: 2.5,
+                border: "1px solid",
+                borderColor: "divider",
                 bgcolor: "background.paper",
                 cursor: completing ? "not-allowed" : "pointer",
                 textAlign: "left",
@@ -852,9 +1239,13 @@ function StepComplete({ firstName, completing, onNavigate }: { firstName: string
             >
               <Box
                 sx={{
-                  width: 46, height: 46, borderRadius: 2,
+                  width: 46,
+                  height: 46,
+                  borderRadius: 2,
                   bgcolor: `${color}14`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   flexShrink: 0,
                   transition: "background 0.15s ease",
                 }}
@@ -862,10 +1253,20 @@ function StepComplete({ firstName, completing, onNavigate }: { firstName: string
                 <Icon sx={{ fontSize: 22, color }} />
               </Box>
               <Box flex={1}>
-                <Typography variant="body2" fontWeight={600} color="text.primary">{label}</Typography>
-                <Typography variant="caption" color="text.secondary">{desc}</Typography>
+                <Typography
+                  variant="body2"
+                  fontWeight={600}
+                  color="text.primary"
+                >
+                  {label}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {desc}
+                </Typography>
               </Box>
-              <ChevronRightRoundedIcon sx={{ fontSize: 18, color: "text.disabled", flexShrink: 0 }} />
+              <ChevronRightRoundedIcon
+                sx={{ fontSize: 18, color: "text.disabled", flexShrink: 0 }}
+              />
             </Box>
           </motion.div>
         ))}
@@ -874,7 +1275,9 @@ function StepComplete({ firstName, completing, onNavigate }: { firstName: string
       {completing && (
         <Stack direction="row" alignItems="center" spacing={1.25}>
           <CircularProgress size={15} thickness={4} />
-          <Typography variant="caption" color="text.secondary">Setting up your dashboard…</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Setting up your dashboard…
+          </Typography>
         </Stack>
       )}
     </Stack>

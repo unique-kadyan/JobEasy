@@ -1,25 +1,5 @@
 package com.kaddy.autoapply.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kaddy.autoapply.dto.response.GeneratedResumeResponse;
-import com.kaddy.autoapply.exception.BadRequestException;
-import com.kaddy.autoapply.security.SecurityUtils;
-import com.kaddy.autoapply.model.GeneratedResume;
-import com.kaddy.autoapply.model.Resume;
-import com.kaddy.autoapply.model.User;
-import com.kaddy.autoapply.model.enums.FeatureType;
-import com.kaddy.autoapply.repository.GeneratedResumeRepository;
-import com.kaddy.autoapply.repository.ResumeRepository;
-import com.kaddy.autoapply.repository.UserRepository;
-import com.kaddy.autoapply.service.ai.AiProviderFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayDeque;
@@ -29,9 +9,30 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kaddy.autoapply.dto.response.GeneratedResumeResponse;
+import com.kaddy.autoapply.exception.BadRequestException;
+import com.kaddy.autoapply.model.GeneratedResume;
+import com.kaddy.autoapply.model.Resume;
+import com.kaddy.autoapply.model.User;
+import com.kaddy.autoapply.model.enums.FeatureType;
+import com.kaddy.autoapply.repository.GeneratedResumeRepository;
+import com.kaddy.autoapply.repository.ResumeRepository;
+import com.kaddy.autoapply.repository.UserRepository;
+import com.kaddy.autoapply.security.SecurityUtils;
+import com.kaddy.autoapply.service.ai.AiProviderFactory;
 
 @Service
 @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -39,10 +40,16 @@ public class ResumeGeneratorService {
 
     private static final Logger log = LoggerFactory.getLogger(ResumeGeneratorService.class);
 
-    private static final int MAX_REFINEMENT_PASSES = 5;
+    // 3 passes caps total time at ~15s on SambaNova (vs 33s with 5 passes).
+    // The log showed pass 4-5 regressed score and repeated the same weaknesses —
+    // diminishing returns.
+    private static final int MAX_REFINEMENT_PASSES = 3;
     private static final int TARGET_ATS_SCORE = 100;
-    /** Max wall-clock time the entire generate() call (including refinement) may take. */
-    private static final Duration MAX_GENERATION_TIME = Duration.ofSeconds(120);
+    /**
+     * Max wall-clock time the entire generate() call (including refinement) may
+     * take.
+     */
+    private static final Duration MAX_GENERATION_TIME = Duration.ofSeconds(90);
 
     private static final String ATS_SCORING_SYSTEM = """
             You are a strict ATS (Applicant Tracking System) evaluation engine.
@@ -129,6 +136,14 @@ public class ResumeGeneratorService {
     }
 
     public GeneratedResumeResponse generate(String userId) {
+        return generateWithProgress(userId, (type, data) -> {
+        });
+    }
+
+    public GeneratedResumeResponse generateWithProgress(
+            String userId,
+            BiConsumer<String, String> progressCallback) {
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("User not found."));
 
@@ -140,7 +155,8 @@ public class ResumeGeneratorService {
 
         String userPrompt = buildPrompt(user, resume);
 
-        // Generate with automatic retry: if a provider returns truncated/unparseable JSON,
+        // Generate with automatic retry: if a provider returns truncated/unparseable
+        // JSON,
         // exclude it and try the next one (up to 3 attempts total).
         Map<String, Object> resumeData = null;
         Set<String> exhausted = new HashSet<>();
@@ -149,7 +165,8 @@ public class ResumeGeneratorService {
                     SYSTEM_PROMPT, userPrompt, AiProviderFactory.TaskType.RESUME_GENERATION, exhausted);
             log.info("Resume generated for user {} using {} (attempt {})", userId, result.providerName(), attempt);
             resumeData = parseResumeJson(result.content());
-            if (!Boolean.TRUE.equals(resumeData.get("parseError"))) break;
+            if (!Boolean.TRUE.equals(resumeData.get("parseError")))
+                break;
             log.warn("Provider {} returned malformed/truncated JSON on attempt {} — will exclude and retry",
                     result.providerName(), attempt);
             exhausted.add(result.providerName().toUpperCase());
@@ -160,10 +177,16 @@ public class ResumeGeneratorService {
             throw new BadRequestException("AI returned malformed JSON. Please retry.");
         }
 
-        // Multi-pass refinement loop: keep improving until score >= TARGET_ATS_SCORE or budget exhausted
+        // Multi-pass refinement loop.
+        // Track the best-scoring version so a late regression (e.g. pass 3 < pass 2)
+        // doesn't
+        // discard good work — we return the highest-scoring draft, not the final draft.
         Instant deadline = Instant.now().plus(MAX_GENERATION_TIME);
         AtsEvaluation evaluation = scoreResume(resumeData);
         log.info("Initial ATS score {} for user {}", evaluation.score(), userId);
+
+        int bestScore = evaluation.score();
+        Map<String, Object> bestData = resumeData;
 
         int pass = 0;
         while (evaluation.score() < TARGET_ATS_SCORE
@@ -173,27 +196,38 @@ public class ResumeGeneratorService {
             pass++;
             log.info("ATS score {} (pass {}/{}) for user {} — refining weaknesses: {}",
                     evaluation.score(), pass, MAX_REFINEMENT_PASSES, userId, evaluation.weaknesses());
+
+            progressCallback.accept("pass",
+                    String.format("{\"pass\":%d,\"total\":%d,\"score\":%d,\"message\":\"Pass %d/%d — ATS: %d\"}",
+                            pass, MAX_REFINEMENT_PASSES, evaluation.score(),
+                            pass, MAX_REFINEMENT_PASSES, evaluation.score()));
+
             Map<String, Object> refined = refineResume(resumeData, evaluation.weaknesses(), pass);
             if (refined.isEmpty()) {
-                log.warn("Refinement pass {} returned empty — keeping best result so far (score={})", pass, evaluation.score());
+                log.warn("Refinement pass {} returned empty — keeping best result so far (score={})", pass, bestScore);
                 break;
             }
             resumeData = refined;
             evaluation = scoreResume(resumeData);
+
+            // Keep the best-scoring draft
+            if (evaluation.score() > bestScore) {
+                bestScore = evaluation.score();
+                bestData = resumeData;
+            }
         }
         if (!Instant.now().isBefore(deadline)) {
             log.warn("Generation time budget exhausted for user {} after {} passes — returning best result (score={})",
-                    userId, pass, evaluation.score());
+                    userId, pass, bestScore);
         }
 
-        int atsScore = evaluation.score();
-        log.info("Final ATS score {} for user {} after {} refinement pass(es)", atsScore, userId, pass);
+        log.info("Final ATS score {} for user {} after {} refinement pass(es)", bestScore, userId, pass);
 
         GeneratedResume entity = new GeneratedResume();
         entity.setUserId(userId);
         entity.setSourceResumeId(resume.getId());
-        entity.setResumeData(resumeData);
-        entity.setAtsScore(atsScore);
+        entity.setResumeData(bestData);
+        entity.setAtsScore(bestScore);
         if (SecurityUtils.isAdmin())
             entity.setPaid(true);
         GeneratedResume saved = generatedResumeRepository.save(entity);
@@ -258,12 +292,15 @@ public class ResumeGeneratorService {
     private Map<String, Object> parseResumeJson(String raw) {
         String json = extractJsonBlock(raw.trim());
         try {
-            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {
+            });
         } catch (JsonProcessingException first) {
-            // Provider likely truncated the response — attempt structural repair before giving up
+            // Provider likely truncated the response — attempt structural repair before
+            // giving up
             try {
                 String repaired = repairTruncatedJson(json);
-                Map<String, Object> result = objectMapper.readValue(repaired, new TypeReference<Map<String, Object>>() {});
+                Map<String, Object> result = objectMapper.readValue(repaired, new TypeReference<Map<String, Object>>() {
+                });
                 log.info("Repaired truncated AI JSON response successfully");
                 return result;
             } catch (JsonProcessingException second) {
@@ -288,7 +325,8 @@ public class ResumeGeneratorService {
         int start = text.indexOf('{');
         if (start > 0) {
             int end = text.lastIndexOf('}');
-            if (end > start) return text.substring(start, end + 1);
+            if (end > start)
+                return text.substring(start, end + 1);
             // No closing brace — keep from first { for repair to handle
             return text.substring(start);
         }
@@ -324,20 +362,25 @@ public class ResumeGeneratorService {
                 continue;
             }
             if (!inString) {
-                if (c == '{') stack.push('}');
-                else if (c == '[') stack.push(']');
-                else if ((c == '}' || c == ']') && !stack.isEmpty()) stack.pop();
+                if (c == '{')
+                    stack.push('}');
+                else if (c == '[')
+                    stack.push(']');
+                else if ((c == '}' || c == ']') && !stack.isEmpty())
+                    stack.pop();
             }
             sb.append(c);
         }
 
         // Close any unterminated string
-        if (inString) sb.append('"');
+        if (inString)
+            sb.append('"');
 
         // Close all open structures, removing any trailing comma first
         while (!stack.isEmpty()) {
             String s = sb.toString().stripTrailing();
-            if (s.endsWith(",")) s = s.substring(0, s.length() - 1);
+            if (s.endsWith(","))
+                s = s.substring(0, s.length() - 1);
             sb = new StringBuilder(s);
             sb.append(stack.pop());
         }
@@ -362,7 +405,8 @@ public class ResumeGeneratorService {
                 if (start >= 0 && end > start)
                     raw = raw.substring(start, end + 1);
             }
-            Map<String, Object> scored = objectMapper.readValue(raw, new TypeReference<>() {});
+            Map<String, Object> scored = objectMapper.readValue(raw, new TypeReference<>() {
+            });
             // AI score is authoritative — local scorer is used ONLY when the AI response
             // omits the "score" field entirely (parse succeeded but field missing).
             int score = (scored.get("score") instanceof Number n)
@@ -370,11 +414,14 @@ public class ResumeGeneratorService {
                     : computeLocalScore(resumeData);
             @SuppressWarnings("unchecked")
             List<String> aiWeaknesses = scored.get("weaknesses") instanceof List<?> w
-                    ? (List<String>) w : List.of();
+                    ? (List<String>) w
+                    : List.of();
             // If the AI returned no weaknesses but score is below target, fall back to
-            // structural weakness detection so the refinement loop has something to work with.
+            // structural weakness detection so the refinement loop has something to work
+            // with.
             List<String> weaknesses = aiWeaknesses.isEmpty() && score < TARGET_ATS_SCORE
-                    ? deriveWeaknesses(resumeData, score) : aiWeaknesses;
+                    ? deriveWeaknesses(resumeData, score)
+                    : aiWeaknesses;
             return new AtsEvaluation(score, weaknesses);
         } catch (Exception e) {
             log.warn("ATS scoring AI call failed — falling back to structural score: {}", e.getMessage());
@@ -386,25 +433,29 @@ public class ResumeGeneratorService {
     }
 
     /**
-     * Structural ATS score used ONLY as fallback when all AI providers are unavailable.
-     * Checks field presence and counts — content quality is assessed by the AI scorer.
+     * Structural ATS score used ONLY as fallback when all AI providers are
+     * unavailable.
+     * Checks field presence and counts — content quality is assessed by the AI
+     * scorer.
      *
-     * contactInfo  0-10  (2 pts per present field)
-     * summary      0-15  (15 if 2+ sentences, 8 if 1 sentence)
-     * experience   0-30  (6 per role with ≥4 bullets, 3 with any bullets; cap 30)
-     * skills       0-20  (3 per non-empty category; cap 20)
-     * education    0-10  (10 all 4 fields, 5 partial)
-     * formatting   0-5   (1 per core section present)
-     * keywords     0-10  (distinct word count proxy)
+     * contactInfo 0-10 (2 pts per present field)
+     * summary 0-15 (15 if 2+ sentences, 8 if 1 sentence)
+     * experience 0-30 (6 per role with ≥4 bullets, 3 with any bullets; cap 30)
+     * skills 0-20 (3 per non-empty category; cap 20)
+     * education 0-10 (10 all 4 fields, 5 partial)
+     * formatting 0-5 (1 per core section present)
+     * keywords 0-10 (distinct word count proxy)
      */
     private int computeLocalScore(Map<String, Object> data) {
-        if (data == null) return 0;
+        if (data == null)
+            return 0;
         int score = 0;
 
         // 1. contactInfo (0-10)
         if (data.get("contact") instanceof Map<?, ?> contact) {
             for (String field : List.of("email", "phone", "location", "linkedin", "github")) {
-                if (contact.get(field) instanceof String s && !s.isBlank()) score += 2;
+                if (contact.get(field) instanceof String s && !s.isBlank())
+                    score += 2;
             }
         }
 
@@ -447,7 +498,8 @@ public class ResumeGeneratorService {
 
         // 7. keywords (0-10): distinct word proxy
         StringBuilder allText = new StringBuilder();
-        if (data.get("summary") instanceof String s) allText.append(s).append(" ");
+        if (data.get("summary") instanceof String s)
+            allText.append(s).append(" ");
         if (data.get("experience") instanceof List<?> exp) {
             exp.stream().filter(Map.class::isInstance).map(Map.class::cast).forEach(role -> {
                 if (role.get("bullets") instanceof List<?> bullets)
@@ -466,7 +518,8 @@ public class ResumeGeneratorService {
      * Only checks presence and counts — content quality is for the AI scorer.
      */
     private List<String> deriveWeaknesses(Map<String, Object> data, int score) {
-        if (score >= TARGET_ATS_SCORE) return List.of();
+        if (score >= TARGET_ATS_SCORE)
+            return List.of();
         List<String> w = new java.util.ArrayList<>();
 
         // 1. Contact — list each missing field individually
@@ -492,7 +545,8 @@ public class ResumeGeneratorService {
                     String title = role.get("title") instanceof String t ? t : "unnamed role";
                     int count = role.get("bullets") instanceof List<?> b ? b.size() : 0;
                     if (count < 4)
-                        w.add("'" + title + "': needs ≥4 action-verb bullets with quantified metrics (has " + count + ")");
+                        w.add("'" + title + "': needs ≥4 action-verb bullets with quantified metrics (has " + count
+                                + ")");
                 }
             }
         } else {
@@ -518,7 +572,8 @@ public class ResumeGeneratorService {
             w.add("Education section is missing");
         }
 
-        // If structure is complete but score is still below target, the gap is content quality.
+        // If structure is complete but score is still below target, the gap is content
+        // quality.
         // Add explicit quality hints so the refinement loop has actionable direction.
         if (w.isEmpty() && score < TARGET_ATS_SCORE) {
             w.add("Every experience bullet MUST start with a strong action verb (Led, Built, Reduced, Implemented, Scaled…)");
@@ -563,7 +618,8 @@ public class ResumeGeneratorService {
     }
 
     private Map<String, Object> buildPreview(Map<String, Object> data) {
-        if (data == null) return Map.of();
+        if (data == null)
+            return Map.of();
         Map<String, Object> preview = new java.util.LinkedHashMap<>();
         preview.put("name", data.get("name"));
         preview.put("contact", data.get("contact"));
